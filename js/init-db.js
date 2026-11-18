@@ -1,148 +1,78 @@
-const fs = require("fs");
-const path = require("path");
-const Database = require("better-sqlite3");
+const fs = require('fs');
+const path = require('path');
+const { openVideoDatabase } = require('./lib/video-db');
 
-const VIDEO_ROOT = "G:\\h";
-const DB_FILE = "videos.db";
+const { VIDEO_LIBRARY_ROOT: VIDEO_ROOT, VIDEO_DB_FILE: DB_FILE } = require('./lib/config');
+const BATCH_SIZE = 1000;
 
+function main() {
+    if (!fs.existsSync(VIDEO_ROOT) || !fs.statSync(VIDEO_ROOT).isDirectory()) {
+        throw new Error('视频目录不存在或不是目录：' + VIDEO_ROOT);
+    }
 
-// ============================================================
-// SQLite
-// ============================================================
+    const database = openVideoDatabase(DB_FILE);
+    const pending = [];
+    const stack = [VIDEO_ROOT];
+    let fileCount = 0;
+    let validCount = 0;
+    let unreadableCount = 0;
+    let newCount = 0;
 
-const db = new Database(DB_FILE);
+    try {
+        while (stack.length) {
+            const directory = stack.pop();
+            let entries;
 
-db.exec(`
-    CREATE TABLE IF NOT EXISTS videos (
-        id INTEGER PRIMARY KEY
-    )
-`);
+            try {
+                entries = fs.readdirSync(directory, { withFileTypes: true });
+            } catch (error) {
+                unreadableCount++;
+                console.warn('[READ ERROR] ' + directory + ': ' + error.message);
+                continue;
+            }
 
-const insertId = db.prepare(`
-    INSERT OR IGNORE INTO videos (id)
-    VALUES (?)
-`);
+            for (const entry of entries) {
+                const fullPath = path.join(directory, entry.name);
+                if (entry.isDirectory()) {
+                    stack.push(fullPath);
+                    continue;
+                }
+                if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== '.mp4') continue;
 
+                fileCount++;
+                const match = entry.name.match(/^(\d+)-/);
+                if (!match) continue;
 
-// ============================================================
-// 扫描目录
-// ============================================================
+                const id = Number(match[1]);
+                if (!Number.isSafeInteger(id) || id <= 0) {
+                    console.warn('[INVALID ID] ' + entry.name);
+                    continue;
+                }
 
-let fileCount = 0;
-let validCount = 0;
-let newCount = 0;
-
-function scanDirectory(dir) {
-
-    const entries = fs.readdirSync(dir, {
-        withFileTypes: true
-    });
-
-    for (const entry of entries) {
-
-        const fullPath = path.join(
-            dir,
-            entry.name
-        );
-
-        if (entry.isDirectory()) {
-
-            scanDirectory(fullPath);
-
-            continue;
+                validCount++;
+                pending.push(id);
+                if (pending.length >= BATCH_SIZE) {
+                    newCount += database.insertMany(pending.splice(0, pending.length));
+                }
+            }
         }
 
-        if (!entry.isFile()) {
-            continue;
-        }
+        if (pending.length) newCount += database.insertMany(pending);
 
-        if (
-            path.extname(entry.name).toLowerCase()
-            !== ".mp4"
-        ) {
-            continue;
-        }
-
-        fileCount++;
-
-        // ----------------------------------------------------
-        // 文件名：
-        //
-        // 500704-1080p.mp4
-        //
-        // ↓
-        //
-        // 500704
-        // ----------------------------------------------------
-
-        const match =
-            entry.name.match(/^(\d+)-/);
-
-        if (!match) {
-            // 乱码或其他无法识别的文件名
-            continue;
-        }
-
-        const id = Number(match[1]);
-
-        if (!Number.isSafeInteger(id)) {
-            console.log(
-                `[INVALID ID] ${entry.name}`
-            );
-
-            continue;
-        }
-
-        validCount++;
-
-        const result = insertId.run(id);
-
-        if (result.changes === 1) {
-            newCount++;
-
-            console.log(
-                `[ADD] ${id} <- ${entry.name}`
-            );
-        }
+        console.log('扫描完成');
+        console.log('MP4 文件：' + fileCount);
+        console.log('有效 ID：' + validCount);
+        console.log('新增 ID：' + newCount);
+        console.log('数据库总数：' + database.count());
+        console.log('无法读取目录：' + unreadableCount);
+    } finally {
+        database.close();
     }
 }
 
-
-// ============================================================
-// 开始扫描
-// ============================================================
-
-console.log(`扫描: ${VIDEO_ROOT}`);
-console.log("");
-
-if (!fs.existsSync(VIDEO_ROOT)) {
-    console.error(
-        `目录不存在: ${VIDEO_ROOT}`
-    );
-
-    process.exit(1);
+try {
+    main();
+} catch (error) {
+    console.error(error);
+    process.exitCode = 1;
 }
-
-scanDirectory(VIDEO_ROOT);
-
-
-// ============================================================
-// 结果
-// ============================================================
-
-console.log("");
-console.log("==============================");
-console.log("扫描完成");
-console.log("==============================");
-console.log(`MP4 文件:     ${fileCount}`);
-console.log(`有效 ID:      ${validCount}`);
-console.log(`新增数据库:   ${newCount}`);
-
-const total = db
-    .prepare("SELECT COUNT(*) AS count FROM videos")
-    .get()
-    .count;
-
-console.log(`数据库总 ID:  ${total}`);
-
-db.close();
