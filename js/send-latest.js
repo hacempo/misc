@@ -1,52 +1,49 @@
-const fs = require('fs');
 const path = require('path');
+const Aria2Client = require('./lib/aria2-client');
+const { readLines } = require('./lib/queue');
+const { sanitizeFolderName } = require('./lib/file-manager');
 
-(async () => {
-  const root = 'G:\\h\\h';
-  const token = process.env.TOKEN;
+const { RESULT_FILE, DOWNLOAD_TARGET_ROOT } = require('./lib/config');
+const DOWNLOAD_ROOT = path.join(DOWNLOAD_TARGET_ROOT, 'h');
 
-  for (const line of fs.readFileSync('result.txt', 'utf8').split(/\r?\n/).filter(Boolean)) {
-    const match = line.match(/^(.*?)\s+(https?:\/\/\S+)\s*$/);
-    if (!match) {
-      console.log(`格式错误：${line}`);
-      continue;
+async function main() {
+    const aria2 = new Aria2Client({ timeout: 15000 });
+    await aria2.test();
+
+    const lines = readLines(RESULT_FILE);
+    if (!lines.length) {
+        console.log('result.txt 没有任务。');
+        return;
     }
 
-    const title = match[1].trim().replace(/[<>:"/\\|?*]/g, '_').replace(/[. ]+$/, '');
-    const url = match[2];
-    const dir = path.join(root, title);
+    for (const line of lines) {
+        const match = line.match(/^(.*?)\s+(https?:\/\/\S+)\s*$/);
+        if (!match) {
+            console.warn('[INVALID] ' + line);
+            continue;
+        }
 
-    fs.mkdirSync(dir, { recursive: true });
+        const title = sanitizeFolderName(match[1].trim());
+        const url = match[2];
+        const dir = path.join(DOWNLOAD_ROOT, title);
 
-    try {
-      const res = await fetch('http://127.0.0.1:29000/jsonrpc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'download',
-          method: 'aria2.addUri',
-          params: [
-            `token:${token}`,
-            [url],
-            {
-              dir,
-              'max-tries': '5',
-              'retry-wait': '5',
-              'connect-timeout': '20',
-              timeout: '60',
-              continue: 'true',
-              'auto-file-renaming': 'false'
-            }
-          ]
-        })
-      });
-
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      console.log(`已提交：${title}`);
-    } catch (e) {
-      console.log(`提交失败：${title}，${e.message}`);
+        try {
+            const gid = await aria2.addUri(url, dir, {
+                'max-tries': '5',
+                'retry-wait': '5',
+                'connect-timeout': '20',
+                timeout: '60',
+                continue: 'true',
+                'auto-file-renaming': 'false'
+            });
+            console.log('[OK] ' + title + ' ' + gid);
+        } catch (error) {
+            console.error('[FAILED] ' + title + ': ' + error.message);
+        }
     }
-  }
-})();
+}
+
+main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+});
