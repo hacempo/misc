@@ -1,70 +1,94 @@
 # JavaScript Utilities
 
-本目录按“单一职责入口 + 可复用模块”组织。入口脚本负责具体任务，公共能力集中在 `lib/`。
+Hanime 流程按页面类型拆分：搜索页只提取视频页链接，视频页只提取播放列表链接，下载页只提取标题和真实下载地址，下载器只负责目录和 aria2。
 
-## 入口脚本
+## Hanime 脚本
 
-| 文件 | 职责 | 输入 / 输出 |
+| 脚本 | 职责 | 默认输入 / 输出 |
 |---|---|---|
-| `main.js` | Hanime 分类爬虫：提取视频 ID、标题、播放源，并遍历播放列表；通过 SQLite 去重。 | 输出：`download.txt`；数据库：`videos.db` |
-| `get-download-links.js` | 按 `task.txt` 中的关键词搜索 Hanime，提取下载页 `data-url`。 | 输入：`task.txt`；输出：`download.txt`（URL + TAB + 搜索词/目录标签） |
-| `get-latest.js` | 从一组页面 URL 中提取标题与下载 URL。 | 输入：`task.txt`；输出：`result.txt`（标题 + 空格 + URL） |
-| `javdb.js` | 搜索 JAVDB，筛选评论并提取 ed2k/magnet 链接。 | 输入：`js/task.txt`；输出：`js/result.txt`（链接 + TAB + 搜索词） |
-| `init-db.js` | 扫描本地 MP4 文件名并把数字 ID 写入 SQLite。 | 输入：`G:\h`；数据库：`videos.db` |
-| `sort-downloads.js` | 按每个目录的任务数量升序重排下载队列，异常行保留。 | 输入/输出：`download.txt` |
-| `send-downloads.js` | 按 aria2 当前活动/等待任务数补足下载并发。 | 输入/更新：`download.txt` |
-| `send-latest.js` | 将 `result.txt` 中的标题/URL 任务提交给 aria2，并按标题归档。 | 输入：`result.txt`；下载根目录：`G:\h\h` |
-| `download-batch.js` | 批量下载入口：调度批次、重试、刷新 HTTP 410 链接、记录 blob，并归档已完成目录。 | 输入：`download.txt`；状态：`current-batch.txt`；人工列表：`blob-manual.txt` |
+| get-video-links.js | 从指定搜索页提取当页所有视频页链接。支持 genre、query 等搜索参数；不带 page 即第 1 页。 | 参数：搜索页 URL；输出：video-links.txt |
+| get-download-links.js | 从 task.txt 读取关键词，构造 Hanime 搜索页并提取视频页链接。搜索页面采集复用同一模块。 | 输入：task.txt；输出：video-links.txt |
+| filter-video-links.js | 用 SQLite 数据库过滤已经入库的视频 ID。 | 输入：video-links.txt；输出：filtered-video-links.txt |
+| get-playlist-links.js | 打开视频页，提取播放列表中的其他视频页链接。 | 输入：filtered-video-links.txt；输出：playlist-links.txt |
+| get-latest.js | 把视频页链接转换为 /download?v=ID，提取唯一 h3 标题和下载地址。 | 输入：filtered-video-links.txt；追加输出：download.txt |
+| download.js | 创建标题目录并把下载地址交给 aria2；失败任务的原视频页链接写入 retry.txt。 | 输入：download.txt；状态：downloading.txt；失败：retry.txt |
 
-## 可复用模块
+### 推荐流程
 
-| 模块 | 职责 |
-|---|---|
-| `lib/browser.js` | Puppeteer 连接、创建/关闭页面和断开浏览器连接。 |
-| `lib/hanime.js` | Hanime URL、视频 ID、搜索结果、标题、播放源、播放列表和下载页提取。 |
-| `lib/javdb-scraper.js` | JAVDB 评论 iframe、评论优先级和链接提取。 |
-| `lib/aria2-client.js` | aria2 JSON-RPC、任务提交、状态查询和并发统计。 |
-| `lib/queue.js` | 队列解析、原子写入、按原始行删除和批次状态文件。 |
-| `lib/video-db.js` | SQLite 视频 ID 数据库及去重接口。 |
-| `lib/file-manager.js` | 文件夹名清理、目录映射、冲突改名和目录合并。 |
-| `lib/config.js` | 统一管理文件路径、数据库路径和下载根目录。 |
-| `lib/batch-downloader.js` | 批次创建、断点恢复、失败重试和批量下载流程。 |
+~~~powershell
+# 方式一：直接采集某个搜索页（不带 page 参数时就是第 1 页）
+node js/get-video-links.js "https://hanime1.me/search?genre=%E8%A3%8F%E7%95%AA&page=2"
+
+# 方式二：按 task.txt 中的关键词搜索；两种搜索方式输出格式相同
+node js/get-download-links.js
+
+# 过滤数据库中已有的视频 ID
+node js/filter-video-links.js
+
+# 可选：从视频页提取播放列表链接
+node js/get-playlist-links.js
+
+# 下载页提取标题和下载地址，追加进统一任务文件
+node js/get-latest.js
+
+# 下载；失败的视频页链接会写入 retry.txt
+node js/download.js
+
+# 失败后重新获取最新下载地址，再交给下载器
+node js/get-latest.js retry.txt
+node js/download.js
+~~~
+
+也可以给脚本传入自定义文件：
+
+~~~powershell
+node js/filter-video-links.js input.txt output.txt
+node js/get-playlist-links.js input.txt output.txt
+node js/get-latest.js input.txt output.txt
+~~~
+
+## 文本格式
+
+- 搜索、过滤、播放列表文件：每行一个 https://hanime1.me/watch?v=视频ID。
+- download.txt：每行 标题<TAB>下载URL<TAB>原视频页URL。第三列用于下载失败时恢复原视频 ID，并生成可重新抓取的 watch 链接。
+- downloading.txt：下载器内部状态文件，保存 aria2 GID 和对应任务；不要手动编辑。
+- retry.txt：每行一个失败任务的 watch 链接，可直接作为 get-latest.js 的输入。
+- JavDB 保持独立：javdb.js 读取 js/task.txt，结果写入 js/result.txt。
+
+## 其他脚本
+
+- init-db.js：扫描本地 MP4 文件名，把文件名开头的数字 ID 写入 videos.db。
+- javdb.js、lib/javdb-scraper.js：JavDB 搜索和评论链接提取，和 Hanime 下载流程分离。
 
 ## 环境
 
-- 浏览器自动化统一使用 `puppeteer-core` 连接已启动的 Chrome。
-- 建议使用 Node.js 22 或更新版本。
-- 依赖：`npm install puppeteer-core better-sqlite3`。
-- Chrome 远程调试地址默认为 `http://127.0.0.1:9222`，可用 `CHROME_CDP_URL` 修改。
-- aria2 RPC 默认为 `http://127.0.0.1:29000/jsonrpc`，可用 `ARIA2_RPC_URL` 修改。
-- aria2 密钥统一从环境变量 `TOKEN` 读取，禁止写入源码。
+- 浏览器自动化使用 puppeteer-core，连接已经启动的 Chrome。
+- 建议 Node.js 22 或更新版本。
+- 依赖：npm install puppeteer-core better-sqlite3。
+- Chrome 远程调试地址默认 http://127.0.0.1:9222，可用 CHROME_CDP_URL 修改。
+- aria2 RPC 默认 http://127.0.0.1:29000/jsonrpc，可用 ARIA2_RPC_URL 修改。
+- aria2 密钥从环境变量 TOKEN 读取，不要写入源码。
 
 PowerShell 示例：
 
-```powershell
+~~~powershell
 $env:TOKEN = "你的 aria2 RPC 密钥"
-node js/send-downloads.js
-# 或者运行批量下载管理器
-node js/download-batch.js
-```
+node js/download.js
+~~~
 
 ### 可配置路径
 
-以下环境变量可以覆盖默认路径：
-
-- `TASK_FILE`、`DOWNLOAD_FILE`、`RESULT_FILE`
-- `CURRENT_BATCH_FILE`、`BLOB_FILE`、`VIDEO_DB_FILE`
-- `DOWNLOAD_SOURCE_ROOT`（默认 `D:\h`）
-- `DOWNLOAD_TARGET_ROOT`（默认 `G:\h`）
-- `VIDEO_LIBRARY_ROOT`（默认 `G:\h`）
-
-## 队列格式
-
-- `download.txt`：每行 `URL<TAB>目录`。批量下载器要求目录位于 `DOWNLOAD_SOURCE_ROOT` 下，下载完成后映射到 `DOWNLOAD_TARGET_ROOT`。
-- `get-download-links.js` 会把搜索关键词清理为目录名，并在 `DOWNLOAD_SOURCE_ROOT` 下创建目录，再将该绝对路径写入 TAB 后面。
-- `get-latest.js`：每行 `标题 URL`，由 `send-latest.js` 读取。
-- `javdb.js`：每行 `链接<TAB>搜索词`，保存在 `js/result.txt`。
+- TASK_FILE（默认 task.txt）
+- VIDEO_LINKS_FILE（默认 video-links.txt）
+- FILTERED_LINKS_FILE（默认 filtered-video-links.txt）
+- PLAYLIST_LINKS_FILE（默认 playlist-links.txt）
+- DOWNLOAD_FILE（默认 download.txt）
+- RUNNING_FILE（默认 downloading.txt）
+- RETRY_FILE（默认 retry.txt）
+- VIDEO_DB_FILE（默认 videos.db）
+- DOWNLOAD_ROOT（默认 G:\h；兼容旧变量 DOWNLOAD_TARGET_ROOT）
+- VIDEO_LIBRARY_ROOT（默认 G:\h）
 
 ## 安全提醒
 
-aria2 RPC 密钥曾经出现在公开仓库历史中。当前脚本已改为读取环境变量，但这不会撤销已经泄露的旧密钥。请在 aria2 配置中轮换/撤销旧密钥。
+aria2 RPC 密钥曾经出现在公开仓库历史中。当前脚本从环境变量读取密钥，但这不会撤销已经泄露的旧密钥。请在 aria2 配置中轮换/撤销它。

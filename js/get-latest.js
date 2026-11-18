@@ -1,47 +1,57 @@
 const { withPage } = require('./lib/browser');
-const { readLines, writeLinesAtomic, appendLine } = require('./lib/queue');
+const { readDownloadTask } = require('./lib/hanime-download');
+const { readLines, appendLine, parseDownloadTasks } = require('./lib/queue');
+const { FILTERED_LINKS_FILE, DOWNLOAD_FILE, RUNNING_FILE } = require('./lib/config');
 
-const { TASK_FILE, RESULT_FILE } = require('./lib/config');
-
-async function readLatestDetails(page, url) {
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => {
-        const title = document.querySelector('h3')?.textContent.trim();
-        const link = document.querySelector('.exoclick-popunder')?.getAttribute('data-url');
-        return Boolean(title && link);
-    }, { timeout: 120000 });
-
-    return page.evaluate(() => ({
-        title: document.querySelector('h3').textContent
-            .trim().replace(/\s+/g, ' ').replace(/ \S+$/, ''),
-        url: document.querySelector('.exoclick-popunder').getAttribute('data-url')
-    }));
+function getExistingWatchUrls(outputFile) {
+    const queued = new Set([
+        ...parseDownloadTasks(DOWNLOAD_FILE).valid.map(item => item.watchUrl),
+        ...parseDownloadTasks(outputFile).valid.map(item => item.watchUrl)
+    ]);
+    const running = readLines(RUNNING_FILE).flatMap(line => {
+        const fields = line.split('\t');
+        return fields.length === 4 ? [fields[3]] : [];
+    });
+    return new Set([...queued, ...running]);
 }
 
 async function main() {
-    const urls = readLines(TASK_FILE);
-    writeLinesAtomic(RESULT_FILE, []);
-    if (!urls.length) {
-        console.log('task.txt 没有 URL。');
+    const inputFile = process.argv[2] || FILTERED_LINKS_FILE;
+    const outputFile = process.argv[3] || DOWNLOAD_FILE;
+    const watchUrls = readLines(inputFile);
+    if (!watchUrls.length) {
+        console.log('没有需要处理的视频页链接：' + inputFile);
         return;
     }
 
+    const seen = getExistingWatchUrls(outputFile);
+    let saved = 0;
+    let skipped = 0;
+    let errors = 0;
+
     await withPage(async page => {
-        for (const url of urls) {
+        for (const [index, watchUrl] of watchUrls.entries()) {
             try {
-                const result = await readLatestDetails(page, url);
-                appendLine(RESULT_FILE, result.title + ' ' + result.url);
-                console.log(result.title + ' ' + result.url);
+                const task = await readDownloadTask(page, watchUrl);
+                if (seen.has(task.watchUrl)) {
+                    skipped++;
+                    continue;
+                }
+                appendLine(outputFile, [task.title, task.url, task.watchUrl].join('\t'));
+                seen.add(task.watchUrl);
+                saved++;
+                console.log('[' + (index + 1) + '/' + watchUrls.length + '] [OK] ' + task.title);
             } catch (error) {
-                console.error('[FAILED] ' + url + ': ' + error.message);
+                errors++;
+                console.error('[FAILED] ' + watchUrl + ': ' + error.message);
             }
         }
     });
 
-    console.log('处理完成：' + RESULT_FILE);
+    console.log('下载链接提取完成：新增 ' + saved + '，重复 ' + skipped + '，失败 ' + errors + ' -> ' + outputFile);
 }
 
 main().catch(error => {
-    console.error(error);
+    console.error(error.message);
     process.exitCode = 1;
 });
