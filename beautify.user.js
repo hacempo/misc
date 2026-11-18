@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      5.1
+// @version      6.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -95,8 +95,8 @@
     const currentSite = SITES.find(site => site.domains.some(isDomainMatch));
     const currentSettings = currentSite && siteSettings.get(currentSite.id);
 
-    // 非目标网站、或该站点的两项功能都关闭：不注入任何东西。
-    if (!currentSite || (!currentSettings.style && !currentSettings.block)) return;
+    // 设置界面需要在所有网站都可访问，因此先完成规则定义和设置菜单注册，
+    // 再判断当前网页是否需要注入美化/屏蔽功能。
 
 
     /* =====================================================================
@@ -479,6 +479,401 @@
     ];
 
 
+
+    /* =====================================================================
+     * 独立规则设置
+     * 每个 CSS 选择器单独保存开关；特殊 JS 规则也纳入设置界面。
+     * ===================================================================== */
+
+    const itemEnabledKey = (feature, siteId, itemId) =>
+        'beautify:item:' + feature + ':' + siteId + ':' + itemId;
+
+    const isItemEnabled = (feature, siteId, itemId, defaultEnabled = true) =>
+        GM_getValue(itemEnabledKey(feature, siteId, itemId), defaultEnabled);
+
+    const hashRuleIdentity = value => {
+        let hash = 2166136261;
+        for (let i = 0; i < value.length; i++) {
+            hash ^= value.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(36);
+    };
+
+    const SPECIAL_RULES = {
+        zhihu: {
+            style: [
+                {
+                    id: 'zhihu-header-width',
+                    title: '顶栏宽度自适应',
+                    description: '根据页面主体实际宽度动态设置顶栏宽度。'
+                }
+            ],
+            block: []
+        },
+        bilibili: {
+            style: [
+                {
+                    id: 'bili-comment-content-padding',
+                    title: '评论区顶部间距',
+                    description: '将评论区内容区域 #contents 的顶部内边距设为 0。'
+                },
+                {
+                    id: 'bili-comment-navbar-margin',
+                    title: '评论区导航栏间距',
+                    description: '将评论区 #navbar 的底部外边距设为 0。'
+                }
+            ],
+            block: [
+                {
+                    id: 'bili-goods-comments',
+                    title: '屏蔽带商品标记的评论',
+                    description: '评论或回复包含 data-type="goods" 标记时隐藏整条评论。'
+                },
+                {
+                    id: 'bili-comment-footers',
+                    title: '屏蔽评论操作栏',
+                    description: '隐藏评论和回复 Shadow DOM 中的 #footer。'
+                },
+                {
+                    id: 'bili-comment-input',
+                    title: '屏蔽评论输入框',
+                    description: '隐藏评论区顶部输入框 #commentbox。'
+                },
+                {
+                    id: 'bili-floating-comment-input',
+                    title: '屏蔽悬浮评论输入框',
+                    description: '隐藏滚动页面时出现的底部悬浮输入框。'
+                }
+            ]
+        }
+    };
+
+    const ruleItemId = (feature, rule, selector) => {
+        const identity = JSON.stringify({
+            selector,
+            domains: rule.domains || [],
+            onlyPaths: rule.onlyPaths || [],
+            excludePaths: rule.excludePaths || [],
+            media: rule.media || '',
+            declarations: rule.declarations || null,
+            enabled: rule.enabled !== false
+        });
+        return 'rule-' + hashRuleIdentity(feature + ':' + identity);
+    };
+
+    const getSiteRuleItems = site => {
+        const style = (STYLE_RULES[site.id] || []).flatMap(rule =>
+            rule.selectors.map(selector => ({
+                id: ruleItemId('style', rule, selector),
+                feature: 'style',
+                title: selector,
+                detail: rule.media ? '媒体条件：' + rule.media : '',
+                rule,
+                selector,
+                defaultEnabled: rule.enabled !== false
+            }))
+        );
+
+        const block = BLOCK_RULES
+            .filter(rule => !rule.domains || rule.domains.some(domain =>
+                site.domains.some(siteDomain =>
+                    siteDomain === domain ||
+                    siteDomain.endsWith('.' + domain) ||
+                    domain.endsWith('.' + siteDomain)
+                )
+            ))
+            .flatMap(rule => rule.selectors.map(selector => ({
+                id: ruleItemId('block', rule, selector),
+                feature: 'block',
+                title: selector,
+                detail: [
+                    rule.domains ? '域名：' + rule.domains.join('、') : '',
+                    rule.onlyPaths ? '仅路径：' + rule.onlyPaths.join('、') : '',
+                    rule.excludePaths ? '排除路径：' + rule.excludePaths.join('、') : ''
+                ].filter(Boolean).join(' · '),
+                rule,
+                selector,
+                defaultEnabled: rule.enabled !== false
+            })));
+
+        const special = SPECIAL_RULES[site.id] || { style: [], block: [] };
+        return {
+            style: [...style, ...special.style.map(item => ({
+                ...item,
+                feature: 'style',
+                detail: item.description,
+                special: true,
+                defaultEnabled: true
+            }))],
+            block: [...block, ...special.block.map(item => ({
+                ...item,
+                feature: 'block',
+                detail: item.description,
+                special: true,
+                defaultEnabled: true
+            }))]
+        };
+    };
+
+    const allSiteRuleItems = new Map(
+        SITES.map(site => [site.id, getSiteRuleItems(site)])
+    );
+
+    let settingsHost = null;
+
+    function openSettings() {
+        if (settingsHost && settingsHost.isConnected) {
+            settingsHost.shadowRoot.querySelector('.close-button').focus();
+            return;
+        }
+
+        const selectedAtStart = currentSite || SITES[0];
+        let selectedSite = selectedAtStart;
+
+        const host = document.createElement('div');
+        host.id = 'beautify-settings-host';
+        const root = host.attachShadow({ mode: 'open' });
+        settingsHost = host;
+
+        const style = document.createElement('style');
+        style.textContent = [
+            ':host{position:fixed;inset:0;z-index:2147483647;color:#202938;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;}',
+            '*{box-sizing:border-box;}',
+            'button,input{font:inherit;}',
+            '.shell{position:absolute;inset:0;display:flex;flex-direction:column;background:#f4f6fa;}',
+            '.topbar{height:68px;flex:0 0 68px;display:flex;align-items:center;gap:18px;padding:0 24px;background:#fff;border-bottom:1px solid #e4e8ef;box-shadow:0 2px 10px rgba(20,35,60,.04);}',
+            '.brand-mark{width:34px;height:34px;border-radius:10px;background:#eaf1ff;color:#2864c5;display:grid;place-items:center;font-weight:800;font-size:17px;}',
+            '.top-title{min-width:0;display:flex;flex-direction:column;}',
+            '.eyebrow{font-size:11px;letter-spacing:.08em;color:#8390a3;font-weight:700;}',
+            '.current-name{font-size:17px;font-weight:750;color:#202938;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+            '.top-spacer{flex:1;}',
+            '.save-hint{color:#778397;font-size:12px;white-space:nowrap;}',
+            '.close-button{width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:#657287;font-size:25px;line-height:1;cursor:pointer;}',
+            '.close-button:hover{background:#f0f2f6;color:#263247;}',
+            '.content{min-height:0;flex:1;display:grid;grid-template-columns:236px minmax(0,1fr);}',
+            '.sidebar{min-height:0;overflow:auto;background:#fff;border-right:1px solid #e4e8ef;padding:24px 14px;}',
+            '.side-heading{padding:0 10px 12px;color:#8994a5;font-size:11px;font-weight:750;letter-spacing:.09em;}',
+            '.site-list{display:flex;flex-direction:column;gap:4px;}',
+            '.site-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:0;border-radius:9px;background:transparent;color:#4e5b70;text-align:left;cursor:pointer;}',
+            '.site-button:hover{background:#f5f7fb;}',
+            '.site-button.active{background:#edf3ff;color:#245bb5;font-weight:700;}',
+            '.site-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+            '.site-count{font-size:11px;color:#98a2b1;font-variant-numeric:tabular-nums;}',
+            '.main{min-width:0;min-height:0;overflow:auto;padding:30px clamp(18px,4vw,52px) 50px;}',
+            '.main-inner{max-width:980px;margin:0 auto;}',
+            '.intro{margin:0 0 22px;}',
+            '.intro h1{margin:0 0 6px;font-size:23px;line-height:1.3;color:#202938;}',
+            '.intro p{margin:0;color:#778397;font-size:13px;}',
+            '.groups{display:grid;grid-template-columns:1fr;gap:18px;}',
+            '.group{background:#fff;border:1px solid #e5e9f0;border-radius:13px;overflow:hidden;box-shadow:0 3px 12px rgba(24,39,65,.035);}',
+            '.group-head{display:flex;align-items:center;gap:14px;padding:17px 20px;border-bottom:1px solid #edf0f4;}',
+            '.group-heading{min-width:0;flex:1;}',
+            '.group-title{font-size:16px;font-weight:750;color:#263247;}',
+            '.group-desc{margin-top:2px;font-size:12px;color:#8a95a5;}',
+            '.group-count{margin-right:6px;color:#98a2b1;font-size:12px;white-space:nowrap;}',
+            '.master-toggle{display:flex;align-items:center;gap:7px;color:#536176;font-size:12px;white-space:nowrap;cursor:pointer;}',
+            '.switch{width:34px;height:19px;accent-color:#2868cf;cursor:pointer;}',
+            '.rule-list{padding:4px 20px;}',
+            '.rule-row{min-height:54px;display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid #f0f2f6;}',
+            '.rule-row:last-child{border-bottom:0;}',
+            '.rule-info{min-width:0;flex:1;}',
+            '.rule-title{display:block;color:#354257;font-size:13px;overflow-wrap:anywhere;}',
+            '.rule-title code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#36475f;background:#f5f7fa;padding:2px 5px;border-radius:4px;}',
+            '.rule-detail{margin-top:3px;color:#929cac;font-size:11px;overflow-wrap:anywhere;}',
+            '.rule-toggle{flex:0 0 auto;width:18px;height:18px;accent-color:#2868cf;cursor:pointer;}',
+            '.empty{padding:22px 0;color:#a0a9b6;font-size:13px;}',
+            '.master-off .rule-list{opacity:.65;}',
+            '.footer-note{margin:18px 2px 0;color:#98a2b1;font-size:12px;}',
+            '@media(max-width:700px){.topbar{padding:0 14px;gap:10px;}.save-hint{display:none;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:22px 12px 36px;}.intro h1{font-size:19px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.group-desc{max-width:180px;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
+        ].join('\n');
+
+        const makeElement = (tag, className, text) => {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+
+        const shell = makeElement('div', 'shell');
+        const topbar = makeElement('header', 'topbar');
+        const mark = makeElement('div', 'brand-mark', 'B');
+        const topTitle = makeElement('div', 'top-title');
+        const eyebrow = makeElement('div', 'eyebrow', 'BEAUTIFY SETTINGS');
+        const currentName = makeElement('div', 'current-name', selectedSite.name);
+        topTitle.append(eyebrow, currentName);
+        const spacer = makeElement('div', 'top-spacer');
+        const saveHint = makeElement('div', 'save-hint', '设置自动保存 · 刷新网页后生效');
+        const closeButton = makeElement('button', 'close-button', '×');
+        closeButton.type = 'button';
+        closeButton.title = '关闭设置';
+        closeButton.setAttribute('aria-label', '关闭设置');
+        closeButton.addEventListener('click', closeSettings);
+        topbar.append(mark, topTitle, spacer, saveHint, closeButton);
+
+        const contentArea = makeElement('div', 'content');
+        const sidebar = makeElement('aside', 'sidebar');
+        sidebar.append(makeElement('div', 'side-heading', '网站列表'));
+        const siteList = makeElement('nav', 'site-list');
+        siteList.setAttribute('aria-label', '网站设置');
+        sidebar.append(siteList);
+        const main = makeElement('main', 'main');
+        const mainInner = makeElement('div', 'main-inner');
+        main.append(mainInner);
+        contentArea.append(sidebar, main);
+        shell.append(topbar, contentArea);
+        root.append(style, shell);
+
+        function closeSettings() {
+            window.removeEventListener('keydown', onKeyDown);
+            if (host.parentNode) host.parentNode.removeChild(host);
+            if (settingsHost === host) settingsHost = null;
+        }
+
+        function onKeyDown(event) {
+            if (event.key === 'Escape') closeSettings();
+        }
+
+        const updateSavedHint = () => {
+            saveHint.textContent = '已自动保存 · 刷新对应网页后生效';
+        };
+
+        const makeToggle = (checked, className, onChange, labelText) => {
+            const label = makeElement('label', className || 'master-toggle');
+            if (labelText) label.append(makeElement('span', '', labelText));
+            const input = makeElement('input', 'switch');
+            input.type = 'checkbox';
+            input.checked = checked;
+            input.addEventListener('change', () => onChange(input.checked));
+            label.append(input);
+            return { label, input };
+        };
+
+        const getMeta = item => {
+            if (item.special) return item.detail || '';
+            const details = [];
+            const rule = item.rule;
+            if (rule.domains) details.push('域名：' + rule.domains.join('、'));
+            if (rule.onlyPaths) details.push('仅路径：' + rule.onlyPaths.join('、'));
+            if (rule.excludePaths) details.push('排除路径：' + rule.excludePaths.join('、'));
+            if (rule.media) details.push('媒体条件：' + rule.media);
+            return details.join(' · ') || item.detail || '当前网站';
+        };
+
+        const makeRuleRow = (site, feature, item) => {
+            const row = makeElement('div', 'rule-row');
+            const info = makeElement('div', 'rule-info');
+            const title = makeElement('div', 'rule-title');
+            if (item.special) {
+                title.textContent = item.title;
+            } else {
+                const code = makeElement('code', '', item.title);
+                title.append(code);
+            }
+            const detail = makeElement('div', 'rule-detail', getMeta(item));
+            info.append(title, detail);
+
+            const checkbox = makeElement('input', 'rule-toggle');
+            checkbox.type = 'checkbox';
+            checkbox.checked = isItemEnabled(feature, site.id, item.id, item.defaultEnabled);
+            checkbox.title = '启用或关闭此项';
+            checkbox.setAttribute('aria-label', (checkbox.checked ? '关闭' : '开启') + item.title);
+            checkbox.addEventListener('change', () => {
+                GM_setValue(itemEnabledKey(feature, site.id, item.id), checkbox.checked);
+                checkbox.setAttribute('aria-label', (checkbox.checked ? '关闭' : '开启') + item.title);
+                updateSavedHint();
+            });
+
+            row.append(info, checkbox);
+            return row;
+        };
+
+        const renderGroup = (site, feature, title, description, items) => {
+            const group = makeElement('section', 'group');
+            const head = makeElement('div', 'group-head');
+            const heading = makeElement('div', 'group-heading');
+            heading.append(
+                makeElement('div', 'group-title', title),
+                makeElement('div', 'group-desc', description)
+            );
+
+            const count = makeElement('div', 'group-count', items.length + ' 项');
+            const master = makeToggle(
+                GM_getValue(featureEnabledKey(feature, site.id), true),
+                'master-toggle',
+                enabled => {
+                    GM_setValue(featureEnabledKey(feature, site.id), enabled);
+                    group.classList.toggle('master-off', !enabled);
+                    updateSavedHint();
+                },
+                '总开关'
+            );
+
+            head.append(heading, count, master.label);
+            const list = makeElement('div', 'rule-list');
+            if (items.length === 0) {
+                list.append(makeElement('div', 'empty', '这个网站暂时没有配置此类规则。'));
+            } else {
+                for (const item of items) list.append(makeRuleRow(site, feature, item));
+            }
+
+            group.append(head, list);
+            group.classList.toggle('master-off', !master.input.checked);
+            return group;
+        };
+
+        function renderSite(site) {
+            selectedSite = site;
+            currentName.textContent = site.name;
+            mainInner.replaceChildren();
+
+            const intro = makeElement('div', 'intro');
+            intro.append(
+                makeElement('h1', '', site.name + ' 设置'),
+                makeElement('p', '', '分别管理页面布局美化和元素屏蔽。每条规则都可以独立启用或关闭。')
+            );
+
+            const items = allSiteRuleItems.get(site.id);
+            const groups = makeElement('div', 'groups');
+            groups.append(
+                renderGroup(site, 'style', '页面美化', '调整宽度、布局、间距等页面样式。', items.style),
+                renderGroup(site, 'block', '元素屏蔽', '隐藏不需要的页面元素。', items.block)
+            );
+            mainInner.append(intro, groups);
+            updateSavedHint();
+
+            for (const button of siteList.querySelectorAll('.site-button')) {
+                const active = button.dataset.siteId === site.id;
+                button.classList.toggle('active', active);
+                if (active) button.setAttribute('aria-current', 'page');
+                else button.removeAttribute('aria-current');
+            }
+        }
+
+        for (const site of SITES) {
+            const items = allSiteRuleItems.get(site.id);
+            const total = items.style.length + items.block.length;
+            const button = makeElement('button', 'site-button');
+            button.type = 'button';
+            button.dataset.siteId = site.id;
+            const name = makeElement('span', 'site-name', site.name);
+            const count = makeElement('span', 'site-count', String(total));
+            button.append(name, count);
+            button.addEventListener('click', () => renderSite(site));
+            siteList.append(button);
+        }
+
+        renderSite(selectedSite);
+        window.addEventListener('keydown', onKeyDown);
+        (document.body || document.documentElement).appendChild(host);
+        closeButton.focus();
+    }
+
+    GM_registerMenuCommand('设置', openSettings);
+
+    // 非目标网站、或该站点的两项总开关都关闭：不注入页面规则，但仍保留设置入口。
+    if (!currentSite || (!currentSettings.style && !currentSettings.block)) return;
+
     /* =====================================================================
      * 生成并注入 CSS（样式在前、屏蔽在后，屏蔽优先）
      * ===================================================================== */
@@ -492,17 +887,29 @@
         return rule.media ? `@media ${rule.media} {\n${body}\n}` : body;
     };
 
+    const currentRuleItems = allSiteRuleItems.get(currentSite.id);
+
     const styleCss = currentSettings.style
-        ? (STYLE_RULES[currentSite.id] || [])
-            .filter(isRuleActive)
-            .map(buildStyleRule)
+        ? currentRuleItems.style
+            .filter(item =>
+                !item.special &&
+                isRuleActive(item.rule) &&
+                isItemEnabled('style', currentSite.id, item.id, item.defaultEnabled)
+            )
+            .map(item => buildStyleRule({
+                ...item.rule,
+                selectors: [item.selector]
+            }))
         : [];
 
     const blockCss = currentSettings.block
-        ? BLOCK_RULES
-            .filter(isRuleActive)
-            .flatMap(rule => rule.selectors)
-            .map(selector => `${selector} {\n    display: none !important;\n}`)
+        ? currentRuleItems.block
+            .filter(item =>
+                !item.special &&
+                isRuleActive(item.rule) &&
+                isItemEnabled('block', currentSite.id, item.id, item.defaultEnabled)
+            )
+            .map(item => `${item.selector} {\n    display: none !important;\n}`)
         : [];
 
     const mountStyle = css => {
@@ -564,7 +971,11 @@
         observer.observe(document.documentElement, { childList: true });
     };
 
-    if (currentSite.id === 'zhihu' && currentSettings.style) {
+    if (
+        currentSite.id === 'zhihu' &&
+        currentSettings.style &&
+        isItemEnabled('style', 'zhihu', 'zhihu-header-width')
+    ) {
         watchZhihuContentWidth();
     }
 
@@ -579,8 +990,20 @@
      *        └─ #navbar、#commentbox、悬浮输入框
      * ===================================================================== */
 
-    const installBilibiliShadowRules = ({ style: styleEnabled, block: blockEnabled }) => {
-        if (hostname !== 'www.bilibili.com' || (!styleEnabled && !blockEnabled)) return;
+    const installBilibiliShadowRules = ({
+        commentPadding,
+        navbarMargin,
+        goodsComments,
+        commentFooters,
+        commentInput,
+        floatingCommentInput
+    }) => {
+        const hasActiveRule = [
+            commentPadding, navbarMargin, goodsComments,
+            commentFooters, commentInput, floatingCommentInput
+        ].some(Boolean);
+
+        if (hostname !== 'www.bilibili.com' || !hasActiveRule) return;
 
         const SHADOW_COMPONENTS = new Set([
             'bili-comments',
@@ -671,7 +1094,9 @@
 
             const walk = node => {
                 if (node.nodeType === Node.ELEMENT_NODE) {
-                    if (node.matches('[data-type="goods"]')) hasGoods = true;
+                    if (goodsComments && node.matches('[data-type="goods"]')) {
+                        hasGoods = true;
+                    }
 
                     const tag = node.localName;
                     const shadowRoot = node.shadowRoot;
@@ -680,8 +1105,9 @@
                         observeRoot(shadowRoot);
 
                         if (
-                            tag === 'bili-comment-renderer' ||
-                            tag === 'bili-comment-reply-renderer'
+                            commentFooters &&
+                            (tag === 'bili-comment-renderer' ||
+                             tag === 'bili-comment-reply-renderer')
                         ) {
                             hide(shadowRoot.querySelector('#footer'));
                         }
@@ -696,7 +1122,7 @@
             };
 
             walk(thread);
-            setThreadHidden(thread, hasGoods);
+            if (goodsComments) setThreadHidden(thread, hasGoods);
         };
 
         const applyRules = () => {
@@ -710,12 +1136,11 @@
 
             observeRoot(root);
 
-            // 评论区布局调整属于美化；评论内容处理属于屏蔽。
-            if (styleEnabled) {
+            if (commentPadding) {
                 setImportantStyle(root.querySelector('#contents'), 'padding-top', '0px');
             }
 
-            if (blockEnabled) {
+            if (goodsComments || commentFooters) {
                 root.querySelectorAll('#feed > bili-comment-thread-renderer')
                     .forEach(scanThread);
             }
@@ -729,15 +1154,14 @@
             }
 
             if (headerRoot) {
-                observeRoot(headerRoot, blockEnabled);
+                observeRoot(headerRoot, commentInput || floatingCommentInput);
 
-                if (styleEnabled) {
+                if (navbarMargin) {
                     setImportantStyle(headerRoot.querySelector('#navbar'), 'margin-bottom', '0px');
                 }
 
-                if (blockEnabled) {
-                    // 输入框以及滚动后出现的悬浮输入框
-                    hide(headerRoot.querySelector('#commentbox'));
+                if (commentInput) hide(headerRoot.querySelector('#commentbox'));
+                if (floatingCommentInput) {
                     hide(headerRoot.querySelector('.bili-comments-bottom-fixed-wrapper'));
                 }
             }
@@ -784,5 +1208,20 @@
         }
     };
 
-    if (currentSite.id === 'bilibili') installBilibiliShadowRules(currentSettings);
+    if (currentSite.id === 'bilibili') {
+        installBilibiliShadowRules({
+            commentPadding: currentSettings.style &&
+                isItemEnabled('style', 'bilibili', 'bili-comment-content-padding'),
+            navbarMargin: currentSettings.style &&
+                isItemEnabled('style', 'bilibili', 'bili-comment-navbar-margin'),
+            goodsComments: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-goods-comments'),
+            commentFooters: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-comment-footers'),
+            commentInput: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-comment-input'),
+            floatingCommentInput: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-floating-comment-input')
+        });
+    }
 })();
