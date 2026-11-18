@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      5.0
-// @description  为指定网站调整页面布局并屏蔽多余元素
+// @version      5.1
+// @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
 // @noframes
@@ -15,8 +15,8 @@
     'use strict';
 
     /*
-     * 站点列表。每个站点一个开关，同时控制该站点的样式和屏蔽规则。
-     * 未设置过的站点默认启用；在油猴菜单中切换。
+     * 站点列表。每个站点的美化与屏蔽分别控制。
+     * 未设置过的功能默认启用；在油猴菜单中独立切换。
      */
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
@@ -52,24 +52,51 @@
         (!rule.onlyPaths || matchesPath(rule.onlyPaths)) &&
         !(rule.excludePaths && matchesPath(rule.excludePaths));
 
-    const enabledKey = id => 'beautify:enabled:' + id;
+    const legacyEnabledKey = id => 'beautify:enabled:' + id;
+    const featureEnabledKey = (feature, id) => 'beautify:' + feature + '-enabled:' + id;
+
+    // 首次升级时沿用旧版总开关状态，之后两项独立保存。
+    const readFeatureEnabled = (site, feature) => {
+        const key = featureEnabledKey(feature, site.id);
+        const saved = GM_getValue(key, undefined);
+
+        if (typeof saved === 'boolean') return saved;
+
+        const legacyEnabled = GM_getValue(legacyEnabledKey(site.id), true);
+        GM_setValue(key, legacyEnabled);
+        return legacyEnabled;
+    };
+
+    const siteSettings = new Map();
 
     for (const site of SITES) {
-        const isEnabled = GM_getValue(enabledKey(site.id), true);
+        const styleEnabled = readFeatureEnabled(site, 'style');
+        const blockEnabled = readFeatureEnabled(site, 'block');
 
-        GM_registerMenuCommand(
-            (isEnabled ? '关闭' : '开启') + '「' + site.name + '」美化与屏蔽',
-            () => {
-                GM_setValue(enabledKey(site.id), !isEnabled);
-                location.reload();
-            }
-        );
+        siteSettings.set(site.id, {
+            style: styleEnabled,
+            block: blockEnabled
+        });
+
+        const registerToggle = (feature, label, enabled) => {
+            GM_registerMenuCommand(
+                (enabled ? '关闭' : '开启') + '「' + site.name + '」' + label,
+                () => {
+                    GM_setValue(featureEnabledKey(feature, site.id), !enabled);
+                    location.reload();
+                }
+            );
+        };
+
+        registerToggle('style', '美化', styleEnabled);
+        registerToggle('block', '屏蔽', blockEnabled);
     }
 
     const currentSite = SITES.find(site => site.domains.some(isDomainMatch));
+    const currentSettings = currentSite && siteSettings.get(currentSite.id);
 
-    // 非目标网站、或该站点开关已关闭：不注入任何东西。
-    if (!currentSite || !GM_getValue(enabledKey(currentSite.id), true)) return;
+    // 非目标网站、或该站点的两项功能都关闭：不注入任何东西。
+    if (!currentSite || (!currentSettings.style && !currentSettings.block)) return;
 
 
     /* =====================================================================
@@ -465,14 +492,18 @@
         return rule.media ? `@media ${rule.media} {\n${body}\n}` : body;
     };
 
-    const styleCss = (STYLE_RULES[currentSite.id] || [])
-        .filter(isRuleActive)
-        .map(buildStyleRule);
+    const styleCss = currentSettings.style
+        ? (STYLE_RULES[currentSite.id] || [])
+            .filter(isRuleActive)
+            .map(buildStyleRule)
+        : [];
 
-    const blockCss = BLOCK_RULES
-        .filter(isRuleActive)
-        .flatMap(rule => rule.selectors)
-        .map(selector => `${selector} {\n    display: none !important;\n}`);
+    const blockCss = currentSettings.block
+        ? BLOCK_RULES
+            .filter(isRuleActive)
+            .flatMap(rule => rule.selectors)
+            .map(selector => `${selector} {\n    display: none !important;\n}`)
+        : [];
 
     const mountStyle = css => {
         const style = document.createElement('style');
@@ -533,7 +564,9 @@
         observer.observe(document.documentElement, { childList: true });
     };
 
-    if (currentSite.id === 'zhihu') watchZhihuContentWidth();
+    if (currentSite.id === 'zhihu' && currentSettings.style) {
+        watchZhihuContentWidth();
+    }
 
 
     /* =====================================================================
@@ -546,8 +579,8 @@
      *        └─ #navbar、#commentbox、悬浮输入框
      * ===================================================================== */
 
-    const installBilibiliShadowRules = () => {
-        if (hostname !== 'www.bilibili.com') return;
+    const installBilibiliShadowRules = ({ style: styleEnabled, block: blockEnabled }) => {
+        if (hostname !== 'www.bilibili.com' || (!styleEnabled && !blockEnabled)) return;
 
         const SHADOW_COMPONENTS = new Set([
             'bili-comments',
@@ -677,10 +710,15 @@
 
             observeRoot(root);
 
-            setImportantStyle(root.querySelector('#contents'), 'padding-top', '0px');
+            // 评论区布局调整属于美化；评论内容处理属于屏蔽。
+            if (styleEnabled) {
+                setImportantStyle(root.querySelector('#contents'), 'padding-top', '0px');
+            }
 
-            root.querySelectorAll('#feed > bili-comment-thread-renderer')
-                .forEach(scanThread);
+            if (blockEnabled) {
+                root.querySelectorAll('#feed > bili-comment-thread-renderer')
+                    .forEach(scanThread);
+            }
 
             const headerHost = root.querySelector('#header > bili-comments-header-renderer');
             const headerRoot = headerHost && headerHost.shadowRoot;
@@ -691,12 +729,17 @@
             }
 
             if (headerRoot) {
-                observeRoot(headerRoot, true);
+                observeRoot(headerRoot, blockEnabled);
 
-                setImportantStyle(headerRoot.querySelector('#navbar'), 'margin-bottom', '0px');
-                // 输入框以及滚动后出现的悬浮输入框
-                hide(headerRoot.querySelector('#commentbox'));
-                hide(headerRoot.querySelector('.bili-comments-bottom-fixed-wrapper'));
+                if (styleEnabled) {
+                    setImportantStyle(headerRoot.querySelector('#navbar'), 'margin-bottom', '0px');
+                }
+
+                if (blockEnabled) {
+                    // 输入框以及滚动后出现的悬浮输入框
+                    hide(headerRoot.querySelector('#commentbox'));
+                    hide(headerRoot.querySelector('.bili-comments-bottom-fixed-wrapper'));
+                }
             }
         };
 
@@ -741,5 +784,5 @@
         }
     };
 
-    if (currentSite.id === 'bilibili') installBilibiliShadowRules();
+    if (currentSite.id === 'bilibili') installBilibiliShadowRules(currentSettings);
 })();
