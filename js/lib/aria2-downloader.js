@@ -118,8 +118,9 @@ async function runAria2Downloader() {
 
             const updated = await updateTaskStates(aria2, active, database);
             active = updated.active;
-            if (updated.changed) saveSendingTasks(active);
+            // Persist retry URLs first: a crash must not drop a failed task.
             if (updated.failures.length) appendLinesUnique(DOWNLOAD_FILE, updated.failures);
+            if (updated.changed) saveSendingTasks(active);
 
             if (pending.length && !stopping) {
                 const counts = await aria2.getTaskCounts();
