@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.2
+// @version      6.3
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -442,6 +442,48 @@
         }
     ];
 
+    /*
+     * 未确认/暂不启用的历史屏蔽规则（统一归档在此处，不参与注入）。
+     *
+     * NGA：旧版元信息条、页脚、导航和菜单项；当前改用 .c1 及用户确认的列表项。
+     * ngabbs.com##.posterInfoLine
+     * ngabbs.com##.posterInfoLineB
+     * ngabbs.com###footer
+     * ngabbs.com###b_nav
+     * ngabbs.com###m_nav
+     * ngabbs.com###m_pbtntop
+     * ngabbs.com###mainmenu
+     * ngabbs.com###custombg
+     *
+     * 知乎：用途未确认的动态类名、文章卡片或推广卡片。
+     * www.zhihu.com##.css-jghqwm
+     * www.zhihu.com##.css-140jo2
+     * www.zhihu.com##.css-a3pqj1
+     * www.zhihu.com##.css-dvccr2
+     * www.zhihu.com##.css-kt4t4n
+     * www.zhihu.com##.css-upmq18
+     * www.zhihu.com##.css-1fo89v5
+     * www.zhihu.com##.css-1m4ta6s
+     * www.zhihu.com##.ContentItem-time
+     * www.zhihu.com##.TopstoryItem:has(.ArticleItem)
+     * www.zhihu.com##.TopstoryItem--advertCard
+     * www.zhihu.com##.SearchTabs-profile
+     *
+     * VoteButton 不单独启用：已由 .ContentItem-actions > :first-child 覆盖。
+     * www.zhihu.com##.VoteButton
+     *
+     * 哔哩哔哩：资源/推荐区域的用途或出现条件尚未确认。
+     * www.bilibili.com##.video-resource-list
+     * www.bilibili.com##.video-page-special-card-small
+     *
+     * X：旧版动态类名/侧栏及回复容器选择器，现已由用户确认的首页发帖区和帖子操作栏替代。
+     * x.com##header
+     * x.com##[data-testid="sidebarColumn"]
+     * x.com##[data-testid="inline_reply_offscreen"]
+     * x.com##.r-rull8r
+     * x.com##[aria-label="主页时间线"] > .r-184en5c
+     */
+
 
     /* =====================================================================
      * 独立规则设置
@@ -580,7 +622,7 @@
                 '.topicrow .c4': '隐藏主页帖子列表中的最后回帖人和最后回帖时间。',
                 '.c1': '隐藏 NGA 的 c1 信息列：主页显示发帖/回帖总人数，详情页显示发帖人/回帖人信息。',
                 '.cell': '隐藏主页和详情页中使用 cell 类的单元格区域，其中包含搜索框、发表新帖等按钮。',
-                '#toptopics': '隐藏首页顶部的版头/主题聚合区域，通常包含版块公告、版块信息或主题入口。',
+                '#toptopics': '隐藏 NGA 首页顶部的大块版头/主题聚合区域（按你的描述，其中包含版块公告、热帖等内容）。',
                 '#fast_post_c': '隐藏首页和详情页共用的快速发帖区域。'
             },
             '123pan': {
