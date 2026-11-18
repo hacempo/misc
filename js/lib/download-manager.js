@@ -1,7 +1,9 @@
 const Aria2Client = require('./aria2-client');
 const { readLines, writeLinesAtomic, appendLine, parseDownloadTasks, removeOriginalRows } = require('./queue');
 const { ensureDirectory } = require('./file-manager');
-const { DOWNLOAD_FILE, RUNNING_FILE, RETRY_FILE, DOWNLOAD_ROOT } = require('./config');
+const { extractVideoId } = require('./hanime-search');
+const { openVideoDatabase } = require('./video-db');
+const { DOWNLOAD_FILE, RUNNING_FILE, RETRY_FILE, DOWNLOAD_ROOT, VIDEO_DB_FILE } = require('./config');
 
 const MAX_TASKS = 5;
 const POLL_INTERVAL = 3000;
@@ -47,7 +49,7 @@ function logInvalidRows(rows) {
     }
 }
 
-async function updateRunningTasks(aria2, running) {
+async function updateRunningTasks(aria2, running, database) {
     if (!running.length) return [];
     const statuses = await aria2.getTasksByGids(running.map(item => item.gid));
     const active = [];
@@ -58,7 +60,9 @@ async function updateRunningTasks(aria2, running) {
             addRetryUrl(item.watchUrl);
             console.warn('[MISSING] aria2 中找不到任务 ' + item.gid + '，已转入 retry.txt');
         } else if (task.status === 'complete') {
-            console.log('[DONE] ' + item.title);
+            const id = extractVideoId(item.watchUrl);
+            if (id) database.insert(id);
+            console.log('[DONE] ' + item.title + (id ? ' [ID ' + id + ' 已入库]' : ''));
         } else if (task.status === 'error' || task.status === 'removed') {
             console.error('[FAILED] ' + item.title + ' code=' + (task.errorCode || '') + ' ' + (task.errorMessage || ''));
             addRetryUrl(item.watchUrl);
@@ -99,28 +103,33 @@ async function runDownloadManager() {
     const version = await aria2.test();
     console.log('aria2 ' + version.version + ' 已连接；并发上限 ' + MAX_TASKS);
 
-    let running = readRunningTasks();
-    if (running.length) console.log('[RESUME] 恢复跟踪 ' + running.length + ' 个 aria2 任务');
+    const database = openVideoDatabase(VIDEO_DB_FILE);
+    try {
+        let running = readRunningTasks();
+        if (running.length) console.log('[RESUME] 恢复跟踪 ' + running.length + ' 个 aria2 任务');
 
-    while (true) {
-        if (stopping) {
-            console.warn('已停止提交新任务；未完成任务保存在 ' + RUNNING_FILE);
-            return;
-        }
-
-        running = await updateRunningTasks(aria2, running);
-        const result = await submitAvailableTasks(aria2, running);
-        running = result.running;
-
-        if (!result.pending && !running.length) {
-            if (result.invalid) {
-                throw new Error('download.txt 中只剩无效记录；已保留原文件，请修复后重试。');
+        while (true) {
+            if (stopping) {
+                console.warn('已停止提交新任务；未完成任务保存在 ' + RUNNING_FILE);
+                return;
             }
-            console.log('下载队列已清空，所有已提交任务均已结束。');
-            return;
-        }
 
-        await sleep(POLL_INTERVAL);
+            running = await updateRunningTasks(aria2, running, database);
+            const result = await submitAvailableTasks(aria2, running);
+            running = result.running;
+
+            if (!result.pending && !running.length) {
+                if (result.invalid) {
+                    throw new Error('download.txt 中只剩无效记录；已保留原文件，请修复后重试。');
+                }
+                console.log('下载队列已清空，所有已提交任务均已结束。');
+                return;
+            }
+
+            await sleep(POLL_INTERVAL);
+        }
+    } finally {
+        database.close();
     }
 }
 
