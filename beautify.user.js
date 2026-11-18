@@ -687,6 +687,7 @@
 
     const CONFIRM_RULES = new Set([
         'block:115:.feature-float',
+        'block:115vod:.feature-float',
         'block:115:.container-leftside',
         'block:115:.ceiling-feature',
         'block:115:.ceiling-link-temp',
