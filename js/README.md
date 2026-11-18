@@ -56,14 +56,14 @@ node js/get-latest.js input.txt output.txt
 ## 文本格式
 
 - 搜索、过滤、播放列表文件：每行一个 https://hanime1.me/watch?v=视频ID。
-- download.txt：每行 标题<TAB>下载URL<TAB>原视频页URL。第三列用于下载失败时恢复原视频 ID，并生成可重新抓取的 watch 链接。
+- download.txt：每行 标题<TAB>下载URL<TAB>原视频页URL。第三列用于下载失败时恢复原视频 ID，并生成可重新抓取的 watch 链接。下载成功后，ID 会自动写入 videos.db。
 - downloading.txt：下载器内部状态文件，保存 aria2 GID 和对应任务；不要手动编辑。
 - retry.txt：每行一个失败任务的 watch 链接，可直接作为 get-latest.js 的输入。
 - JavDB 保持独立：javdb.js 读取 js/task.txt，结果写入 js/result.txt。
 
 ## 其他脚本
 
-- init-db.js：扫描本地 MP4 文件名，把文件名开头的数字 ID 写入 videos.db。
+- init-db.js：扫描本地 MP4 文件名，把文件名开头的数字 ID 写入 videos.db；下载器成功完成任务时也会自动登记对应 ID。
 - javdb.js、lib/javdb-scraper.js：JavDB 搜索和评论链接提取，和 Hanime 下载流程分离。
 
 ## 环境
