@@ -25,9 +25,6 @@ node js/get-download-links.js
 # 过滤数据库中已有的视频 ID
 node js/filter-video-links.js
 
-# 可选：从视频页提取播放列表链接
-node js/get-playlist-links.js
-
 # 下载页提取标题和下载地址，追加进统一任务文件
 node js/get-latest.js
 
@@ -36,6 +33,15 @@ node js/download.js
 
 # 失败后重新获取最新下载地址，再交给下载器
 node js/get-latest.js retry.txt
+node js/download.js
+~~~
+
+播放列表是独立的扩展来源，可以这样接入相同的下载流程：
+
+~~~powershell
+node js/get-playlist-links.js
+node js/filter-video-links.js playlist-links.txt filtered-playlist-links.txt
+node js/get-latest.js filtered-playlist-links.txt
 node js/download.js
 ~~~
 
