@@ -46,8 +46,8 @@
      *   onlyPaths           仅这些路径生效
      *   excludePaths        这些路径不生效
      */
+    // 仅判断规则的域名/路径上下文；是否启用由每条规则自己的开关决定。
     const isRuleActive = rule =>
-        rule.enabled !== false &&
         (!rule.domains || rule.domains.some(isDomainMatch)) &&
         (!rule.onlyPaths || matchesPath(rule.onlyPaths)) &&
         !(rule.excludePaths && matchesPath(rule.excludePaths));
