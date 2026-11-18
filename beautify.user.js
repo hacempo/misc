@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.0
+// @version      6.1
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -16,7 +16,7 @@
 
     /*
      * 站点列表。每个站点的美化与屏蔽分别控制。
-     * 未设置过的功能默认启用；在油猴菜单中独立切换。
+     * 所有功能统一从油猴菜单的「设置」入口管理。
      */
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
@@ -77,19 +77,6 @@
             style: styleEnabled,
             block: blockEnabled
         });
-
-        const registerToggle = (feature, label, enabled) => {
-            GM_registerMenuCommand(
-                (enabled ? '关闭' : '开启') + '「' + site.name + '」' + label,
-                () => {
-                    GM_setValue(featureEnabledKey(feature, site.id), !enabled);
-                    location.reload();
-                }
-            );
-        };
-
-        registerToggle('style', '美化', styleEnabled);
-        registerToggle('block', '屏蔽', blockEnabled);
     }
 
     const currentSite = SITES.find(site => site.domains.some(isDomainMatch));
@@ -549,6 +536,186 @@
         }
     };
 
+
+    // 每条规则的可读说明；类名语义不明确的项目会明确标记为待确认。
+    const RULE_HINTS = {
+        style: {
+            tieba: {
+                '.main-page-wrap': '取消贴吧移动端主页主内容区域的最大宽度限制。',
+                '.nav-bar-v2-fixed': '取消贴吧移动端顶部固定导航栏的最大宽度限制。'
+            },
+            zhihu: {
+                '.Question-main': '问题页主内容容器铺满可用宽度，并移除主栏之间的间距。',
+                '.Question-mainColumn': '让问题页正文主栏扩展到可用宽度，不再受固定宽度限制。',
+                '.css-1gl8cva': '问题页主栏内部容器铺满宽度，清除左右留白。',
+                '.Topstory-container': '首页内容外层铺满宽度，移除左右内边距。',
+                '.Topstory-mainColumn': '首页主内容栏占满剩余空间，取消宽度上限和右侧空白。',
+                '.Topstory-mainColumnCard': '首页主栏卡片铺满可用宽度。',
+                '.Topstory-content': '首页信息流内容区域铺满可用宽度。',
+                '.Topstory-recommend': '首页推荐内容区域铺满可用宽度。',
+                'div:has(> header.AppHeader)': '让固定顶栏容器跟随页面实际宽度，避免滚动条造成横向溢出。',
+                'header.AppHeader': '让知乎顶栏本身铺满宽度并取消左右外边距。',
+                'header.AppHeader > div': '让顶栏内部容器铺满宽度，取消内部最大宽度限制。',
+                'header.AppHeader > div > .css-51utkw': '扩展顶栏中间的导航与搜索区域，使其能利用剩余空间。',
+                'header.AppHeader > div > .css-51utkw > .css-51utkw': '扩展顶栏内部嵌套区域，避免导航和搜索容器被固定宽度限制。',
+                'header.AppHeader .css-1ndlr1n': '限制顶栏子区域不超过可用宽度，并允许其在窄屏下收缩。',
+                '.css-x84wzl': '让顶栏搜索区域占据导航和头像之间的剩余空间，并将搜索框靠右排列。',
+                '.css-x84wzl .SearchBar': '在较宽屏幕上把搜索框设为响应式宽度（约 400–540px）。',
+                '.css-x84wzl .SearchBar-tool': '让搜索工具栏填满搜索框可用宽度。',
+                '.css-14iuq0r': '取消顶栏相关区域的最大宽度限制，使其可以向左侧扩展。',
+                '.QuestionHeader': '让问题标题区域铺满页面宽度并取消左右外边距。',
+                '.QuestionHeader-content': '让问题标题内容铺满宽度，并移除左右内边距。',
+                '.QuestionHeader-main': '让问题标题主区域占满父容器宽度。',
+                '.ContentItem-actions > :nth-child(2)': '非搜索页中，移除内容操作栏第二个按钮左侧的多余间距。',
+                '.ContentItem-actions': '非搜索页中扩展内容操作栏，使按钮区域与卡片内容边缘对齐。',
+                '.css-1qqx3d0 > :nth-child(2)': '搜索页中，移除内容操作栏第二个按钮左侧的多余间距。',
+                '.css-1qqx3d0': '搜索页中扩展内容操作栏，使按钮区域与卡片内容边缘对齐。',
+                '.Search-container': '搜索页搜索结果容器铺满宽度，并移除外层内边距。',
+                '#SearchMain': '搜索页主内容区域铺满宽度，取消右侧空白。',
+                '.SearchTabs-inner': '搜索页顶部标签栏铺满宽度并取消居中宽度限制。',
+                '.SearchTabs-searchBarContainer': '将搜索框容器推到搜索页标签栏的右侧。'
+            },
+            bilibili: {
+                'main': '哔哩哔哩动态页主内容区铺满整行，解除侧栏布局造成的列宽限制。'
+            }
+        },
+        block: {
+            tieba: {
+                '.login': '隐藏帖子底部悬浮操作栏，以及回帖旁的点赞操作。',
+                '.icon_tshows': '隐藏楼主昵称旁边的图标。',
+                '.level-icon': '隐藏回帖用户昵称旁边的等级图标。',
+                '.interaction-bar': '隐藏贴吧主页上的操作栏。'
+            },
+            '115': {
+                '#js_bottom_notification': '隐藏页面底部通知栏。',
+                '.feature-float': '隐藏页面上的悬浮功能入口；具体包含哪些按钮待确认。',
+                '.container-leftside': '隐藏页面左侧容器；其中具体包含的内容待确认。',
+                '[data-nav="photo"]': '隐藏导航栏中的照片入口。',
+                '[data-nav="credentials"]': '隐藏导航栏中的证件/凭证入口。',
+                '[data-nav="note"]': '隐藏导航栏中的笔记入口。',
+                '.ceiling-feature': '隐藏一个顶部/悬浮功能区域；具体内容待确认。',
+                '.ceiling-link-temp': '隐藏一个顶部/悬浮链接；具体用途待确认。'
+            },
+            '115vod': {
+                '.feature-float': '隐藏 115 视频页面上的悬浮功能入口；具体包含哪些按钮待确认。'
+            },
+            nga: {
+                '.posterInfoLine': '隐藏帖子列表每行的元信息条（回复数、发帖人、时间等）。',
+                '.posterInfoLineB': '隐藏另一种模板中的帖子元信息条（回复数、发帖人、时间等）。',
+                '.topicrow .c3': '隐藏帖子列表中 topicrow 的第 3 列；列内容待确认。',
+                '.topicrow .c4': '隐藏帖子列表中 topicrow 的第 4 列；列内容待确认。',
+                '.c1': '隐藏页面中使用 c1 类名的列表/表格列；具体内容待确认。',
+                '.cell': '隐藏页面中使用 cell 类名的单元格；具体影响范围待确认。',
+                '#toptopics': '隐藏页面顶部的热门/置顶主题区域。',
+                '#fast_post_c': '隐藏快速发帖区域。',
+                '#footer': '隐藏页面底部页脚。',
+                '#b_nav': '隐藏桌面版底部导航区域。',
+                '#m_nav': '隐藏移动版导航区域。',
+                '#m_pbtntop': '隐藏移动版顶部按钮区域；具体按钮用途待确认。',
+                '#mainmenu': '隐藏页面主菜单。',
+                '#custombg': '隐藏页面自定义背景区域。'
+            },
+            '123pan': {
+                '.notice-box': '隐藏页面通知/公告提示框。',
+                '.entry_p0tlq': '隐藏云盘页面中的一个内部模块；具体内容待确认。',
+                '.mfy-main-layout__head': '隐藏主布局顶部标题/工具栏区域。',
+                'aside': '隐藏页面侧边栏区域。',
+                '.withSideMenuLayoutSider_ELJ6a': '隐藏带侧边菜单布局中的侧栏。'
+            },
+            zhihu: {
+                '.css-bkewaf': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '.QuestionHeader-side': '隐藏问题标题区域右侧的侧栏内容。',
+                '[href="https://www.zhihu.com/column-square"]': '隐藏知乎专栏广场入口。',
+                '[href="https://www.zhihu.com/ring-feeds"]': '隐藏知乎圈子动态入口。',
+                '.css-53paqb': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '[href="https://www.zhihu.com/project-square"]': '隐藏知乎想法/项目广场入口。',
+                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '隐藏知乎会员入口。',
+                '[href="https://zhida.zhihu.com/"]': '隐藏知乎直答入口。',
+                '.SearchBar-askContainer': '隐藏搜索框旁边的提问入口。',
+                '.css-1vbrp2j': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '.css-ruapjk': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '.QuestionHeader-footer': '隐藏问题标题区域底部的附加信息/操作区域。',
+                '.FollowButton': '隐藏关注按钮。',
+                '.Reward': '隐藏赞赏入口。',
+                '.css-a3pqj1': '知乎内容卡片中的一个样式类名，具体对应内容待确认。',
+                '.ContentItem-time': '隐藏内容卡片中的发布时间信息。',
+                '.css-dvccr2': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '.css-kt4t4n': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '[aria-label="喜欢"]': '隐藏“喜欢”按钮。',
+                '[data-tooltip="解释这篇内容"]': '隐藏“解释这篇内容”功能入口。',
+                '.css-upmq18': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '.css-1fo89v5': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '.css-140jo2': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
+                '.WriteArea': '隐藏写回答/评论输入区域。',
+                '.CornerButtonsGroup': '隐藏页面角落的悬浮按钮组。',
+                '[aria-label="知乎"]': '隐藏顶部栏中的知乎 Logo/名称区域。',
+                '.ContentItem-actions > :first-child': '非搜索页中，隐藏内容操作栏的第一个按钮。',
+                '.css-1qqx3d0 > :first-child': '搜索页中，隐藏内容操作栏的第一个按钮。',
+                '.css-1m4ta6s': '搜索页中的一个样式类名，具体对应元素待确认。',
+                '.SearchTabs-profile': '隐藏搜索页顶部的个人资料/用户相关标签入口。'
+            },
+            bilibili: {
+                '.adblock-tips': '隐藏广告拦截提示。',
+                '.recommended-swipe': '隐藏首页推荐内容的横向滑动卡片区域。',
+                '.floor-single-card': '隐藏首页分区中的单张卡片；具体卡片类型待确认。',
+                '.feed-card:not(:has(.enable-no-interest))': '隐藏没有“不感兴趣”入口的首页信息流卡片。',
+                '.bili-feed-card:not(:has(.enable-no-interest))': '隐藏另一种模板中没有“不感兴趣”入口的首页信息流卡片。',
+                '.video-resource-list': '隐藏视频页中的资源/相关推荐列表区域。',
+                '.video-page-special-card-small': '隐藏视频页中的小型特别推荐卡片。',
+                '.left-entry-main > :nth-child(n+4)': '隐藏顶栏左侧入口中从第 4 项开始的菜单项。',
+                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧只保留第 4 至第 6 个入口，隐藏其余入口。',
+                'aside': '隐藏动态页右侧栏。',
+                '.bili-dyn-publishing': '隐藏动态页的发布/投稿区域。'
+            },
+            x: {
+                'header': '隐藏 X 页面顶部导航区域（此规则默认关闭）。',
+                '[data-testid="sidebarColumn"]': '隐藏 X 页面侧栏（此规则默认关闭）。',
+                '[data-testid="inline_reply_offscreen"]': '隐藏 X 的行内回复编辑/弹出区域，具体触发场景待确认。',
+                '.r-rull8r': 'X 页面中的一个样式类名，无法仅凭选择器判断具体用途，待确认。',
+                '[aria-label="主页时间线"] > .r-184en5c': '隐藏主页时间线中的一个直接子区域，具体内容待确认。',
+                'article .r-kzbkwu > :last-child': '隐藏 X 帖子卡片中指定容器的最后一个子元素，具体对应内容待确认。'
+            },
+            douyin: {
+                '.VAQA49VP': '抖音页面中的一个动态类名，无法仅凭选择器判断具体用途，待确认。',
+                '.Ctt1baq8': '抖音页面中的一个动态类名，无法仅凭选择器判断具体用途，待确认。',
+                '.comment-input-container': '隐藏评论输入框。',
+                '.semiTabrelated_card': '隐藏相关内容推荐卡片。',
+                '.semiTabai_card': '隐藏 AI 相关功能卡片。'
+            }
+        }
+    };
+
+    const CONFIRM_RULES = new Set([
+        'block:115:.feature-float',
+        'block:115:.container-leftside',
+        'block:115:.ceiling-feature',
+        'block:115:.ceiling-link-temp',
+        'block:nga:.topicrow .c3',
+        'block:nga:.topicrow .c4',
+        'block:nga:.c1',
+        'block:nga:.cell',
+        'block:nga:#m_pbtntop',
+        'block:123pan:.entry_p0tlq',
+        'block:zhihu:.css-bkewaf',
+        'block:zhihu:.css-53paqb',
+        'block:zhihu:.css-1vbrp2j',
+        'block:zhihu:.css-ruapjk',
+        'block:zhihu:.css-a3pqj1',
+        'block:zhihu:.css-dvccr2',
+        'block:zhihu:.css-kt4t4n',
+        'block:zhihu:.css-upmq18',
+        'block:zhihu:.css-1fo89v5',
+        'block:zhihu:.css-140jo2',
+        'block:zhihu:.css-1m4ta6s',
+        'block:bilibili:.floor-single-card',
+        'block:x:[data-testid="inline_reply_offscreen"]',
+        'block:x:.r-rull8r',
+        'block:x:[aria-label="主页时间线"] > .r-184en5c',
+        'block:x:article .r-kzbkwu > :last-child',
+        'block:douyin:.VAQA49VP',
+        'block:douyin:.Ctt1baq8'
+    ]);
+
     const ruleItemId = (feature, rule, selector) => {
         const identity = JSON.stringify({
             selector,
@@ -568,6 +735,9 @@
                 id: ruleItemId('style', rule, selector),
                 feature: 'style',
                 title: selector,
+                description: RULE_HINTS.style[site.id]?.[selector] ||
+                    '此项美化规则的具体作用待确认。',
+                descriptionPending: CONFIRM_RULES.has('style:' + site.id + ':' + selector),
                 detail: rule.media ? '媒体条件：' + rule.media : '',
                 rule,
                 selector,
@@ -587,6 +757,9 @@
                 id: ruleItemId('block', rule, selector),
                 feature: 'block',
                 title: selector,
+                description: RULE_HINTS.block[site.id]?.[selector] ||
+                    '此项屏蔽规则的具体作用待确认。',
+                descriptionPending: CONFIRM_RULES.has('block:' + site.id + ':' + selector),
                 detail: [
                     rule.domains ? '域名：' + rule.domains.join('、') : '',
                     rule.onlyPaths ? '仅路径：' + rule.onlyPaths.join('、') : '',
@@ -638,10 +811,10 @@
 
         const style = document.createElement('style');
         style.textContent = [
-            ':host{position:fixed;inset:0;z-index:2147483647;color:#202938;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;}',
+            ':host{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;pointer-events:none;color:#202938;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;}',
             '*{box-sizing:border-box;}',
             'button,input{font:inherit;}',
-            '.shell{position:absolute;inset:0;display:flex;flex-direction:column;background:#f4f6fa;}',
+            '.shell{position:relative;width:min(1080px,calc(100vw - 40px));height:min(780px,calc(100vh - 40px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;background:#f4f6fa;border:1px solid #dce2eb;border-radius:16px;overflow:hidden;box-shadow:0 22px 80px rgba(17,29,50,.28);pointer-events:auto;}',
             '.topbar{height:68px;flex:0 0 68px;display:flex;align-items:center;gap:18px;padding:0 24px;background:#fff;border-bottom:1px solid #e4e8ef;box-shadow:0 2px 10px rgba(20,35,60,.04);}',
             '.brand-mark{width:34px;height:34px;border-radius:10px;background:#eaf1ff;color:#2864c5;display:grid;place-items:center;font-weight:800;font-size:17px;}',
             '.top-title{min-width:0;display:flex;flex-direction:column;}',
@@ -680,12 +853,15 @@
             '.rule-info{min-width:0;flex:1;}',
             '.rule-title{display:block;color:#354257;font-size:13px;overflow-wrap:anywhere;}',
             '.rule-title code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#36475f;background:#f5f7fa;padding:2px 5px;border-radius:4px;}',
-            '.rule-detail{margin-top:3px;color:#929cac;font-size:11px;overflow-wrap:anywhere;}',
+            '.rule-description{margin-top:4px;color:#647187;font-size:12px;line-height:1.45;overflow-wrap:anywhere;}',
+            '.rule-description.pending{color:#9a6412;}',
+            '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
+            '.rule-detail{margin-top:4px;color:#929cac;font-size:10px;overflow-wrap:anywhere;}',
             '.rule-toggle{flex:0 0 auto;width:18px;height:18px;accent-color:#2868cf;cursor:pointer;}',
             '.empty{padding:22px 0;color:#a0a9b6;font-size:13px;}',
             '.master-off .rule-list{opacity:.65;}',
             '.footer-note{margin:18px 2px 0;color:#98a2b1;font-size:12px;}',
-            '@media(max-width:700px){.topbar{padding:0 14px;gap:10px;}.save-hint{display:none;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:22px 12px 36px;}.intro h1{font-size:19px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.group-desc{max-width:180px;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
+            '@media(max-width:700px){.shell{width:calc(100vw - 16px);height:calc(100dvh - 24px);border-radius:12px;}.topbar{padding:0 14px;gap:10px;}.save-hint{display:none;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:22px 12px 36px;}.intro h1{font-size:19px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.group-desc{max-width:180px;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
         ].join('\n');
 
         const makeElement = (tag, className, text) => {
@@ -750,7 +926,7 @@
         };
 
         const getMeta = item => {
-            if (item.special) return item.detail || '';
+            if (item.special) return '';
             const details = [];
             const rule = item.rule;
             if (rule.domains) details.push('域名：' + rule.domains.join('、'));
@@ -770,8 +946,18 @@
                 const code = makeElement('code', '', item.title);
                 title.append(code);
             }
-            const detail = makeElement('div', 'rule-detail', getMeta(item));
-            info.append(title, detail);
+            const description = makeElement(
+                'div',
+                'rule-description' + (item.descriptionPending ? ' pending' : ''),
+                item.description || '此项规则的具体作用待确认。'
+            );
+            if (item.descriptionPending) {
+                description.append(makeElement('span', 'pending-badge', '待确认'));
+            }
+
+            info.append(title, description);
+            const metaText = getMeta(item);
+            if (metaText) info.append(makeElement('div', 'rule-detail', metaText));
 
             const checkbox = makeElement('input', 'rule-toggle');
             checkbox.type = 'checkbox';
