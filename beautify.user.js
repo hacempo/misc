@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.1
+// @version      6.2
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -302,24 +302,24 @@
     /*
      * 屏蔽规则（display: none）。
      * 按域名（含子域）匹配；每个选择器单独成条，避免其中一条不被支持时连累其他。
-     * enabled: false 表示仅保留记录。
+     * 每条规则都在设置界面独立控制；未确认的历史选择器统一归档在 block.txt 末尾注释区。
+     * 当前实际生效规则与 block.txt 上方的规则清单保持同步。
      *
-     * 贴吧桌面端规则已归档到仓库的 block.txt。
-     * 其他暂不启用的选择器（用途待确认）：
-     *   www.zhihu.com: .css-jghqwm、.TopstoryItem:has(.ArticleItem)、.TopstoryItem--advertCard
+     * 贴吧桌面端规则单独归档在 block.txt，不在本脚本中注入。
      */
     const BLOCK_RULES = [
         {
-            // 移动端网页
+            // 百度贴吧移动端
             domains: ['tieba.baidu.com'],
             selectors: [
-                '.login',           // 帖子底部浮动操作栏（收藏/回复/点赞）及回帖旁点赞
-                '.icon_tshows',     // 楼主姓名旁图标
-                '.level-icon',      // 回帖用户姓名旁图标
-                '.interaction-bar'  // 主页操作栏
+                '.login',
+                '.icon_tshows',
+                '.level-icon',
+                '.interaction-bar'
             ]
         },
         {
+            // 115 网盘：通知/广告弹窗、左栏、无用导航入口及顶栏广告
             domains: ['115.com'],
             selectors: [
                 '#js_bottom_notification',
@@ -333,32 +333,24 @@
             ]
         },
         {
+            // 115 视频：底部右侧悬浮弹窗
             domains: ['115vod.com'],
             selectors: ['.feature-float']
         },
         {
+            // NGA：列表发帖/回帖信息、用户统计、按钮单元格及顶部模块
             domains: ['ngabbs.com'],
             selectors: [
-                // 帖子列表每行的元信息条（回复数/发帖人/时间等）。
-                // 屏蔽后行高由 123px 降到 64px，一屏能看到约两倍的帖子。
-                // .posterInfoLineB 是同一模板的另一种命名。
-                '.posterInfoLine',
-                '.posterInfoLineB',
                 '.topicrow .c3',
                 '.topicrow .c4',
                 '.c1',
                 '.cell',
                 '#toptopics',
-                '#fast_post_c',
-                '#footer',
-                '#b_nav',
-                '#m_nav',
-                '#m_pbtntop',
-                '#mainmenu',
-                '#custombg'
+                '#fast_post_c'
             ]
         },
         {
+            // 123 云盘：公告/广告、顶部区域及两处左侧栏
             domains: ['yun.123pan.cn'],
             selectors: [
                 '.notice-box',
@@ -369,6 +361,7 @@
             ]
         },
         {
+            // 知乎：侧栏、顶栏入口、问题操作和内容操作
             domains: ['www.zhihu.com'],
             selectors: [
                 '.css-bkewaf',
@@ -385,49 +378,38 @@
                 '.QuestionHeader-footer',
                 '.FollowButton',
                 '.Reward',
-                '.css-a3pqj1',
-                '.ContentItem-time',
-                '.css-dvccr2',
-                '.css-kt4t4n',
                 '[aria-label="喜欢"]',
                 '[data-tooltip="解释这篇内容"]',
-                '.css-upmq18',
-                '.css-1fo89v5',
-                '.css-140jo2',
                 '.WriteArea',
                 '.CornerButtonsGroup',
-                '[aria-label="知乎"]'   // 顶栏 Logo/名称区域
+                '[aria-label="知乎"]'
             ]
         },
         {
+            // 知乎非搜索页：回答操作栏第一个按钮（赞同/反对入口）
             domains: ['www.zhihu.com'],
             excludePaths: ['/search'],
             selectors: ['.ContentItem-actions > :first-child']
         },
         {
-            // 搜索页使用新版 DOM 选择器，等价替换上一条。
+            // 知乎搜索页：新版 DOM 中回答操作栏第一个按钮
             domains: ['www.zhihu.com'],
             onlyPaths: ['/search'],
-            selectors: [
-                '.css-1qqx3d0 > :first-child',
-                '.css-1m4ta6s',
-                '.SearchTabs-profile'
-            ]
+            selectors: ['.css-1qqx3d0 > :first-child']
         },
         {
+            // 哔哩哔哩：广告提示、首页轮播及确定的广告/直播信息流卡片
             domains: ['www.bilibili.com'],
             selectors: [
                 '.adblock-tips',
                 '.recommended-swipe',
                 '.floor-single-card',
                 '.feed-card:not(:has(.enable-no-interest))',
-                '.bili-feed-card:not(:has(.enable-no-interest))',
-                '.video-resource-list',
-                '.video-page-special-card-small'
+                '.bili-feed-card:not(:has(.enable-no-interest))'
             ]
         },
         {
-            // 顶栏存在于所有 Bilibili 子域。
+            // 顶栏存在于所有 Bilibili 子域
             domains: ['bilibili.com'],
             selectors: [
                 '.left-entry-main > :nth-child(n+4)',
@@ -435,25 +417,20 @@
             ]
         },
         {
+            // 动态页侧栏及发布区域
             domains: ['t.bilibili.com'],
             selectors: ['aside', '.bili-dyn-publishing']
         },
         {
-            // 仅记录，不应用：X 左栏与右栏。
-            domains: ['x.com'],
-            enabled: false,
-            selectors: ['header', '[data-testid="sidebarColumn"]']
-        },
-        {
+            // X：首页发帖区域及每条帖子的操作栏
             domains: ['x.com'],
             selectors: [
-                '[data-testid="inline_reply_offscreen"]',
-                '.r-rull8r',
-                '[aria-label="主页时间线"] > .r-184en5c',
+                '[aria-label="主页时间线"] > :nth-child(3)',
                 'article .r-kzbkwu > :last-child'
             ]
         },
         {
+            // 抖音：评论信息/操作栏及相关输入、推荐模块
             domains: ['douyin.com'],
             selectors: [
                 '.VAQA49VP',
@@ -464,7 +441,6 @@
             ]
         }
     ];
-
 
 
     /* =====================================================================
@@ -587,97 +563,74 @@
                 '.interaction-bar': '隐藏贴吧主页上的操作栏。'
             },
             '115': {
-                '#js_bottom_notification': '隐藏页面底部通知栏。',
-                '.feature-float': '隐藏页面上的悬浮功能入口；具体包含哪些按钮待确认。',
-                '.container-leftside': '隐藏页面左侧容器；其中具体包含的内容待确认。',
-                '[data-nav="photo"]': '隐藏导航栏中的照片入口。',
-                '[data-nav="credentials"]': '隐藏导航栏中的证件/凭证入口。',
-                '[data-nav="note"]': '隐藏导航栏中的笔记入口。',
-                '.ceiling-feature': '隐藏一个顶部/悬浮功能区域；具体内容待确认。',
-                '.ceiling-link-temp': '隐藏一个顶部/悬浮链接；具体用途待确认。'
+                '#js_bottom_notification': '隐藏页面底部左侧的通知弹窗。',
+                '.feature-float': '隐藏页面底部右侧的悬浮功能弹窗。',
+                '.container-leftside': '隐藏网盘页面左侧栏。',
+                '[data-nav="photo"]': '隐藏顶栏中的照片入口（替代原来的 album 链接选择器）。',
+                '[data-nav="credentials"]': '隐藏顶栏中的密档/证件入口。',
+                '[data-nav="note"]': '隐藏顶栏中的记事入口。',
+                '.ceiling-feature': '隐藏顶栏中间的广告区域。',
+                '.ceiling-link-temp': '隐藏顶栏中的提示链接/提示条。'
             },
             '115vod': {
-                '.feature-float': '隐藏 115 视频页面上的悬浮功能入口；具体包含哪些按钮待确认。'
+                '.feature-float': '隐藏 115 视频页面底部右侧的悬浮弹窗。'
             },
             nga: {
-                '.posterInfoLine': '隐藏帖子列表每行的元信息条（回复数、发帖人、时间等）。',
-                '.posterInfoLineB': '隐藏另一种模板中的帖子元信息条（回复数、发帖人、时间等）。',
-                '.topicrow .c3': '隐藏帖子列表中 topicrow 的第 3 列；列内容待确认。',
-                '.topicrow .c4': '隐藏帖子列表中 topicrow 的第 4 列；列内容待确认。',
-                '.c1': '隐藏页面中使用 c1 类名的列表/表格列；具体内容待确认。',
-                '.cell': '隐藏页面中使用 cell 类名的单元格；具体影响范围待确认。',
-                '#toptopics': '隐藏页面顶部的热门/置顶主题区域。',
-                '#fast_post_c': '隐藏快速发帖区域。',
-                '#footer': '隐藏页面底部页脚。',
-                '#b_nav': '隐藏桌面版底部导航区域。',
-                '#m_nav': '隐藏移动版导航区域。',
-                '#m_pbtntop': '隐藏移动版顶部按钮区域；具体按钮用途待确认。',
-                '#mainmenu': '隐藏页面主菜单。',
-                '#custombg': '隐藏页面自定义背景区域。'
+                '.topicrow .c3': '隐藏主页帖子列表中的发帖人和发帖时间。',
+                '.topicrow .c4': '隐藏主页帖子列表中的最后回帖人和最后回帖时间。',
+                '.c1': '隐藏 NGA 的 c1 信息列：主页显示发帖/回帖总人数，详情页显示发帖人/回帖人信息。',
+                '.cell': '隐藏主页和详情页中使用 cell 类的单元格区域，其中包含搜索框、发表新帖等按钮。',
+                '#toptopics': '隐藏首页顶部的版头/主题聚合区域，通常包含版块公告、版块信息或主题入口。',
+                '#fast_post_c': '隐藏首页和详情页共用的快速发帖区域。'
             },
             '123pan': {
-                '.notice-box': '隐藏页面通知/公告提示框。',
-                '.entry_p0tlq': '隐藏云盘页面中的一个内部模块；具体内容待确认。',
-                '.mfy-main-layout__head': '隐藏主布局顶部标题/工具栏区域。',
-                'aside': '隐藏页面侧边栏区域。',
-                '.withSideMenuLayoutSider_ELJ6a': '隐藏带侧边菜单布局中的侧栏。'
+                '.notice-box': '隐藏页面底部右侧的公告提示框。',
+                '.entry_p0tlq': '隐藏公告上方的广告模块。',
+                '.mfy-main-layout__head': '隐藏云盘主布局顶部区域。',
+                'aside': '隐藏页面左侧栏。',
+                '.withSideMenuLayoutSider_ELJ6a': '隐藏右侧主要界面布局内部额外的左侧菜单栏。'
             },
             zhihu: {
-                '.css-bkewaf': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '.QuestionHeader-side': '隐藏问题标题区域右侧的侧栏内容。',
-                '[href="https://www.zhihu.com/column-square"]': '隐藏知乎专栏广场入口。',
-                '[href="https://www.zhihu.com/ring-feeds"]': '隐藏知乎圈子动态入口。',
-                '.css-53paqb': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '[href="https://www.zhihu.com/project-square"]': '隐藏知乎想法/项目广场入口。',
-                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '隐藏知乎会员入口。',
-                '[href="https://zhida.zhihu.com/"]': '隐藏知乎直答入口。',
-                '.SearchBar-askContainer': '隐藏搜索框旁边的提问入口。',
-                '.css-1vbrp2j': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '.css-ruapjk': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '.QuestionHeader-footer': '隐藏问题标题区域底部的附加信息/操作区域。',
-                '.FollowButton': '隐藏关注按钮。',
-                '.Reward': '隐藏赞赏入口。',
-                '.css-a3pqj1': '知乎内容卡片中的一个样式类名，具体对应内容待确认。',
-                '.ContentItem-time': '隐藏内容卡片中的发布时间信息。',
-                '.css-dvccr2': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '.css-kt4t4n': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '[aria-label="喜欢"]': '隐藏“喜欢”按钮。',
-                '[data-tooltip="解释这篇内容"]': '隐藏“解释这篇内容”功能入口。',
-                '.css-upmq18': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '.css-1fo89v5': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '.css-140jo2': '知乎页面中的一个样式类名，无法仅凭选择器确定对应元素，待确认。',
-                '.WriteArea': '隐藏写回答/评论输入区域。',
-                '.CornerButtonsGroup': '隐藏页面角落的悬浮按钮组。',
-                '[aria-label="知乎"]': '隐藏顶部栏中的知乎 Logo/名称区域。',
-                '.ContentItem-actions > :first-child': '非搜索页中，隐藏内容操作栏的第一个按钮。',
-                '.css-1qqx3d0 > :first-child': '搜索页中，隐藏内容操作栏的第一个按钮。',
-                '.css-1m4ta6s': '搜索页中的一个样式类名，具体对应元素待确认。',
-                '.SearchTabs-profile': '隐藏搜索页顶部的个人资料/用户相关标签入口。'
+                '.css-bkewaf': '隐藏知乎首页和详情页共用的侧栏。',
+                '.QuestionHeader-side': '隐藏详情页问题标题区域右侧栏，包括滚动时出现的浮动标题栏侧栏。',
+                '[href="https://www.zhihu.com/column-square"]': '隐藏顶栏中的专栏广场入口。',
+                '[href="https://www.zhihu.com/ring-feeds"]': '隐藏顶栏中的圈子入口。',
+                '.css-53paqb': '隐藏顶栏中用于分隔导航入口的竖线。',
+                '[href="https://www.zhihu.com/project-square"]': '隐藏顶栏中的 AI Works / 项目广场入口。',
+                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '隐藏顶栏中的会员故事入口。',
+                '[href="https://zhida.zhihu.com/"]': '隐藏顶栏中的 AI 直答入口。',
+                '.SearchBar-askContainer': '隐藏搜索框旁边的用户发布/提问入口。',
+                '.css-1vbrp2j': '隐藏顶栏中的消息和私信入口。',
+                '.css-ruapjk': '隐藏顶栏最右侧的头像/用户界面入口。',
+                '.QuestionHeader-footer': '隐藏问题标题区域底部的操作模块（关注问题、写回答等）。',
+                '.FollowButton': '隐藏问题/回答区域中面向答主的关注按钮。',
+                '.Reward': '隐藏回答区域中可能出现的赞赏按钮。',
+                '[aria-label="喜欢"]': '隐藏回答操作栏中的喜欢按钮。',
+                '[data-tooltip="解释这篇内容"]': '隐藏回答操作栏中的解释内容按钮。',
+                '.WriteArea': '隐藏知乎首页的写回答区域。',
+                '.CornerButtonsGroup': '隐藏首页和详情页角落的悬浮按钮组（AI 助手）。',
+                '[aria-label="知乎"]': '隐藏顶栏中的知乎 Logo/名称区域。',
+                '.ContentItem-actions > :first-child': '非搜索页中隐藏回答操作栏第一个按钮，统一覆盖赞同和反对；VoteButton 已包含在这一项中。',
+                '.css-1qqx3d0 > :first-child': '搜索页中隐藏新版回答操作栏的第一个按钮。'
             },
             bilibili: {
-                '.adblock-tips': '隐藏广告拦截提示。',
-                '.recommended-swipe': '隐藏首页推荐内容的横向滑动卡片区域。',
-                '.floor-single-card': '隐藏首页分区中的单张卡片；具体卡片类型待确认。',
-                '.feed-card:not(:has(.enable-no-interest))': '隐藏没有“不感兴趣”入口的首页信息流卡片。',
-                '.bili-feed-card:not(:has(.enable-no-interest))': '隐藏另一种模板中没有“不感兴趣”入口的首页信息流卡片。',
-                '.video-resource-list': '隐藏视频页中的资源/相关推荐列表区域。',
-                '.video-page-special-card-small': '隐藏视频页中的小型特别推荐卡片。',
-                '.left-entry-main > :nth-child(n+4)': '隐藏顶栏左侧入口中从第 4 项开始的菜单项。',
+                '.adblock-tips': '隐藏广告拦截提示，避免第三方广告拦截实现触发的提示占位。',
+                '.recommended-swipe': '隐藏哔哩哔哩首页轮播图区域。',
+                '.floor-single-card': '隐藏首页分区中的单张卡片；你已确认此类卡片包含烦人的广告、直播等内容。',
+                '.feed-card:not(:has(.enable-no-interest))': '隐藏初始加载的信息流卡片中不含“不感兴趣”入口的卡片。',
+                '.bili-feed-card:not(:has(.enable-no-interest))': '隐藏页面下滑后动态加载的信息流卡片中不含“不感兴趣”入口的卡片。',
+                '.left-entry-main > :nth-child(n+4)': '隐藏哔哩哔哩顶栏左侧从第 4 项开始的入口。',
                 '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧只保留第 4 至第 6 个入口，隐藏其余入口。',
                 'aside': '隐藏动态页右侧栏。',
                 '.bili-dyn-publishing': '隐藏动态页的发布/投稿区域。'
             },
             x: {
-                'header': '隐藏 X 页面顶部导航区域（此规则默认关闭）。',
-                '[data-testid="sidebarColumn"]': '隐藏 X 页面侧栏（此规则默认关闭）。',
-                '[data-testid="inline_reply_offscreen"]': '隐藏 X 的行内回复编辑/弹出区域，具体触发场景待确认。',
-                '.r-rull8r': 'X 页面中的一个样式类名，无法仅凭选择器判断具体用途，待确认。',
-                '[aria-label="主页时间线"] > .r-184en5c': '隐藏主页时间线中的一个直接子区域，具体内容待确认。',
-                'article .r-kzbkwu > :last-child': '隐藏 X 帖子卡片中指定容器的最后一个子元素，具体对应内容待确认。'
+                '[aria-label="主页时间线"] > :nth-child(3)': '隐藏 X 首页时间线中的发帖输入/发布区域（第 3 个直接子元素）。',
+                'article .r-kzbkwu > :last-child': '隐藏 X 每条帖子底部的操作栏。'
             },
             douyin: {
-                '.VAQA49VP': '抖音页面中的一个动态类名，无法仅凭选择器判断具体用途，待确认。',
-                '.Ctt1baq8': '抖音页面中的一个动态类名，无法仅凭选择器判断具体用途，待确认。',
+                '.VAQA49VP': '隐藏评论信息中的发布时间和发布地区。',
+                '.Ctt1baq8': '隐藏抖音评论区每条评论的操作栏。',
                 '.comment-input-container': '隐藏评论输入框。',
                 '.semiTabrelated_card': '隐藏相关内容推荐卡片。',
                 '.semiTabai_card': '隐藏 AI 相关功能卡片。'
@@ -685,37 +638,7 @@
         }
     };
 
-    const CONFIRM_RULES = new Set([
-        'block:115:.feature-float',
-        'block:115vod:.feature-float',
-        'block:115:.container-leftside',
-        'block:115:.ceiling-feature',
-        'block:115:.ceiling-link-temp',
-        'block:nga:.topicrow .c3',
-        'block:nga:.topicrow .c4',
-        'block:nga:.c1',
-        'block:nga:.cell',
-        'block:nga:#m_pbtntop',
-        'block:123pan:.entry_p0tlq',
-        'block:zhihu:.css-bkewaf',
-        'block:zhihu:.css-53paqb',
-        'block:zhihu:.css-1vbrp2j',
-        'block:zhihu:.css-ruapjk',
-        'block:zhihu:.css-a3pqj1',
-        'block:zhihu:.css-dvccr2',
-        'block:zhihu:.css-kt4t4n',
-        'block:zhihu:.css-upmq18',
-        'block:zhihu:.css-1fo89v5',
-        'block:zhihu:.css-140jo2',
-        'block:zhihu:.css-1m4ta6s',
-        'block:bilibili:.floor-single-card',
-        'block:x:[data-testid="inline_reply_offscreen"]',
-        'block:x:.r-rull8r',
-        'block:x:[aria-label="主页时间线"] > .r-184en5c',
-        'block:x:article .r-kzbkwu > :last-child',
-        'block:douyin:.VAQA49VP',
-        'block:douyin:.Ctt1baq8'
-    ]);
+
 
     const ruleItemId = (feature, rule, selector) => {
         const identity = JSON.stringify({
@@ -738,7 +661,6 @@
                 title: selector,
                 description: RULE_HINTS.style[site.id]?.[selector] ||
                     '此项美化规则的具体作用待确认。',
-                descriptionPending: CONFIRM_RULES.has('style:' + site.id + ':' + selector),
                 detail: rule.media ? '媒体条件：' + rule.media : '',
                 rule,
                 selector,
@@ -760,7 +682,6 @@
                 title: selector,
                 description: RULE_HINTS.block[site.id]?.[selector] ||
                     '此项屏蔽规则的具体作用待确认。',
-                descriptionPending: CONFIRM_RULES.has('block:' + site.id + ':' + selector),
                 detail: [
                     rule.domains ? '域名：' + rule.domains.join('、') : '',
                     rule.onlyPaths ? '仅路径：' + rule.onlyPaths.join('、') : '',
