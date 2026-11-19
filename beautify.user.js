@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.9.0
+// @version      7.10.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -21,8 +21,8 @@
 // @match        *://*.x.com/*
 // @match        *://douyin.com/*
 // @match        *://*.douyin.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.0
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.0
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -604,7 +604,7 @@
                     id: 'zhihu-header-width',
                     title: '顶栏宽度自适应',
                     path: '全站 > 顶栏 > 固定外层容器',
-                    elementName: '直接匹配 div:has(> header.AppHeader) 的固定定位外层容器',
+                    elementName: 'div:has(> header.AppHeader)',
                     effectDescription: '通过 ResizeObserver 监听 body 实际宽度，并将固定顶栏宽度同步为该宽度，避免 100vw 把滚动条宽度也计入而造成横向溢出。'
                 }
             ],
@@ -631,22 +631,30 @@
                 {
                     id: 'bili-goods-comments',
                     title: '商品标记评论',
-                    description: '播放 > 评论区 > 评论；选择器：[data-type="goods"]（检测商品标记），命中后隐藏所属 bili-comment-thread-renderer（display: none，通过 JS 控制）'
+                    path: '播放 > 评论区 > 评论 > 推广评论',
+                    elementName: '包含 [data-type="goods"] 的 bili-comment-thread-renderer',
+                    effectDescription: '检测到商品标记后，隐藏其所属的整条评论线程。'
                 },
                 {
                     id: 'bili-comment-footers',
                     title: '评论操作栏',
-                    description: '播放 > 评论区 > 评论 > 操作栏；选择器：bili-comment-renderer 的 Shadow DOM 内 #footer、bili-comment-reply-renderer 的 Shadow DOM 内 #footer；修改：display: none（通过 JS 隐藏主评论和回复的操作栏）'
+                    path: '播放 > 评论区 > 评论 > 操作栏',
+                    elementName: 'bili-comment-renderer / bili-comment-reply-renderer 的 Shadow DOM 内 #footer',
+                    effectDescription: '隐藏主评论和回复下方的操作栏。'
                 },
                 {
                     id: 'bili-comment-input',
                     title: '评论输入框',
-                    description: '播放 > 评论区 > 顶部输入框；选择器：bili-comments-header-renderer 的 Shadow DOM 内 #commentbox；修改：display: none（通过 JS 隐藏输入框）'
+                    path: '播放 > 评论区 > 顶部输入框',
+                    elementName: 'bili-comments-header-renderer 的 Shadow DOM 内 #commentbox',
+                    effectDescription: '隐藏评论区顶部的评论输入框。'
                 },
                 {
                     id: 'bili-floating-comment-input',
                     title: '悬浮评论输入框',
-                    description: '播放 > 评论区 > 底部悬浮输入框；选择器：.bili-comments-bottom-fixed-wrapper（位于 bili-comments-header-renderer 的 Shadow DOM）；修改：display: none（通过 JS 隐藏悬浮输入框）'
+                    path: '播放 > 评论区 > 底部悬浮输入框',
+                    elementName: '.bili-comments-bottom-fixed-wrapper（位于 bili-comments-header-renderer 的 Shadow DOM）',
+                    effectDescription: '隐藏评论区底部的悬浮评论输入框。'
                 }
             ]
         }
@@ -1181,7 +1189,7 @@
                     feature: 'style',
                     title: selector,
                     path: RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充',
-                    elementName: presentation.element,
+                    elementName: selector,
                     effectDescription: presentation.effect +
                         (rule.media ? '（生效条件：' + rule.media + '）' : ''),
                     pages: getRulePages(site, 'style', selector),
@@ -1203,18 +1211,26 @@
             ))
             .flatMap(rule => {
                 const ruleSiteId = rule.domains?.includes('115vod.com') ? '115vod' : site.id;
-                return rule.selectors.map(selector => ({
-                    id: ruleItemId('block', rule, selector),
-                    feature: 'block',
-                    title: selector,
-                    description: RULE_HINTS.block[ruleSiteId]?.[selector] ||
-                        '其他 > 位置待补充',
-                    pages: getRulePages(site, 'block', selector, false, ruleSiteId),
-                    detail: '',
-                    rule,
-                    selector,
-                    defaultEnabled: rule.enabled !== false
-                }));
+                return rule.selectors.map(selector => {
+                    const path = RULE_HINTS.block[ruleSiteId]?.[selector] ||
+                        '其他 > 位置待补充';
+                    const pathLeaf = path.split(' > ').map(segment => segment.trim()).filter(Boolean).pop();
+                    return {
+                        id: ruleItemId('block', rule, selector),
+                        feature: 'block',
+                        title: selector,
+                        path,
+                        elementName: selector,
+                        effectDescription: pathLeaf && pathLeaf !== '位置待补充'
+                            ? '隐藏' + pathLeaf + '。'
+                            : '隐藏该元素。',
+                        pages: getRulePages(site, 'block', selector, false, ruleSiteId),
+                        detail: '',
+                        rule,
+                        selector,
+                        defaultEnabled: rule.enabled !== false
+                    };
+                });
             });
 
         const special = SPECIAL_RULES[site.id] || { style: [], block: [] };
@@ -1315,12 +1331,8 @@
             '.rule-row{min-height:54px;display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid #f0f2f6;}',
             '.rule-row:last-child{border-bottom:0;}',
             '.rule-info{min-width:0;flex:1;}',
-            '.rule-title{display:block;color:#354257;font-size:13px;font-weight:700;overflow-wrap:anywhere;}',
-            '.rule-title code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#36475f;background:#f5f7fa;padding:2px 5px;border-radius:4px;}',
-            '.style-details{display:grid;gap:4px;}',
-            '.style-detail-line{min-width:0;color:#647187;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}',
-            '.rule-description{margin-top:4px;color:#647187;font-size:12px;line-height:1.45;overflow-wrap:anywhere;}',
-            '.rule-description.pending{color:#9a6412;}',
+            '.rule-details{display:grid;gap:4px;}',
+            '.rule-detail-line{min-width:0;color:#647187;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}',
             '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
             '.rule-detail{margin-top:4px;color:#929cac;font-size:10px;overflow-wrap:anywhere;}',
             '.rule-toggle{flex:0 0 auto;width:18px;height:18px;accent-color:#2868cf;cursor:pointer;}',
@@ -1399,43 +1411,19 @@
             return { label, input };
         };
 
-        const getMeta = item => {
-            if (item.special || !item.rule?.media) return '';
-            return '媒体条件：' + item.rule.media;
-        };
-
         const makeRuleRow = (site, feature, item) => {
             const row = makeElement('div', 'rule-row');
             const info = makeElement('div', 'rule-info');
-
-            if (feature === 'style') {
-                const details = makeElement('div', 'style-details');
-                details.append(
-                    makeElement('div', 'style-detail-line', item.elementName || '元素位置待补充'),
-                    makeElement('div', 'style-detail-line', item.effectDescription || '效果说明待补充')
-                );
-                info.append(details);
-            } else {
-                const title = makeElement('div', 'rule-title', item.title);
-                const descriptionPath = (item.description || '位置待补充')
-                    .split(' > ')
-                    .map(segment => segment.trim())
-                    .filter(Boolean);
-                const descriptionLeaf = descriptionPath[descriptionPath.length - 1] || '位置待补充';
-                const description = makeElement(
+            const details = makeElement('div', 'rule-details');
+            details.append(
+                makeElement('div', 'rule-detail-line', item.elementName || item.selector || '元素位置待补充'),
+                makeElement(
                     'div',
-                    'rule-description' + (item.descriptionPending ? ' pending' : ''),
-                    descriptionLeaf
-                );
-                description.title = item.description || '';
-                if (item.descriptionPending) {
-                    description.append(makeElement('span', 'pending-badge', '待确认'));
-                }
-
-                info.append(title, description);
-                const metaText = getMeta(item);
-                if (metaText) info.append(makeElement('div', 'rule-detail', metaText));
-            }
+                    'rule-detail-line',
+                    item.effectDescription || (feature === 'block' ? '隐藏该元素。' : '效果说明待补充')
+                )
+            );
+            info.append(details);
 
             const checkbox = makeElement('input', 'rule-toggle');
             checkbox.type = 'checkbox';
@@ -1499,7 +1487,7 @@
                     }
                     node.items.push(item);
                 } else {
-                    const segments = (item.description || '其他 > 位置待补充')
+                    const segments = (item.path || item.description || '其他 > 位置待补充')
                         .split(' > ')
                         .map(segment => segment.trim())
                         .filter(Boolean);
