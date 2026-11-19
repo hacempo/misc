@@ -1417,31 +1417,46 @@
         const makeRuleRow = (site, feature, item) => {
             const row = makeElement('div', 'rule-row');
             const info = makeElement('div', 'rule-info');
-            const title = makeElement('div', 'rule-title');
-            if (item.special) {
-                title.textContent = item.title;
-            } else {
-                const code = makeElement('code', '', item.title);
-                title.append(code);
-            }
-            const descriptionPath = (item.description || '位置待补充')
-                .split(' > ')
-                .map(segment => segment.trim())
-                .filter(Boolean);
-            const descriptionLeaf = descriptionPath[descriptionPath.length - 1] || '位置待补充';
-            const description = makeElement(
-                'div',
-                'rule-description' + (item.descriptionPending ? ' pending' : ''),
-                descriptionLeaf
-            );
-            description.title = item.description || '';
-            if (item.descriptionPending) {
-                description.append(makeElement('span', 'pending-badge', '待确认'));
-            }
+            const title = makeElement('div', 'rule-title', item.title);
 
-            info.append(title, description);
-            const metaText = getMeta(item);
-            if (metaText) info.append(makeElement('div', 'rule-detail', metaText));
+            if (feature === 'style') {
+                const details = makeElement('div', 'style-details');
+                const addStyleLine = (labelText, valueText, isCode = false) => {
+                    const line = makeElement('div', 'style-detail-line');
+                    line.append(makeElement('span', 'style-detail-label', labelText));
+                    line.append(makeElement(
+                        isCode ? 'code' : 'span',
+                        isCode ? 'style-detail-code' : 'style-detail-value',
+                        valueText || '未提供'
+                    ));
+                    details.append(line);
+                };
+
+                addStyleLine('元素', item.elementName);
+                addStyleLine('样式', item.styleText, true);
+                addStyleLine('描述', item.effectDescription);
+                if (item.detail) addStyleLine('条件', item.detail);
+                info.append(title, details);
+            } else {
+                const descriptionPath = (item.description || '位置待补充')
+                    .split(' > ')
+                    .map(segment => segment.trim())
+                    .filter(Boolean);
+                const descriptionLeaf = descriptionPath[descriptionPath.length - 1] || '位置待补充';
+                const description = makeElement(
+                    'div',
+                    'rule-description' + (item.descriptionPending ? ' pending' : ''),
+                    descriptionLeaf
+                );
+                description.title = item.description || '';
+                if (item.descriptionPending) {
+                    description.append(makeElement('span', 'pending-badge', '待确认'));
+                }
+
+                info.append(title, description);
+                const metaText = getMeta(item);
+                if (metaText) info.append(makeElement('div', 'rule-detail', metaText));
+            }
 
             const checkbox = makeElement('input', 'rule-toggle');
             checkbox.type = 'checkbox';
