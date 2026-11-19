@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.7.0
+// @version      7.8.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -1182,9 +1182,10 @@
                     title: selector,
                     path: RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充',
                     elementName: presentation.element,
-                    effectDescription: presentation.effect,
+                    effectDescription: presentation.effect +
+                        (rule.media ? '（生效条件：' + rule.media + '）' : ''),
                     pages: getRulePages(site, 'style', selector),
-                    detail: rule.media ? '媒体条件：' + rule.media : '',
+                    detail: '',
                     rule,
                     selector,
                     defaultEnabled: rule.enabled !== false
@@ -1316,10 +1317,8 @@
             '.rule-info{min-width:0;flex:1;}',
             '.rule-title{display:block;color:#354257;font-size:13px;font-weight:700;overflow-wrap:anywhere;}',
             '.rule-title code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#36475f;background:#f5f7fa;padding:2px 5px;border-radius:4px;}',
-            '.style-details{display:grid;gap:4px;margin-top:7px;}',
-            '.style-detail-line{display:flex;align-items:baseline;gap:8px;min-width:0;color:#647187;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}',
-            '.style-detail-label{flex:0 0 34px;color:#8793a5;font-size:11px;font-weight:750;}',
-            '.style-detail-value{min-width:0;color:#526176;}',
+            '.style-details{display:grid;gap:3px;margin-top:7px;}',
+            '.style-detail-line{min-width:0;color:#647187;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}',
             '.rule-description{margin-top:4px;color:#647187;font-size:12px;line-height:1.45;overflow-wrap:anywhere;}',
             '.rule-description.pending{color:#9a6412;}',
             '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
@@ -1417,18 +1416,10 @@
 
             if (feature === 'style') {
                 const details = makeElement('div', 'style-details');
-                const addStyleLine = (labelText, valueText) => {
-                    const line = makeElement('div', 'style-detail-line');
-                    line.append(
-                        makeElement('span', 'style-detail-label', labelText),
-                        makeElement('span', 'style-detail-value', valueText || '未提供')
-                    );
-                    details.append(line);
-                };
-
-                addStyleLine('元素', item.elementName);
-                addStyleLine('效果', item.effectDescription);
-                if (item.detail) addStyleLine('条件', item.detail);
+                details.append(
+                    makeElement('div', 'style-detail-line', item.elementName || '元素位置待补充'),
+                    makeElement('div', 'style-detail-line', item.effectDescription || '效果说明待补充')
+                );
                 info.append(title, details);
             } else {
                 const descriptionPath = (item.description || '位置待补充')
