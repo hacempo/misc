@@ -602,7 +602,7 @@
                 '.login': '隐藏帖子底部悬浮操作栏，以及回帖旁的点赞操作。',
                 '.icon_tshows': '隐藏楼主昵称旁边的图标。',
                 '.level-icon': '隐藏回帖用户昵称旁边的等级图标。',
-                '.interaction-bar': '隐藏贴吧主页上的操作栏。'
+                '.interaction-bar': '隐藏页面上的操作栏。'
             },
             '115': {
                 '#js_bottom_notification': '隐藏页面底部左侧的通知弹窗。',
@@ -615,7 +615,7 @@
                 '.ceiling-link-temp': '隐藏顶栏中的提示链接/提示条。'
             },
             '115vod': {
-                '.feature-float': '隐藏 115 视频页面底部右侧的悬浮弹窗。'
+                '.feature-float': '隐藏底部右侧的悬浮弹窗。'
             },
             nga: {
                 '.topicrow .c3': '隐藏帖子列表中的发帖人和发帖时间。',
@@ -652,19 +652,19 @@
                 '.WriteArea': '隐藏写回答区域。',
                 '.CornerButtonsGroup': '隐藏角落的悬浮按钮组（AI 助手）。',
                 '[aria-label="知乎"]': '隐藏顶栏中的知乎 Logo/名称区域。',
-                '.ContentItem-actions > :first-child': '非搜索页中隐藏回答操作栏第一个按钮，统一覆盖赞同和反对；VoteButton 已包含在这一项中。',
-                '.css-1qqx3d0 > :first-child': '搜索页中隐藏新版回答操作栏的第一个按钮。'
+                '.ContentItem-actions > :first-child': '隐藏回答操作栏第一个按钮，统一覆盖赞同和反对；VoteButton 已包含在这一项中。',
+                '.css-1qqx3d0 > :first-child': '隐藏新版回答操作栏的第一个按钮。'
             },
             bilibili: {
                 '.adblock-tips': '隐藏广告拦截提示，避免第三方广告拦截实现触发的提示占位。',
-                '.recommended-swipe': '隐藏哔哩哔哩首页轮播图区域。',
-                '.floor-single-card': '隐藏首页分区中的单张卡片；你已确认此类卡片包含烦人的广告、直播等内容。',
+                '.recommended-swipe': '隐藏轮播图区域。',
+                '.floor-single-card': '隐藏单张分区卡片；其中包含烦人的广告、直播等内容。',
                 '.feed-card:not(:has(.enable-no-interest))': '隐藏初始加载的信息流卡片中不含“不感兴趣”入口的卡片。',
                 '.bili-feed-card:not(:has(.enable-no-interest))': '隐藏页面下滑后动态加载的信息流卡片中不含“不感兴趣”入口的卡片。',
                 '.left-entry-main > :nth-child(n+4)': '隐藏哔哩哔哩顶栏左侧从第 4 项开始的入口。',
                 '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧只保留第 4 至第 6 个入口，隐藏其余入口。',
-                'aside': '隐藏动态页右侧栏。',
-                '.bili-dyn-publishing': '隐藏动态页的发布/投稿区域。'
+                'aside': '隐藏右侧栏。',
+                '.bili-dyn-publishing': '隐藏发布/投稿区域。'
             },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': '隐藏时间线中的发帖输入/发布区域（第 3 个直接子元素）。',
