@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.8.0
+// @version      7.9.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -1317,7 +1317,7 @@
             '.rule-info{min-width:0;flex:1;}',
             '.rule-title{display:block;color:#354257;font-size:13px;font-weight:700;overflow-wrap:anywhere;}',
             '.rule-title code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#36475f;background:#f5f7fa;padding:2px 5px;border-radius:4px;}',
-            '.style-details{display:grid;gap:3px;margin-top:7px;}',
+            '.style-details{display:grid;gap:4px;}',
             '.style-detail-line{min-width:0;color:#647187;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}',
             '.rule-description{margin-top:4px;color:#647187;font-size:12px;line-height:1.45;overflow-wrap:anywhere;}',
             '.rule-description.pending{color:#9a6412;}',
@@ -1407,12 +1407,6 @@
         const makeRuleRow = (site, feature, item) => {
             const row = makeElement('div', 'rule-row');
             const info = makeElement('div', 'rule-info');
-            const title = makeElement('div', 'rule-title');
-            if (feature === 'style' && item.selector) {
-                title.append(makeElement('code', '', item.selector));
-            } else {
-                title.textContent = item.title;
-            }
 
             if (feature === 'style') {
                 const details = makeElement('div', 'style-details');
@@ -1420,8 +1414,9 @@
                     makeElement('div', 'style-detail-line', item.elementName || '元素位置待补充'),
                     makeElement('div', 'style-detail-line', item.effectDescription || '效果说明待补充')
                 );
-                info.append(title, details);
+                info.append(details);
             } else {
+                const title = makeElement('div', 'rule-title', item.title);
                 const descriptionPath = (item.description || '位置待补充')
                     .split(' > ')
                     .map(segment => segment.trim())
