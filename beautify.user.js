@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.2
+// @version      7.3
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -31,7 +31,7 @@
     ];
 
     const hostname = location.hostname.toLowerCase();
-    const pathname = location.pathname;
+    let pathname = location.pathname;
 
     const isDomainMatch = domain =>
         hostname === domain || hostname.endsWith('.' + domain);
@@ -44,12 +44,16 @@
      *   enabled: false      仅保留记录，不生效
      *   domains             限定域名（含子域）
      *   onlyPaths           仅这些路径生效
+     *   exactPath           onlyPaths 中路径必须完全相等
+     *   onlyPathIncludes    路径包含指定片段时生效
      *   excludePaths        这些路径不生效
      */
     // 仅判断规则的域名/路径上下文；是否启用由每条规则自己的开关决定。
     const isRuleActive = rule =>
         (!rule.domains || rule.domains.some(isDomainMatch)) &&
-        (!rule.onlyPaths || matchesPath(rule.onlyPaths)) &&
+        (!rule.onlyPaths || (rule.exactPath
+            ? rule.onlyPaths.includes(pathname)
+            : matchesPath(rule.onlyPaths))) &&
         (!rule.onlyPathIncludes || rule.onlyPathIncludes.some(part => pathname.includes(part))) &&
         !(rule.excludePaths && matchesPath(rule.excludePaths));
 
@@ -448,6 +452,7 @@
             // X：首页发帖框，仅限 /home，避免误伤帖子详情页。
             domains: ['x.com'],
             onlyPaths: ['/home'],
+            exactPath: true,
             selectors: ['[aria-label="主页时间线"] > :nth-child(3)']
         },
         {
@@ -456,6 +461,7 @@
             onlyPathIncludes: ['/status/'],
             selectors: [
                 'article .r-qklmqi > :first-child',
+                'article .r-kzbkwu > :last-child',
                 '[data-testid="inline_reply_offscreen"]'
             ]
         },
@@ -768,6 +774,7 @@
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 输入框（仅 x.com/home）',
                 'article .r-qklmqi > :first-child': '帖子页 > 楼主帖子 > 操作栏',
+                'article .r-kzbkwu > :last-child': '帖子页 > 其他帖子 > 操作栏（原有规则）',
                 '[data-testid="inline_reply_offscreen"]': '帖子页 > 回复输入框',
                 'header[role="banner"]': '全站 > 左栏 > 导航区域',
                 '[data-testid="sidebarColumn"]': '全站 > 主要内容 > 右栏'
@@ -909,6 +916,7 @@
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': ['home'],
                 'article .r-qklmqi > :first-child': ['post'],
+                'article .r-kzbkwu > :last-child': ['post'],
                 '[data-testid="inline_reply_offscreen"]': ['post']
             }
         },
@@ -1803,5 +1811,44 @@
         }
     }
 
+    /*
+     * X、知乎等单页应用会在不刷新的情况下切换路由。
+     * 路径变化时重新生成样式表，避免 /home 的规则残留到帖子页等其他路由。
+     */
+    const checkPathChange = () => {
+        const nextPathname = location.pathname;
+        if (nextPathname === pathname) return;
+        pathname = nextPathname;
+        refreshCurrentPageRules();
+    };
+
+    const installHistoryRouteWatcher = () => {
+        for (const method of ['pushState', 'replaceState']) {
+            const original = history[method];
+            if (typeof original !== 'function' || original.__beautifyRouteHook) continue;
+
+            const wrapped = function (...args) {
+                const result = Reflect.apply(original, this, args);
+                queueMicrotask(checkPathChange);
+                return result;
+            };
+            Object.defineProperty(wrapped, '__beautifyRouteHook', { value: true });
+
+            try {
+                Object.defineProperty(history, method, {
+                    configurable: true,
+                    writable: true,
+                    value: wrapped
+                });
+            } catch (error) {
+                // 某些页面可能限制 History 实例属性；popstate 监听仍可覆盖后退/前进导航。
+            }
+        }
+
+        window.addEventListener('popstate', checkPathChange);
+        window.addEventListener('hashchange', checkPathChange);
+    };
+
+    installHistoryRouteWatcher();
     refreshCurrentPageRules();
 })();
