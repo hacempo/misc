@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.7
+// @version      6.8
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -9,6 +9,7 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant       GM_addValueChangeListener
 // ==/UserScript==
 
 (function () {
@@ -80,6 +81,7 @@
 
     const currentSite = SITES.find(site => site.domains.some(isDomainMatch));
     const currentSettings = currentSite && siteSettings.get(currentSite.id);
+    let refreshCurrentPageRules = () => {};
 
     // 设置界面需要在所有网站都可访问，因此先完成规则定义和设置菜单注册，
     // 再判断当前网页是否需要注入美化/屏蔽功能。
@@ -647,26 +649,26 @@
                 '.withSideMenuLayoutSider_ELJ6a': '网盘 > 主内容区 > 左侧菜单栏'
             },
             zhihu: {
-                '.css-bkewaf': '通用 > 页面布局 > 侧栏',
-                '.QuestionHeader-side': '回答 > 问题标题区 > 右侧栏',
-                '[href="https://www.zhihu.com/column-square"]': '通用 > 顶栏 > 专栏广场入口',
-                '[href="https://www.zhihu.com/ring-feeds"]': '通用 > 顶栏 > 圈子入口',
-                '.css-53paqb': '通用 > 顶栏 > 导航入口分隔符',
-                '[href="https://www.zhihu.com/project-square"]': '通用 > 顶栏 > AI Works/项目广场入口',
-                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '通用 > 顶栏 > 会员故事入口',
-                '[href="https://zhida.zhihu.com/"]': '通用 > 顶栏 > AI 直答入口',
-                '.SearchBar-askContainer': '通用 > 顶栏 > 搜索框旁 > 用户发布入口',
-                '.css-1vbrp2j': '通用 > 顶栏 > 消息和私信入口',
-                '.css-ruapjk': '通用 > 顶栏 > 最右侧 > 头像/用户界面入口',
-                '.QuestionHeader-footer': '回答 > 问题标题区 > 底部操作模块',
-                '.FollowButton': '回答 > 内容区 > 答主关注按钮',
-                '.Reward': '回答 > 内容区 > 赞赏按钮',
-                '[aria-label="喜欢"]': '回答 > 内容卡片 > 操作栏 > 喜欢按钮',
-                '[data-tooltip="解释这篇内容"]': '回答 > 内容卡片 > 操作栏 > 解释内容按钮',
-                '.WriteArea': '首页 > 内容区 > 写回答区域',
-                '.CornerButtonsGroup': '通用 > 页面角落 > 悬浮按钮组（AI 助手）',
-                '[aria-label="知乎"]': '通用 > 顶栏 > Logo/名称区域',
-                '.ContentItem-actions > :first-child': '回答 > 内容卡片 > 操作栏 > 第一个按钮（赞同/反对）',
+                '.css-bkewaf': '首页 > 主要内容 > 右栏',
+                '[aria-label="知乎"]': '全站 > 顶栏 > Logo',
+                '[href="https://www.zhihu.com/column-square"]': '全站 > 顶栏 > 专栏',
+                '[href="https://www.zhihu.com/ring-feeds"]': '全站 > 顶栏 > 圈子',
+                '.css-53paqb': '全站 > 顶栏 > 分隔符',
+                '[href="https://www.zhihu.com/project-square"]': '全站 > 顶栏 > AI Works',
+                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '全站 > 顶栏 > 故事',
+                '[href="https://zhida.zhihu.com/"]': '全站 > 顶栏 > 直答',
+                '.SearchBar-askContainer': '全站 > 顶栏 > 发布',
+                '.css-1vbrp2j': '全站 > 顶栏 > 消息、私信',
+                '.css-ruapjk': '全站 > 顶栏 > 头像',
+                '.ContentItem-actions > :first-child': '全站 > 主要内容 > 具体回答 > 操作栏 > 赞同/反对',
+                '[aria-label="喜欢"]': '全站 > 主要内容 > 具体回答 > 操作栏 > 喜欢',
+                '[data-tooltip="解释这篇内容"]': '全站 > 主要内容 > 具体回答 > 操作栏 > 解释',
+                '.WriteArea': '首页 > 主要内容 > 写回答（顶部）',
+                '.CornerButtonsGroup': '全站 > AI 助手（右下角）',
+                '.QuestionHeader-side': '回答页 > 悬浮顶栏 > 右侧栏',
+                '.QuestionHeader-footer': '回答页 > 顶部问题栏 > 底部操作栏',
+                '.FollowButton': '回答页 > 关注按钮（多个地方：关注用户、关注问题）',
+                '.Reward': '回答页 > 主要内容 > 具体回答 > 赞赏（可能会出现在底部）',
                 '.css-1qqx3d0 > :first-child': '搜索 > 搜索结果 > 操作栏 > 第一个按钮（赞同/反对）'
             },
             bilibili: {
@@ -698,14 +700,17 @@
     // 设置界面中的页面分类。
     const SITE_PAGES = {
         tieba: [
+            { id: 'global', label: '全站' },
             { id: 'home', label: '首页' },
             { id: 'thread', label: '帖子' }
         ],
         '115': [
+            { id: 'global', label: '全站' },
             { id: 'cloud', label: '网盘' },
             { id: 'play', label: '播放' }
         ],
         nga: [
+            { id: 'global', label: '全站' },
             { id: 'home', label: '首页' },
             { id: 'detail', label: '帖子' }
         ],
@@ -713,16 +718,19 @@
             { id: 'cloud', label: '网盘' }
         ],
         zhihu: [
+            { id: 'global', label: '全站' },
             { id: 'home', label: '首页' },
             { id: 'question', label: '回答' },
             { id: 'search', label: '搜索' }
         ],
         bilibili: [
+            { id: 'global', label: '全站' },
             { id: 'home', label: '首页' },
             { id: 'video', label: '播放' },
             { id: 'dynamic', label: '动态' }
         ],
         x: [
+            { id: 'global', label: '全站' },
             { id: 'home', label: '首页' },
             { id: 'post', label: '帖子' }
         ],
@@ -839,12 +847,17 @@
     };
 
     const getRulePages = (site, feature, ruleKey, isSpecial = false, ruleSiteId = site.id) => {
-        const pageIds = (SITE_PAGES[site.id] || [{ id: 'all', label: '全部' }])
-            .map(page => page.id);
+        const contentPageIds = (SITE_PAGES[site.id] || [{ id: 'all', label: '全部' }])
+            .map(page => page.id)
+            .filter(pageId => pageId !== 'global');
         const map = isSpecial
             ? RULE_PAGE_MAP.special?.[feature]?.[site.id]
             : RULE_PAGE_MAP[feature]?.[ruleSiteId];
-        return map?.[ruleKey] || pageIds;
+        const mappedPages = map?.[ruleKey];
+        if (mappedPages?.length > 1 || (!mappedPages && contentPageIds.length > 1)) {
+            return ['global'];
+        }
+        return mappedPages || contentPageIds;
     };
 
     const ruleItemId = (feature, rule, selector) => {
@@ -1026,7 +1039,7 @@
         const currentName = makeElement('div', 'current-name', selectedSite.name);
         topTitle.append(eyebrow, currentName);
         const spacer = makeElement('div', 'top-spacer');
-        const saveHint = makeElement('div', 'save-hint', '设置自动保存 · 刷新网页后生效');
+        const saveHint = makeElement('div', 'save-hint', '开关修改后会立即生效');
         const closeButton = makeElement('button', 'close-button', '×');
         closeButton.type = 'button';
         closeButton.title = '关闭设置';
@@ -1063,8 +1076,10 @@
             if (event.key === 'Escape') closeSettings();
         }
 
-        const updateSavedHint = () => {
-            saveHint.textContent = '已自动保存 · 刷新对应网页后生效';
+        const updateSavedHint = site => {
+            saveHint.textContent = site && currentSite?.id === site.id
+                ? '已自动保存 · 当前页面立即生效'
+                : '已自动保存 · 进入对应网站时生效';
         };
 
         const makeToggle = (checked, className, onChange, labelText) => {
@@ -1120,7 +1135,8 @@
             checkbox.addEventListener('change', () => {
                 GM_setValue(itemEnabledKey(feature, site.id, item.id), checkbox.checked);
                 checkbox.setAttribute('aria-label', (checkbox.checked ? '关闭' : '开启') + item.title);
-                updateSavedHint();
+                if (currentSite?.id === site.id) refreshCurrentPageRules();
+                updateSavedHint(site);
             });
 
             row.append(info, checkbox);
@@ -1143,7 +1159,11 @@
                 enabled => {
                     GM_setValue(featureEnabledKey(feature, site.id), enabled);
                     group.classList.toggle('master-off', !enabled);
-                    updateSavedHint();
+                    if (currentSite?.id === site.id && currentSettings) {
+                        currentSettings[feature] = enabled;
+                        refreshCurrentPageRules();
+                    }
+                    updateSavedHint(site);
                 },
                 '全站总开关'
             );
@@ -1254,7 +1274,7 @@
                 if (active) button.setAttribute('aria-current', 'page');
                 else button.removeAttribute('aria-current');
             }
-            updateSavedHint();
+            updateSavedHint(site);
         }
 
         function renderSite(site) {
@@ -1311,72 +1331,141 @@
 
     GM_registerMenuCommand('设置', openSettings);
 
-    // 非目标网站、或该站点的两项总开关都关闭：不注入页面规则，但仍保留设置入口。
-    if (!currentSite || (!currentSettings.style && !currentSettings.block)) return;
-
-    /* =====================================================================
-     * 生成并注入 CSS（样式在前、屏蔽在后，屏蔽优先）
-     * ===================================================================== */
+    if (!currentSite) return;
 
     const buildStyleRule = rule => {
         const declarations = Object.entries(rule.declarations)
             .map(([property, value]) => `    ${property}: ${value} !important;`)
-            .join('\n');
-        const body = `${rule.selectors.join(',\n')} {\n${declarations}\n}`;
-
-        return rule.media ? `@media ${rule.media} {\n${body}\n}` : body;
+            .join('\\n');
+        const body = `${rule.selectors.join(',\\n')} {\\n${declarations}\\n}`;
+        return rule.media ? `@media ${rule.media} {\\n${body}\\n}` : body;
     };
 
     const currentRuleItems = allSiteRuleItems.get(currentSite.id);
-
-    const styleCss = currentSettings.style
-        ? currentRuleItems.style
-            .filter(item =>
-                !item.special &&
-                isRuleActive(item.rule) &&
-                isItemEnabled('style', currentSite.id, item.id, item.defaultEnabled)
-            )
-            .map(item => buildStyleRule({
-                ...item.rule,
-                selectors: [item.selector]
-            }))
-        : [];
-
-    const blockCss = currentSettings.block
-        ? currentRuleItems.block
-            .filter(item =>
-                !item.special &&
-                isRuleActive(item.rule) &&
-                isItemEnabled('block', currentSite.id, item.id, item.defaultEnabled)
-            )
-            .map(item => `${item.selector} {\n    display: none !important;\n}`)
-        : [];
+    let injectedStyle = null;
+    let styleAttachObserver = null;
+    let syncZhihuContentWidth = () => {};
+    let syncBilibiliRules = () => {};
 
     const mountStyle = css => {
-        const style = document.createElement('style');
-        style.id = 'beautify-style';
-        style.textContent = css;
+        if (!css) {
+            if (injectedStyle?.parentNode) injectedStyle.parentNode.removeChild(injectedStyle);
+            injectedStyle = null;
+            if (styleAttachObserver) {
+                styleAttachObserver.disconnect();
+                styleAttachObserver = null;
+            }
+            return;
+        }
+        if (!injectedStyle) {
+            injectedStyle = document.createElement('style');
+            injectedStyle.id = 'beautify-style';
+        }
+        injectedStyle.textContent = css;
 
-        // document-start 时 head 可能还不存在：先挂到 documentElement，
-        // 等 head 出现后再移进去。
         const attach = () => {
             const target = document.head || document.documentElement;
-
-            if (target && style.parentNode !== target) target.appendChild(style);
-
+            if (target && injectedStyle && injectedStyle.parentNode !== target) {
+                target.appendChild(injectedStyle);
+            }
             return Boolean(document.head);
         };
-
-        if (!attach()) {
-            const observer = new MutationObserver(() => {
-                if (attach()) observer.disconnect();
+        if (attach()) {
+            if (styleAttachObserver) {
+                styleAttachObserver.disconnect();
+                styleAttachObserver = null;
+            }
+        } else if (!styleAttachObserver) {
+            styleAttachObserver = new MutationObserver(() => {
+                if (!attach()) return;
+                styleAttachObserver.disconnect();
+                styleAttachObserver = null;
             });
-            observer.observe(document, { childList: true, subtree: true });
+            styleAttachObserver.observe(document, { childList: true, subtree: true });
         }
     };
 
-    const allCss = [...styleCss, ...blockCss].join('\n\n');
-    if (allCss) mountStyle(allCss);
+    refreshCurrentPageRules = () => {
+        const styleCss = currentSettings.style
+            ? currentRuleItems.style
+                .filter(item =>
+                    !item.special &&
+                    isRuleActive(item.rule) &&
+                    isItemEnabled('style', currentSite.id, item.id, item.defaultEnabled)
+                )
+                .map(item => buildStyleRule({
+                    ...item.rule,
+                    selectors: [item.selector]
+                }))
+            : [];
+
+        const blockCss = currentSettings.block
+            ? currentRuleItems.block
+                .filter(item =>
+                    !item.special &&
+                    isRuleActive(item.rule) &&
+                    isItemEnabled('block', currentSite.id, item.id, item.defaultEnabled)
+                )
+                .map(item => `${item.selector} {\\n    display: none !important;\\n}`)
+            : [];
+
+        mountStyle([...styleCss, ...blockCss].join('\\n\\n'));
+        syncZhihuContentWidth();
+        syncBilibiliRules();
+    };
+
+
+    /* =====================================================================
+     * 知乎：动态设置顶栏宽度变量；开关关闭时清除观察器和变量。
+     * ===================================================================== */
+
+    let zhihuWidthResizeObserver = null;
+    let zhihuWidthBodyObserver = null;
+
+    syncZhihuContentWidth = () => {
+        if (currentSite.id !== 'zhihu') return;
+        const enabled = currentSettings.style &&
+            isItemEnabled('style', 'zhihu', 'zhihu-header-width');
+
+        if (!enabled) {
+            if (zhihuWidthResizeObserver) {
+                zhihuWidthResizeObserver.disconnect();
+                zhihuWidthResizeObserver = null;
+            }
+            if (zhihuWidthBodyObserver) {
+                zhihuWidthBodyObserver.disconnect();
+                zhihuWidthBodyObserver = null;
+            }
+            document.documentElement.style.removeProperty('--beautify-content-width');
+            return;
+        }
+
+        const update = () => {
+            if (!document.body) return;
+            const width = document.body.getBoundingClientRect().width;
+            if (width > 0) {
+                document.documentElement.style.setProperty('--beautify-content-width', width + 'px');
+            }
+        };
+        const attach = () => {
+            if (!document.body) return false;
+            if (!zhihuWidthResizeObserver) {
+                zhihuWidthResizeObserver = new ResizeObserver(update);
+                zhihuWidthResizeObserver.observe(document.body);
+            }
+            update();
+            return true;
+        };
+
+        if (!attach() && !zhihuWidthBodyObserver) {
+            zhihuWidthBodyObserver = new MutationObserver(() => {
+                if (!attach()) return;
+                zhihuWidthBodyObserver.disconnect();
+                zhihuWidthBodyObserver = null;
+            });
+            zhihuWidthBodyObserver.observe(document.documentElement, { childList: true });
+        }
+    };
 
 
     /* =====================================================================
@@ -1430,20 +1519,9 @@
      *        └─ #navbar、#commentbox、悬浮输入框
      * ===================================================================== */
 
-    const installBilibiliShadowRules = ({
-        commentPadding,
-        navbarMargin,
-        goodsComments,
-        commentFooters,
-        commentInput,
-        floatingCommentInput
-    }) => {
-        const hasActiveRule = [
-            commentPadding, navbarMargin, goodsComments,
-            commentFooters, commentInput, floatingCommentInput
-        ].some(Boolean);
-
-        if (hostname !== 'www.bilibili.com' || !hasActiveRule) return;
+    const installBilibiliShadowRules = initialRules => {
+        if (hostname !== 'www.bilibili.com') return () => {};
+        let liveRules = { ...initialRules };
 
         const SHADOW_COMPONENTS = new Set([
             'bili-comments',
@@ -1453,25 +1531,35 @@
             'bili-comment-reply-renderer',
             'bili-comments-header-renderer'
         ]);
-
-        const rootObservers = new Map();       // shadowRoot -> MutationObserver
-        const pendingHosts = new Set();        // 已发现但尚未 attachShadow 的宿主
-        const threadOriginalDisplay = new WeakMap();
+        const rootObservers = new Map();
+        const pendingHosts = new Set();
+        const originalStyles = new WeakMap();
         let applyScheduled = false;
 
-        const scheduleApply = () => {
-            if (applyScheduled) return;
-            applyScheduled = true;
-
-            queueMicrotask(() => {
-                applyScheduled = false;
-                applyRules();
-            });
-        };
-
-        const setImportantStyle = (element, property, value) => {
+        const setManagedStyle = (element, property, value) => {
             if (!element) return;
+            let saved = originalStyles.get(element);
 
+            if (value === null) {
+                if (!saved?.has(property)) return;
+                const original = saved.get(property);
+                if (original.value) element.style.setProperty(property, original.value, original.priority);
+                else element.style.removeProperty(property);
+                saved.delete(property);
+                if (!saved.size) originalStyles.delete(element);
+                return;
+            }
+
+            if (!saved) {
+                saved = new Map();
+                originalStyles.set(element, saved);
+            }
+            if (!saved.has(property)) {
+                saved.set(property, {
+                    value: element.style.getPropertyValue(property),
+                    priority: element.style.getPropertyPriority(property)
+                });
+            }
             if (
                 element.style.getPropertyValue(property) !== value ||
                 element.style.getPropertyPriority(property) !== 'important'
@@ -1480,19 +1568,22 @@
             }
         };
 
-        const hide = element => setImportantStyle(element, 'display', 'none');
+        const scheduleApply = () => {
+            if (applyScheduled) return;
+            applyScheduled = true;
+            queueMicrotask(() => {
+                applyScheduled = false;
+                applyRules();
+            });
+        };
 
         const observeRoot = (shadowRoot, isHeader = false) => {
             if (rootObservers.has(shadowRoot)) return;
-
             const observer = new MutationObserver(scheduleApply);
-
             observer.observe(shadowRoot, {
                 childList: true,
                 subtree: true,
                 attributes: true,
-                // Header 的悬浮输入框通过 class/style 切换显示；
-                // 评论内容只需关注商品标记。
                 attributeFilter: isHeader
                     ? ['class', 'style', 'hidden', 'aria-hidden']
                     : ['data-type']
@@ -1500,138 +1591,96 @@
             rootObservers.set(shadowRoot, observer);
         };
 
-        const setThreadHidden = (thread, hidden) => {
-            if (hidden) {
-                if (!threadOriginalDisplay.has(thread)) {
-                    threadOriginalDisplay.set(thread, {
-                        value: thread.style.getPropertyValue('display'),
-                        priority: thread.style.getPropertyPriority('display')
-                    });
-                }
-                setImportantStyle(thread, 'display', 'none');
-                return;
-            }
-
-            const original = threadOriginalDisplay.get(thread);
-            if (!original) return;
-
-            if (original.value) {
-                thread.style.setProperty('display', original.value, original.priority);
-            } else {
-                thread.style.removeProperty('display');
-            }
-            threadOriginalDisplay.delete(thread);
-        };
-
-        /*
-         * 遍历一条评论（含任意深度 Shadow DOM）：
-         * 1. 查找商品标记，有则隐藏整条评论；
-         * 2. 隐藏每条评论/回复内的 #footer；
-         * 3. 记录尚未 attachShadow 的组件，交给定时器兜底。
-         */
         const scanThread = thread => {
             let hasGoods = false;
-
             const walk = node => {
                 if (node.nodeType === Node.ELEMENT_NODE) {
-                    if (goodsComments && node.matches('[data-type="goods"]')) {
+                    if (liveRules.goodsComments && node.matches('[data-type="goods"]')) {
                         hasGoods = true;
                     }
-
                     const tag = node.localName;
                     const shadowRoot = node.shadowRoot;
-
                     if (shadowRoot) {
                         observeRoot(shadowRoot);
-
-                        if (
-                            commentFooters &&
-                            (tag === 'bili-comment-renderer' ||
-                             tag === 'bili-comment-reply-renderer')
-                        ) {
-                            hide(shadowRoot.querySelector('#footer'));
+                        if (tag === 'bili-comment-renderer' || tag === 'bili-comment-reply-renderer') {
+                            setManagedStyle(
+                                shadowRoot.querySelector('#footer'),
+                                'display',
+                                liveRules.commentFooters ? 'none' : null
+                            );
                         }
-
                         walk(shadowRoot);
                     } else if (SHADOW_COMPONENTS.has(tag)) {
                         pendingHosts.add(node);
                     }
                 }
-
                 for (const child of node.children || []) walk(child);
             };
-
             walk(thread);
-            if (goodsComments) setThreadHidden(thread, hasGoods);
+            setManagedStyle(
+                thread,
+                'display',
+                liveRules.goodsComments && hasGoods ? 'none' : null
+            );
         };
 
         const applyRules = () => {
             const commentsHost = document.querySelector('#commentapp > bili-comments');
             const root = commentsHost && commentsHost.shadowRoot;
-
             if (!root) {
                 if (commentsHost) pendingHosts.add(commentsHost);
                 return;
             }
 
             observeRoot(root);
-
-            if (commentPadding) {
-                setImportantStyle(root.querySelector('#contents'), 'padding-top', '0px');
-            }
-
-            if (goodsComments || commentFooters) {
-                root.querySelectorAll('#feed > bili-comment-thread-renderer')
-                    .forEach(scanThread);
-            }
+            setManagedStyle(
+                root.querySelector('#contents'),
+                'padding-top',
+                liveRules.commentPadding ? '0px' : null
+            );
+            root.querySelectorAll('#feed > bili-comment-thread-renderer').forEach(scanThread);
 
             const headerHost = root.querySelector('#header > bili-comments-header-renderer');
             const headerRoot = headerHost && headerHost.shadowRoot;
-
             if (headerHost && !headerRoot) {
                 pendingHosts.add(headerHost);
                 return;
             }
-
             if (headerRoot) {
-                observeRoot(headerRoot, commentInput || floatingCommentInput);
-
-                if (navbarMargin) {
-                    setImportantStyle(headerRoot.querySelector('#navbar'), 'margin-bottom', '0px');
-                }
-
-                if (commentInput) hide(headerRoot.querySelector('#commentbox'));
-                if (floatingCommentInput) {
-                    hide(headerRoot.querySelector('.bili-comments-bottom-fixed-wrapper'));
-                }
+                observeRoot(headerRoot, true);
+                setManagedStyle(
+                    headerRoot.querySelector('#navbar'),
+                    'margin-bottom',
+                    liveRules.navbarMargin ? '0px' : null
+                );
+                setManagedStyle(
+                    headerRoot.querySelector('#commentbox'),
+                    'display',
+                    liveRules.commentInput ? 'none' : null
+                );
+                setManagedStyle(
+                    headerRoot.querySelector('.bili-comments-bottom-fixed-wrapper'),
+                    'display',
+                    liveRules.floatingCommentInput ? 'none' : null
+                );
             }
         };
 
-        // 新评论、展开回复、翻页、Header 动态节点变化时重新扫描。
         const documentObserver = new MutationObserver(scheduleApply);
         documentObserver.observe(document, { childList: true, subtree: true });
-
         applyRules();
 
-        // 只检查此前见过、但当时尚未创建 ShadowRoot 的宿主节点。
         const pendingTimer = window.setInterval(() => {
             if (document.visibilityState !== 'visible') return;
-
             let found = false;
-
             for (const host of pendingHosts) {
-                if (!host.isConnected) {
+                if (!host.isConnected) pendingHosts.delete(host);
+                else if (host.shadowRoot) {
                     pendingHosts.delete(host);
-                } else if (host.shadowRoot) {
-                    pendingHosts.delete(host);
-                    observeRoot(
-                        host.shadowRoot,
-                        host.localName === 'bili-comments-header-renderer'
-                    );
+                    observeRoot(host.shadowRoot, host.localName === 'bili-comments-header-renderer');
                     found = true;
                 }
             }
-
             if (found) scheduleApply();
         }, 1000);
 
@@ -1646,10 +1695,30 @@
         for (const name of SHADOW_COMPONENTS) {
             window.customElements.whenDefined(name).then(scheduleApply);
         }
+
+        return nextRules => {
+            liveRules = { ...nextRules };
+            scheduleApply();
+        };
     };
 
+    let updateBilibiliShadowRules = () => {};
     if (currentSite.id === 'bilibili') {
-        installBilibiliShadowRules({
+        updateBilibiliShadowRules = installBilibiliShadowRules({
+            commentPadding: currentSettings.style &&
+                isItemEnabled('style', 'bilibili', 'bili-comment-content-padding'),
+            navbarMargin: currentSettings.style &&
+                isItemEnabled('style', 'bilibili', 'bili-comment-navbar-margin'),
+            goodsComments: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-goods-comments'),
+            commentFooters: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-comment-footers'),
+            commentInput: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-comment-input'),
+            floatingCommentInput: currentSettings.block &&
+                isItemEnabled('block', 'bilibili', 'bili-floating-comment-input')
+        });
+        syncBilibiliRules = () => updateBilibiliShadowRules({
             commentPadding: currentSettings.style &&
                 isItemEnabled('style', 'bilibili', 'bili-comment-content-padding'),
             navbarMargin: currentSettings.style &&
@@ -1664,4 +1733,24 @@
                 isItemEnabled('block', 'bilibili', 'bili-floating-comment-input')
         });
     }
+
+    if (typeof GM_addValueChangeListener === 'function') {
+        for (const feature of ['style', 'block']) {
+            GM_addValueChangeListener(
+                featureEnabledKey(feature, currentSite.id),
+                (_key, _oldValue, newValue) => {
+                    if (typeof newValue === 'boolean') currentSettings[feature] = newValue;
+                    refreshCurrentPageRules();
+                }
+            );
+            for (const item of currentRuleItems[feature]) {
+                GM_addValueChangeListener(
+                    itemEnabledKey(feature, currentSite.id, item.id),
+                    () => refreshCurrentPageRules()
+                );
+            }
+        }
+    }
+
+    refreshCurrentPageRules();
 })();
