@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.5.0
+// @version      7.6.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -603,7 +603,11 @@
                 {
                     id: 'zhihu-header-width',
                     title: '顶栏宽度自适应',
-                    description: '全站 > 顶栏 > 固定外层容器；选择器：div:has(> header.AppHeader)；实现：ResizeObserver 监听 body 实际宽度，将宽度写入 --beautify-content-width，供该固定容器使用，避免 100vw 造成横向溢出'
+                    path: '全站 > 顶栏 > 固定外层容器',
+                    pathSelector: 'div:has(> header.AppHeader)',
+                    elementName: '直接包含 header.AppHeader 的固定定位外层 div',
+                    styleText: 'width: var(--beautify-content-width) !important; max-width: none !important; box-sizing: border-box !important；JS：ResizeObserver 将 body 实际宽度写入 --beautify-content-width',
+                    effectDescription: '让固定顶栏宽度与 body 的实际宽度一致，避免 100vw 把滚动条宽度也计入而造成横向溢出。'
                 }
             ],
             block: []
@@ -613,12 +617,20 @@
                 {
                     id: 'bili-comment-content-padding',
                     title: '评论区内容顶部间距',
-                    description: '播放 > 评论区 > 内容区；选择器：#commentapp > bili-comments 的 Shadow DOM 内 #contents；修改：padding-top: 0px（通过 JS 写入，清除内容区顶部留白）'
+                    path: '播放 > 评论区 > 内容区',
+                    pathSelector: '#commentapp',
+                    elementName: 'bili-comments 的 Shadow DOM 内 #contents',
+                    styleText: 'padding-top: 0px !important（JS 通过 element.style.setProperty 写入）',
+                    effectDescription: '清除评论区内容区域顶部留白。'
                 },
                 {
                     id: 'bili-comment-navbar-margin',
                     title: '评论区导航栏间距',
-                    description: '播放 > 评论区 > 顶部导航栏；选择器：#commentapp > bili-comments > #header > bili-comments-header-renderer 的 Shadow DOM 内 #navbar；修改：margin-bottom: 0px（通过 JS 写入，移除导航栏下方间距）'
+                    path: '播放 > 评论区 > 顶部导航栏',
+                    pathSelector: '#commentapp',
+                    elementName: 'bili-comments-header-renderer 的 Shadow DOM 内 #navbar',
+                    styleText: 'margin-bottom: 0px !important（JS 通过 element.style.setProperty 写入）',
+                    effectDescription: '清除评论区顶部导航栏下方的多余间距。'
                 }
             ],
             block: [
@@ -1173,21 +1185,24 @@
 
     const getSiteRuleItems = site => {
         const style = (STYLE_RULES[site.id] || []).flatMap(rule =>
-            rule.selectors.map(selector => ({
-                id: ruleItemId('style', rule, selector),
-                feature: 'style',
-                title: selector,
-                description:
-                    (RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充') +
-                    '；选择器：' + selector +
-                    '；修改：' + describeCssDeclarations(rule.declarations) +
-                    '；以上声明均以 !important 覆盖页面原样式',
-                pages: getRulePages(site, 'style', selector),
-                detail: rule.media ? '媒体条件：' + rule.media : '',
-                rule,
-                selector,
-                defaultEnabled: rule.enabled !== false
-            }))
+            rule.selectors.map(selector => {
+                const presentation = getStylePresentation(site.id, selector, rule);
+                return {
+                    id: ruleItemId('style', rule, selector),
+                    feature: 'style',
+                    title: presentation.title,
+                    path: RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充',
+                    pathSelector: selector,
+                    elementName: presentation.element,
+                    styleText: formatCssStyle(rule.declarations),
+                    effectDescription: presentation.effect,
+                    pages: getRulePages(site, 'style', selector),
+                    detail: rule.media ? '媒体条件：' + rule.media : '',
+                    rule,
+                    selector,
+                    defaultEnabled: rule.enabled !== false
+                };
+            })
         );
 
         const block = BLOCK_RULES
