@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.0
+// @version      7.1
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -533,7 +533,7 @@
                 {
                     id: 'zhihu-header-width',
                     title: '顶栏宽度自适应',
-                    description: '通用 > 顶栏 > 宽度自适应'
+                    description: '全站 > 顶栏 > 固定外层容器 > 用 ResizeObserver 监听 body 宽度并动态写入 CSS 变量'
                 }
             ],
             block: []
@@ -543,12 +543,12 @@
                 {
                     id: 'bili-comment-content-padding',
                     title: '评论区内容顶部间距',
-                    description: '播放 > 评论区 > 内容顶部间距'
+                    description: '播放 > 评论区 > 内容区 > 将 #contents 的 padding-top 设为 0'
                 },
                 {
                     id: 'bili-comment-navbar-margin',
                     title: '评论区导航栏间距',
-                    description: '播放 > 评论区 > 顶部导航栏下方间距'
+                    description: '播放 > 评论区 > 顶部导航栏 > 将 margin-bottom 设为 0'
                 }
             ],
             block: [
