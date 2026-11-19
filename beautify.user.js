@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.1
+// @version      7.2
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -953,7 +953,7 @@
             domains: rule.domains || [],
             onlyPaths: rule.onlyPaths || [],
             excludePaths: rule.excludePaths || [],
-            onlyPathIncludes: rule.onlyPathIncludes || [],
+            onlyPathIncludes: rule.onlyPathIncludes,
             media: rule.media || '',
             declarations: rule.declarations || null,
             enabled: rule.enabled !== false
