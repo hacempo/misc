@@ -50,6 +50,7 @@
     const isRuleActive = rule =>
         (!rule.domains || rule.domains.some(isDomainMatch)) &&
         (!rule.onlyPaths || matchesPath(rule.onlyPaths)) &&
+        (!rule.onlyPathIncludes || rule.onlyPathIncludes.some(part => pathname.includes(part))) &&
         !(rule.excludePaths && matchesPath(rule.excludePaths));
 
     const legacyEnabledKey = id => 'beautify:enabled:' + id;
@@ -297,6 +298,19 @@
                     'grid-column': '1 / -1'
                 }
             }
+        ],
+
+        x: [
+            {
+                // 主内容容器占满视口可用宽度。
+                selectors: ['.r-113js5t'],
+                declarations: { width: '100%', 'max-width': 'none' }
+            },
+            {
+                // 主栏填满主内容容器；max-width:auto 无效，改用 none 并明确设宽度。
+                selectors: ['.r-1ye8kvj'],
+                declarations: { width: '100%', 'max-width': 'none', 'min-width': '0' }
+            }
         ]
     };
 
@@ -366,6 +380,8 @@
             domains: ['www.zhihu.com'],
             selectors: [
                 '.css-bkewaf',
+                '.css-18opwoy',
+                '.css-79elbk > :first-child',
                 '[aria-label="知乎"]',
                 '[href="https://www.zhihu.com/column-square"]',
                 '[href="https://www.zhihu.com/ring-feeds"]',
@@ -429,12 +445,24 @@
             selectors: ['aside', '.bili-dyn-publishing']
         },
         {
-            // X：首页发帖区域及每条帖子的操作栏
+            // X：首页发帖框，仅限 /home，避免误伤帖子详情页。
             domains: ['x.com'],
+            onlyPaths: ['/home'],
+            selectors: ['[aria-label="主页时间线"] > :nth-child(3)']
+        },
+        {
+            // X：帖子详情页楼主操作栏与回复输入框，只在 /status/ 路由生效。
+            domains: ['x.com'],
+            onlyPathIncludes: ['/status/'],
             selectors: [
-                '[aria-label="主页时间线"] > :nth-child(3)',
-                'article .r-kzbkwu > :last-child'
+                'article .r-qklmqi > :first-child',
+                '[data-testid="inline_reply_offscreen"]'
             ]
+        },
+        {
+            // X：左侧导航与右侧推荐栏。使用 banner header 精确定位左侧栏。
+            domains: ['x.com'],
+            selectors: ['header[role="banner"]', '[data-testid="sidebarColumn"]']
         },
         {
             // 抖音：评论信息/操作栏及相关输入、推荐模块
@@ -533,7 +561,7 @@
                 {
                     id: 'zhihu-header-width',
                     title: '顶栏宽度自适应',
-                    description: '全站 > 顶栏 > 固定外层容器 > 用 ResizeObserver 监听 body 宽度并动态写入 CSS 变量'
+                    description: '全站 > 顶栏 > 固定外层容器；选择器：div:has(> header.AppHeader)；实现：ResizeObserver 监听 body 实际宽度，将宽度写入 --beautify-content-width，供该固定容器使用，避免 100vw 造成横向溢出'
                 }
             ],
             block: []
@@ -543,80 +571,127 @@
                 {
                     id: 'bili-comment-content-padding',
                     title: '评论区内容顶部间距',
-                    description: '播放 > 评论区 > 内容区 > 将 #contents 的 padding-top 设为 0'
+                    description: '播放 > 评论区 > 内容区；选择器：#commentapp > bili-comments 的 Shadow DOM 内 #contents；修改：padding-top: 0px（通过 JS 写入，清除内容区顶部留白）'
                 },
                 {
                     id: 'bili-comment-navbar-margin',
                     title: '评论区导航栏间距',
-                    description: '播放 > 评论区 > 顶部导航栏 > 将 margin-bottom 设为 0'
+                    description: '播放 > 评论区 > 顶部导航栏；选择器：#commentapp > bili-comments > #header > bili-comments-header-renderer 的 Shadow DOM 内 #navbar；修改：margin-bottom: 0px（通过 JS 写入，移除导航栏下方间距）'
                 }
             ],
             block: [
                 {
                     id: 'bili-goods-comments',
                     title: '商品标记评论',
-                    description: '播放 > 评论区 > 带商品标记的评论'
+                    description: '播放 > 评论区 > 评论；选择器：[data-type="goods"]（检测商品标记），命中后隐藏所属 bili-comment-thread-renderer（display: none，通过 JS 控制）'
                 },
                 {
                     id: 'bili-comment-footers',
                     title: '评论操作栏',
-                    description: '播放 > 评论区 > 评论 > 操作栏'
+                    description: '播放 > 评论区 > 评论 > 操作栏；选择器：bili-comment-renderer 的 Shadow DOM 内 #footer、bili-comment-reply-renderer 的 Shadow DOM 内 #footer；修改：display: none（通过 JS 隐藏主评论和回复的操作栏）'
                 },
                 {
                     id: 'bili-comment-input',
                     title: '评论输入框',
-                    description: '播放 > 评论区 > 顶部输入框'
+                    description: '播放 > 评论区 > 顶部输入框；选择器：bili-comments-header-renderer 的 Shadow DOM 内 #commentbox；修改：display: none（通过 JS 隐藏输入框）'
                 },
                 {
                     id: 'bili-floating-comment-input',
                     title: '悬浮评论输入框',
-                    description: '播放 > 评论区 > 底部悬浮输入框'
+                    description: '播放 > 评论区 > 底部悬浮输入框；选择器：.bili-comments-bottom-fixed-wrapper（位于 bili-comments-header-renderer 的 Shadow DOM）；修改：display: none（通过 JS 隐藏悬浮输入框）'
                 }
             ]
         }
     };
 
 
-    // 每条规则的可读说明；类名语义不明确的项目会明确标记为待确认。
+    // 将实际 declarations 转成可核对的中文说明，避免美化描述只说位置、不说如何修改。
+    const CSS_PROPERTY_LABELS = {
+        width: '宽度',
+        'max-width': '最大宽度上限',
+        'min-width': '最小宽度下限',
+        height: '高度',
+        'max-height': '最大高度上限',
+        'min-height': '最小高度下限',
+        display: '布局显示方式',
+        flex: '弹性布局参数',
+        'flex-grow': '弹性伸展系数',
+        'flex-shrink': '弹性收缩系数',
+        'flex-basis': '弹性基准尺寸',
+        'grid-column': '网格列占位',
+        gap: '项目间距',
+        'column-gap': '列间距',
+        'row-gap': '行间距',
+        margin: '外边距',
+        'margin-left': '左外边距',
+        'margin-right': '右外边距',
+        'margin-top': '上外边距',
+        'margin-bottom': '下外边距',
+        padding: '内边距',
+        'padding-left': '左内边距',
+        'padding-right': '右内边距',
+        'padding-top': '上内边距',
+        'padding-bottom': '下内边距',
+        'align-items': '交叉轴对齐方式',
+        'justify-content': '主轴对齐方式',
+        'box-sizing': '盒模型计算方式'
+    };
+
+    const describeCssDeclarations = declarations =>
+        Object.entries(declarations).map(([property, value]) => {
+            const label = CSS_PROPERTY_LABELS[property] || property;
+            const valueText = value === 'none'
+                ? '取消限制'
+                : value === '0' || value === '0px'
+                    ? '清零'
+                    : '设为 ' + value;
+            return label + valueText + '（' + property + ': ' + value + '）';
+        }).join('；');
+
+    // 每条规则的可读说明；美化项会自动附加实际选择器与 declarations。
     const RULE_HINTS = {
         style: {
             tieba: {
-                '.main-page-wrap': '首页 > 主内容区 > 取消最大宽度限制（max-width: none）',
-                '.nav-bar-v2-fixed': '顶栏 > 固定导航栏 > 取消最大宽度限制（max-width: none）'
+                '.main-page-wrap': '首页 > 主内容区',
+                '.nav-bar-v2-fixed': '全站 > 顶栏 > 固定导航栏'
             },
             zhihu: {
-                '.Question-main': '回答页 > 主要内容 > 主栏 > 铺满可用宽度、清除左右留白并压缩列间距',
-                '.Question-mainColumn': '回答页 > 主要内容 > 正文主栏 > 铺满剩余空间并清除左右留白',
-                '.css-1gl8cva': '回答页 > 主要内容 > 主栏内层 > 宽度铺满并清除左右留白',
-                '.Topstory-container': '首页 > 主要内容 > 外层容器 > 宽度铺满并清除左右内边距',
-                '.Topstory-mainColumn': '首页 > 主要内容 > 主栏 > 铺满宽度、允许收缩并移除右侧空隙',
-                '.Topstory-mainColumnCard': '首页 > 主要内容 > 主栏卡片 > 宽度铺满父容器',
-                '.Topstory-content': '首页 > 主要内容 > 信息流 > 宽度铺满父容器',
-                '.Topstory-recommend': '首页 > 主要内容 > 推荐区域 > 宽度铺满父容器',
-                'div:has(> header.AppHeader)': '全站 > 顶栏 > 固定外层容器 > 按 body 实际宽度设置宽度，避免 100vw 引起横向溢出',
-                'header.AppHeader': '全站 > 顶栏 > 主容器 > 宽度铺满并取消左右外边距',
-                'header.AppHeader > div': '全站 > 顶栏 > 内层容器 > 宽度铺满父级',
-                'header.AppHeader > div > .css-51utkw': '全站 > 顶栏 > 中间导航和搜索区 > 使用弹性布局占据剩余空间',
-                'header.AppHeader > div > .css-51utkw > .css-51utkw': '全站 > 顶栏 > 导航内层 > 宽度铺满并允许弹性伸展',
-                'header.AppHeader .css-1ndlr1n': '全站 > 顶栏 > 子区域 > 限制最大宽度并允许收缩，避免挤出容器',
-                '.css-x84wzl': '全站 > 顶栏 > 搜索区域 > 允许收缩并靠右排列',
-                '.css-x84wzl .SearchBar': '全站 > 顶栏 > 搜索框 > 屏幕宽度至少 800px 时设为 400–540px 响应式宽度',
-                '.css-x84wzl .SearchBar-tool': '全站 > 顶栏 > 搜索工具栏 > 宽度铺满可用区域',
-                '.css-14iuq0r': '全站 > 顶栏 > 左侧区域 > 取消最大宽度限制',
-                '.QuestionHeader': '回答页 > 顶部问题栏 > 容器宽度铺满并取消左右外边距',
-                '.QuestionHeader-content': '回答页 > 顶部问题栏 > 内容区 > 宽度铺满并清除左右内边距',
-                '.QuestionHeader-main': '回答页 > 顶部问题栏 > 主内容区 > 宽度设为 100%',
-                '.ContentItem-actions > :nth-child(2)': '全站 > 主要内容 > 回答操作栏 > 第二个按钮取消左侧间距',
-                '.ContentItem-actions': '全站 > 主要内容 > 回答操作栏 > 左右各向外扩展 16px',
-                '.css-1qqx3d0 > :nth-child(2)': '搜索 > 主要内容 > 具体回答 > 操作栏 > 第二个按钮取消左侧间距',
-                '.css-1qqx3d0': '搜索 > 主要内容 > 具体回答 > 操作栏 > 左右各向外扩展 16px',
-                '.Search-container': '搜索 > 主要内容 > 外层容器 > 清除内边距并铺满宽度',
-                '#SearchMain': '搜索 > 主要内容 > 主内容区 > 铺满宽度并取消右侧外边距',
-                '.SearchTabs-inner': '搜索 > 顶部 > 悬浮工具栏 > 改为 flex 布局，宽度铺满并取消外边距和最大宽度限制',
-                '.SearchTabs-searchBarContainer': '搜索 > 顶部 > 悬浮工具栏 > 搜索框 > 自动靠右并保持内容宽度'
+                '.Question-main': '回答页 > 主要内容 > 主栏',
+                '.Question-mainColumn': '回答页 > 主要内容 > 正文主栏',
+                '.css-1gl8cva': '回答页 > 主要内容 > 主栏内层',
+                '.Topstory-container': '首页 > 主要内容 > 外层容器',
+                '.Topstory-mainColumn': '首页 > 主要内容 > 主栏',
+                '.Topstory-mainColumnCard': '首页 > 主要内容 > 主栏卡片',
+                '.Topstory-content': '首页 > 主要内容 > 信息流',
+                '.Topstory-recommend': '首页 > 主要内容 > 推荐区域',
+                'div:has(> header.AppHeader)': '全站 > 顶栏 > 固定外层容器',
+                'header.AppHeader': '全站 > 顶栏 > 主容器',
+                'header.AppHeader > div': '全站 > 顶栏 > 内层容器',
+                'header.AppHeader > div > .css-51utkw': '全站 > 顶栏 > 中间导航和搜索区',
+                'header.AppHeader > div > .css-51utkw > .css-51utkw': '全站 > 顶栏 > 导航内层',
+                'header.AppHeader .css-1ndlr1n': '全站 > 顶栏 > 导航子区域',
+                '.css-x84wzl': '全站 > 顶栏 > 搜索区域',
+                '.css-x84wzl .SearchBar': '全站 > 顶栏 > 搜索框',
+                '.css-x84wzl .SearchBar-tool': '全站 > 顶栏 > 搜索工具栏',
+                '.css-14iuq0r': '全站 > 顶栏 > 左侧区域',
+                '.QuestionHeader': '回答页 > 顶部问题栏 > 容器',
+                '.QuestionHeader-content': '回答页 > 顶部问题栏 > 内容区',
+                '.QuestionHeader-main': '回答页 > 顶部问题栏 > 主内容区',
+                '.ContentItem-actions > :nth-child(2)': '全站 > 主要内容 > 具体回答 > 操作栏 > 第二个按钮',
+                '.ContentItem-actions': '全站 > 主要内容 > 具体回答 > 操作栏',
+                '.css-1qqx3d0 > :nth-child(2)': '搜索 > 主要内容 > 具体回答 > 操作栏 > 第二个按钮',
+                '.css-1qqx3d0': '搜索 > 主要内容 > 具体回答 > 操作栏',
+                '.Search-container': '搜索 > 主要内容 > 外层容器',
+                '#SearchMain': '搜索 > 主要内容 > 主内容区',
+                '.SearchTabs-inner': '搜索 > 顶部 > 悬浮工具栏',
+                '.SearchTabs-searchBarContainer': '搜索 > 顶部 > 悬浮工具栏 > 搜索框'
             },
             bilibili: {
-                'main': '动态 > 主要内容 > 主栏 > 宽度铺满、清除左右外边距并跨满网格列'
+                'main': '动态 > 主要内容 > 主栏'
+            },
+            x: {
+                '.r-113js5t': '全站 > 主要内容 > 主容器',
+                '.r-1ye8kvj': '全站 > 主要内容 > 主栏'
             }
         },
         block: {
@@ -656,6 +731,8 @@
             },
             zhihu: {
                 '.css-bkewaf': '全站 > 主要内容 > 右栏',
+                '.css-18opwoy': '全站 > 主要内容 > 具体回答 > 评论区 > 评论 > 回复、点赞',
+                '.css-79elbk > :first-child': '全站 > 主要内容 > 具体回答 > 评论区 > 回复栏',
                 '[aria-label="知乎"]': '全站 > 顶栏 > Logo',
                 '[href="https://www.zhihu.com/column-square"]': '全站 > 顶栏 > 专栏',
                 '[href="https://www.zhihu.com/ring-feeds"]': '全站 > 顶栏 > 圈子',
@@ -689,8 +766,11 @@
                 '.bili-dyn-publishing': '动态 > 发布区域'
             },
             x: {
-                '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 时间线 > 输入框（顶部）',
-                'article .r-kzbkwu > :last-child': '主页/帖子页 > 帖子 > 操作栏（底部）'
+                '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 输入框（仅 x.com/home）',
+                'article .r-qklmqi > :first-child': '帖子页 > 楼主帖子 > 操作栏',
+                '[data-testid="inline_reply_offscreen"]': '帖子页 > 回复输入框',
+                'header[role="banner"]': '全站 > 左栏 > 导航区域',
+                '[data-testid="sidebarColumn"]': '全站 > 主要内容 > 右栏'
             },
             douyin: {
                 '.Ctt1baq8': '评论区 > 评论 > 操作栏（底部）',
@@ -828,7 +908,8 @@
             },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': ['home'],
-                'article .r-kzbkwu > :last-child': ['home', 'post']
+                'article .r-qklmqi > :first-child': ['post'],
+                '[data-testid="inline_reply_offscreen"]': ['post']
             }
         },
         special: {
@@ -872,6 +953,7 @@
             domains: rule.domains || [],
             onlyPaths: rule.onlyPaths || [],
             excludePaths: rule.excludePaths || [],
+            onlyPathIncludes: rule.onlyPathIncludes || [],
             media: rule.media || '',
             declarations: rule.declarations || null,
             enabled: rule.enabled !== false
@@ -885,8 +967,11 @@
                 id: ruleItemId('style', rule, selector),
                 feature: 'style',
                 title: selector,
-                description: RULE_HINTS.style[site.id]?.[selector] ||
-                    '其他 > 位置待补充',
+                description:
+                    (RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充') +
+                    '；选择器：' + selector +
+                    '；修改：' + describeCssDeclarations(rule.declarations) +
+                    '；以上声明均以 !important 覆盖页面原样式',
                 pages: getRulePages(site, 'style', selector),
                 detail: rule.media ? '媒体条件：' + rule.media : '',
                 rule,
