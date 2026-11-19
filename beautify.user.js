@@ -1,9 +1,28 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.4
+// @version      7.5.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
-// @match        *://*/*
+// @match        *://tieba.baidu.com/*
+// @match        *://*.tieba.baidu.com/*
+// @match        *://115.com/*
+// @match        *://*.115.com/*
+// @match        *://115vod.com/*
+// @match        *://*.115vod.com/*
+// @match        *://ngabbs.com/*
+// @match        *://*.ngabbs.com/*
+// @match        *://yun.123pan.cn/*
+// @match        *://*.yun.123pan.cn/*
+// @match        *://www.zhihu.com/*
+// @match        *://*.www.zhihu.com/*
+// @match        *://bilibili.com/*
+// @match        *://*.bilibili.com/*
+// @match        *://x.com/*
+// @match        *://*.x.com/*
+// @match        *://douyin.com/*
+// @match        *://*.douyin.com/*
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
