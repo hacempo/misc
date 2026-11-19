@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.6
+// @version      6.7
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -1093,11 +1093,17 @@
                 const code = makeElement('code', '', item.title);
                 title.append(code);
             }
+            const descriptionPath = (item.description || '位置待补充')
+                .split(' > ')
+                .map(segment => segment.trim())
+                .filter(Boolean);
+            const descriptionLeaf = descriptionPath[descriptionPath.length - 1] || '位置待补充';
             const description = makeElement(
                 'div',
                 'rule-description' + (item.descriptionPending ? ' pending' : ''),
-                item.description || '此项规则的具体作用待确认。'
+                descriptionLeaf
             );
+            description.title = item.description || '';
             if (item.descriptionPending) {
                 description.append(makeElement('span', 'pending-badge', '待确认'));
             }
