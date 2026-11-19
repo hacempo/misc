@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.6.0
+// @version      7.7.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -604,10 +604,8 @@
                     id: 'zhihu-header-width',
                     title: '顶栏宽度自适应',
                     path: '全站 > 顶栏 > 固定外层容器',
-                    pathSelector: 'div:has(> header.AppHeader)',
-                    elementName: '直接包含 header.AppHeader 的固定定位外层 div',
-                    styleText: 'width: var(--beautify-content-width) !important; max-width: none !important; box-sizing: border-box !important；JS：ResizeObserver 将 body 实际宽度写入 --beautify-content-width',
-                    effectDescription: '让固定顶栏宽度与 body 的实际宽度一致，避免 100vw 把滚动条宽度也计入而造成横向溢出。'
+                    elementName: '直接匹配 div:has(> header.AppHeader) 的固定定位外层容器',
+                    effectDescription: '通过 ResizeObserver 监听 body 实际宽度，并将固定顶栏宽度同步为该宽度，避免 100vw 把滚动条宽度也计入而造成横向溢出。'
                 }
             ],
             block: []
@@ -618,18 +616,14 @@
                     id: 'bili-comment-content-padding',
                     title: '评论区内容顶部间距',
                     path: '播放 > 评论区 > 内容区',
-                    pathSelector: '#commentapp',
-                    elementName: 'bili-comments 的 Shadow DOM 内 #contents',
-                    styleText: 'padding-top: 0px !important（JS 通过 element.style.setProperty 写入）',
+                    elementName: '#commentapp > bili-comments 的 Shadow DOM 内 #contents',
                     effectDescription: '清除评论区内容区域顶部留白。'
                 },
                 {
                     id: 'bili-comment-navbar-margin',
                     title: '评论区导航栏间距',
                     path: '播放 > 评论区 > 顶部导航栏',
-                    pathSelector: '#commentapp',
-                    elementName: 'bili-comments-header-renderer 的 Shadow DOM 内 #navbar',
-                    styleText: 'margin-bottom: 0px !important（JS 通过 element.style.setProperty 写入）',
+                    elementName: '#commentapp > bili-comments > #header > bili-comments-header-renderer 的 Shadow DOM 内 #navbar',
                     effectDescription: '清除评论区顶部导航栏下方的多余间距。'
                 }
             ],
@@ -862,11 +856,6 @@
             effect: '按下方列出的 CSS 属性和值覆盖页面原样式。'
         };
     };
-
-    const formatCssStyle = declarations =>
-        Object.entries(declarations)
-            .map(([property, value]) => property + ': ' + value + ' !important')
-            .join('; ');
 
     // 每条规则的可读说明；美化项会自动附加实际选择器与 declarations。
     const RULE_HINTS = {
@@ -1190,11 +1179,9 @@
                 return {
                     id: ruleItemId('style', rule, selector),
                     feature: 'style',
-                    title: presentation.title,
+                    title: selector,
                     path: RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充',
-                    pathSelector: selector,
                     elementName: presentation.element,
-                    styleText: formatCssStyle(rule.declarations),
                     effectDescription: presentation.effect,
                     pages: getRulePages(site, 'style', selector),
                     detail: rule.media ? '媒体条件：' + rule.media : '',
@@ -1311,10 +1298,6 @@
             '.path-summary::-webkit-details-marker{display:none;}',
             '.path-summary::before{content:"›";display:inline-block;color:#8492a7;font-size:18px;line-height:1;transform:rotate(0deg);transition:transform .15s ease;}',
             '.path-group[open]>.path-summary::before{transform:rotate(90deg);}',
-            '.path-selector-group>.path-summary{gap:7px;padding:8px 10px;margin:2px 0;border:1px solid #dfe7f4;border-radius:8px;background:#f7f9fd;color:#66758d;}',
-            '.path-selector-group>.path-summary::before{color:#8294b1;}',
-            '.path-selector-label{padding:2px 6px;border-radius:5px;background:#e8eef9;color:#536b91;font-size:10px;font-weight:750;letter-spacing:.03em;}',
-            '.path-selector-code{max-width:min(560px,65%);padding:3px 7px;border-radius:5px;background:#25344d;color:#eaf1ff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:600;overflow-wrap:anywhere;white-space:normal;}',
             '.path-count{margin-left:auto;color:#9aa5b5;font-size:11px;font-weight:500;}',
             '.path-depth-1>.path-summary{font-size:12px;color:#718097;}',
             '.path-depth-2>.path-summary{font-size:12px;color:#8793a5;}',
@@ -1337,7 +1320,6 @@
             '.style-detail-line{display:flex;align-items:baseline;gap:8px;min-width:0;color:#647187;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}',
             '.style-detail-label{flex:0 0 34px;color:#8793a5;font-size:11px;font-weight:750;}',
             '.style-detail-value{min-width:0;color:#526176;}',
-            '.style-detail-code{min-width:0;color:#33445e;background:#f2f5fa;border:1px solid #e5eaf2;border-radius:5px;padding:2px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;white-space:normal;overflow-wrap:anywhere;}',
             '.rule-description{margin-top:4px;color:#647187;font-size:12px;line-height:1.45;overflow-wrap:anywhere;}',
             '.rule-description.pending{color:#9a6412;}',
             '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
@@ -1426,24 +1408,26 @@
         const makeRuleRow = (site, feature, item) => {
             const row = makeElement('div', 'rule-row');
             const info = makeElement('div', 'rule-info');
-            const title = makeElement('div', 'rule-title', item.title);
+            const title = makeElement('div', 'rule-title');
+            if (feature === 'style' && item.selector) {
+                title.append(makeElement('code', '', item.selector));
+            } else {
+                title.textContent = item.title;
+            }
 
             if (feature === 'style') {
                 const details = makeElement('div', 'style-details');
-                const addStyleLine = (labelText, valueText, isCode = false) => {
+                const addStyleLine = (labelText, valueText) => {
                     const line = makeElement('div', 'style-detail-line');
-                    line.append(makeElement('span', 'style-detail-label', labelText));
-                    line.append(makeElement(
-                        isCode ? 'code' : 'span',
-                        isCode ? 'style-detail-code' : 'style-detail-value',
-                        valueText || '未提供'
-                    ));
+                    line.append(
+                        makeElement('span', 'style-detail-label', labelText),
+                        makeElement('span', 'style-detail-value', valueText || '未提供')
+                    );
                     details.append(line);
                 };
 
                 addStyleLine('元素', item.elementName);
-                addStyleLine('样式', item.styleText, true);
-                addStyleLine('描述', item.effectDescription);
+                addStyleLine('效果', item.effectDescription);
                 if (item.detail) addStyleLine('条件', item.detail);
                 info.append(title, details);
             } else {
@@ -1527,17 +1511,7 @@
                         }
                         node = node.children.get(segment);
                     }
-
-                    const selectorKey = '__selector__:' + (item.pathSelector || item.selector || '待补充');
-                    if (!node.children.has(selectorKey)) {
-                        node.children.set(selectorKey, {
-                            children: new Map(),
-                            items: [],
-                            kind: 'selector',
-                            selector: item.pathSelector || item.selector || '待补充'
-                        });
-                    }
-                    node.children.get(selectorKey).items.push(item);
+                    node.items.push(item);
                 } else {
                     const segments = (item.description || '其他 > 位置待补充')
                         .split(' > ')
@@ -1559,10 +1533,7 @@
             }
 
             const renderPathNode = (pathName, node, depth = 0) => {
-                const details = makeElement(
-                    'details',
-                    'path-group path-depth-' + depth + (node.kind === 'selector' ? ' path-selector-group' : '')
-                );
+                const details = makeElement('details', 'path-group path-depth-' + depth);
                 details.open = true;
 
                 const summary = makeElement('summary', 'path-summary');
@@ -1572,15 +1543,10 @@
                         (sum, child) => sum + countPathItems(child), 0
                     );
                 const total = countPathItems(node);
-                if (node.kind === 'selector') {
-                    summary.append(
-                        makeElement('span', 'path-selector-label', '选择器'),
-                        makeElement('code', 'path-selector-code', node.selector)
-                    );
-                } else {
-                    summary.append(makeElement('span', '', pathName));
-                }
-                summary.append(makeElement('span', 'path-count', total + ' 项'));
+                summary.append(
+                    makeElement('span', '', pathName),
+                    makeElement('span', 'path-count', total + ' 项')
+                );
 
                 const body = makeElement('div', 'path-rule-list');
                 for (const item of node.items) body.append(makeRuleRow(site, feature, item));
