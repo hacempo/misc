@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.10.0
+// @version      7.10.1
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -21,8 +21,8 @@
 // @match        *://*.x.com/*
 // @match        *://douyin.com/*
 // @match        *://*.douyin.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.0
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.0
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.1
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.1
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -617,14 +617,14 @@
                     title: '评论区内容顶部间距',
                     path: '播放 > 评论区 > 内容区',
                     elementName: '#commentapp > bili-comments 的 Shadow DOM 内 #contents',
-                    effectDescription: '清除评论区内容区域顶部留白。'
+                    effectDescription: '将 padding-top 设为 0px，清除评论区内容区域顶部留白。'
                 },
                 {
                     id: 'bili-comment-navbar-margin',
                     title: '评论区导航栏间距',
                     path: '播放 > 评论区 > 顶部导航栏',
                     elementName: '#commentapp > bili-comments > #header > bili-comments-header-renderer 的 Shadow DOM 内 #navbar',
-                    effectDescription: '清除评论区顶部导航栏下方的多余间距。'
+                    effectDescription: '将 margin-bottom 设为 0px，清除评论区顶部导航栏下方的多余间距。'
                 }
             ],
             block: [
