@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.3
+// @version      7.4
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -45,16 +45,27 @@
      *   domains             限定域名（含子域）
      *   onlyPaths           仅这些路径生效
      *   exactPath           onlyPaths 中路径必须完全相等
+     *   exactPaths          精确匹配任一指定路径
      *   onlyPathIncludes    路径包含指定片段时生效
      *   excludePaths        这些路径不生效
      */
     // 仅判断规则的域名/路径上下文；是否启用由每条规则自己的开关决定。
+    const matchesRuleRoute = rule => {
+        if (rule.exactPaths || rule.onlyPathIncludes) {
+            return Boolean(
+                rule.exactPaths?.includes(pathname) ||
+                rule.onlyPathIncludes?.some(part => pathname.includes(part))
+            );
+        }
+        if (!rule.onlyPaths) return true;
+        return rule.exactPath
+            ? rule.onlyPaths.includes(pathname)
+            : matchesPath(rule.onlyPaths);
+    };
+
     const isRuleActive = rule =>
         (!rule.domains || rule.domains.some(isDomainMatch)) &&
-        (!rule.onlyPaths || (rule.exactPath
-            ? rule.onlyPaths.includes(pathname)
-            : matchesPath(rule.onlyPaths))) &&
-        (!rule.onlyPathIncludes || rule.onlyPathIncludes.some(part => pathname.includes(part))) &&
+        matchesRuleRoute(rule) &&
         !(rule.excludePaths && matchesPath(rule.excludePaths));
 
     const legacyEnabledKey = id => 'beautify:enabled:' + id;
@@ -456,14 +467,20 @@
             selectors: ['[aria-label="主页时间线"] > :nth-child(3)']
         },
         {
-            // X：帖子详情页楼主操作栏与回复输入框，只在 /status/ 路由生效。
+            // X：楼主帖子专用操作栏与回复输入框，仅在帖子详情页生效。
             domains: ['x.com'],
             onlyPathIncludes: ['/status/'],
             selectors: [
                 'article .r-qklmqi > :first-child',
-                'article .r-kzbkwu > :last-child',
                 '[data-testid="inline_reply_offscreen"]'
             ]
+        },
+        {
+            // X：其他帖子操作栏同时出现在首页信息流和帖子详情页。
+            domains: ['x.com'],
+            exactPaths: ['/home'],
+            onlyPathIncludes: ['/status/'],
+            selectors: ['article .r-kzbkwu > :last-child']
         },
         {
             // X：左侧导航与右侧推荐栏。使用 banner header 精确定位左侧栏。
@@ -774,7 +791,7 @@
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 输入框（仅 x.com/home）',
                 'article .r-qklmqi > :first-child': '帖子页 > 楼主帖子 > 操作栏',
-                'article .r-kzbkwu > :last-child': '帖子页 > 其他帖子 > 操作栏（原有规则）',
+                'article .r-kzbkwu > :last-child': '首页/帖子页 > 信息流中的其他帖子 > 操作栏',
                 '[data-testid="inline_reply_offscreen"]': '帖子页 > 回复输入框',
                 'header[role="banner"]': '全站 > 左栏 > 导航区域',
                 '[data-testid="sidebarColumn"]': '全站 > 主要内容 > 右栏'
@@ -916,7 +933,7 @@
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': ['home'],
                 'article .r-qklmqi > :first-child': ['post'],
-                'article .r-kzbkwu > :last-child': ['post'],
+                'article .r-kzbkwu > :last-child': ['home', 'post'],
                 '[data-testid="inline_reply_offscreen"]': ['post']
             }
         },
