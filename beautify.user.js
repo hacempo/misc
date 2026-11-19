@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.8
+// @version      6.9
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -362,11 +362,11 @@
             ]
         },
         {
-            // 知乎：侧栏、顶栏入口、问题操作和内容操作
+            // 知乎：侧栏与顶栏入口（顶栏按从左到右排列）
             domains: ['www.zhihu.com'],
             selectors: [
                 '.css-bkewaf',
-                '.QuestionHeader-side',
+                '[aria-label="知乎"]',
                 '[href="https://www.zhihu.com/column-square"]',
                 '[href="https://www.zhihu.com/ring-feeds"]',
                 '.css-53paqb',
@@ -375,15 +375,7 @@
                 '[href="https://zhida.zhihu.com/"]',
                 '.SearchBar-askContainer',
                 '.css-1vbrp2j',
-                '.css-ruapjk',
-                '.QuestionHeader-footer',
-                '.FollowButton',
-                '.Reward',
-                '[aria-label="喜欢"]',
-                '[data-tooltip="解释这篇内容"]',
-                '.WriteArea',
-                '.CornerButtonsGroup',
-                '[aria-label="知乎"]'
+                '.css-ruapjk'
             ]
         },
         {
@@ -391,6 +383,20 @@
             domains: ['www.zhihu.com'],
             excludePaths: ['/search'],
             selectors: ['.ContentItem-actions > :first-child']
+        },
+        {
+            // 知乎回答页：问题栏、关注/赞赏，以及回答操作栏后续按钮
+            domains: ['www.zhihu.com'],
+            selectors: [
+                '.QuestionHeader-side',
+                '.QuestionHeader-footer',
+                '.FollowButton',
+                '.Reward',
+                '[aria-label="喜欢"]',
+                '[data-tooltip="解释这篇内容"]',
+                '.WriteArea',
+                '.CornerButtonsGroup'
+            ]
         },
         {
             // 知乎搜索页：新版 DOM 中回答操作栏第一个按钮
