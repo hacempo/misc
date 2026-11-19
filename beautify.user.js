@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.4
+// @version      6.5
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -20,13 +20,12 @@
      */
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
-        { id: '115', name: '115 网盘', domains: ['115.com'] },
-        { id: '115vod', name: '115 视频', domains: ['115vod.com'] },
+        { id: '115', name: '115 网盘', domains: ['115.com', '115vod.com'] },
         { id: 'nga', name: 'NGA 玩家社区', domains: ['ngabbs.com'] },
         { id: '123pan', name: '123 云盘', domains: ['yun.123pan.cn'] },
         { id: 'zhihu', name: '知乎', domains: ['www.zhihu.com'] },
         { id: 'bilibili', name: '哔哩哔哩', domains: ['bilibili.com'] },
-        { id: 'x', name: 'X', domains: ['x.com'] },
+        { id: 'x', name: '推特', domains: ['x.com'] },
         { id: 'douyin', name: '抖音', domains: ['douyin.com'] }
     ];
 
@@ -493,8 +492,23 @@
     const itemEnabledKey = (feature, siteId, itemId) =>
         'beautify:item:' + feature + ':' + siteId + ':' + itemId;
 
-    const isItemEnabled = (feature, siteId, itemId, defaultEnabled = true) =>
-        GM_getValue(itemEnabledKey(feature, siteId, itemId), defaultEnabled);
+    const isItemEnabled = (feature, siteId, itemId, defaultEnabled = true) => {
+        const key = itemEnabledKey(feature, siteId, itemId);
+        const saved = GM_getValue(key, undefined);
+        if (typeof saved === 'boolean') return saved;
+
+        // 115 视频并入 115 网盘后，迁移旧站点的单项开关状态。
+        if (siteId === '115') {
+            const oldKey = itemEnabledKey(feature, '115vod', itemId);
+            const oldSaved = GM_getValue(oldKey, undefined);
+            if (typeof oldSaved === 'boolean') {
+                GM_setValue(key, oldSaved);
+                return oldSaved;
+            }
+        }
+
+        return defaultEnabled;
+    };
 
     const hashRuleIdentity = value => {
         let hash = 2166136261;
@@ -520,35 +534,35 @@
             style: [
                 {
                     id: 'bili-comment-content-padding',
-                    title: '评论区顶部间距',
-                    description: '将评论区内容区域 #contents 的顶部内边距设为 0。'
+                    title: '评论区内容顶部间距',
+                    description: '播放 > 评论区 > 内容顶部间距'
                 },
                 {
                     id: 'bili-comment-navbar-margin',
                     title: '评论区导航栏间距',
-                    description: '将评论区 #navbar 的底部外边距设为 0。'
+                    description: '播放 > 评论区 > 顶部导航栏下方间距'
                 }
             ],
             block: [
                 {
                     id: 'bili-goods-comments',
-                    title: '屏蔽带商品标记的评论',
-                    description: '评论或回复包含 data-type="goods" 标记时隐藏整条评论。'
+                    title: '商品标记评论',
+                    description: '播放 > 评论区 > 带商品标记的评论'
                 },
                 {
                     id: 'bili-comment-footers',
-                    title: '屏蔽评论操作栏',
-                    description: '隐藏评论和回复 Shadow DOM 中的 #footer。'
+                    title: '评论操作栏',
+                    description: '播放 > 评论区 > 评论 > 操作栏'
                 },
                 {
                     id: 'bili-comment-input',
-                    title: '屏蔽评论输入框',
-                    description: '隐藏评论区顶部输入框 #commentbox。'
+                    title: '评论输入框',
+                    description: '播放 > 评论区 > 顶部输入框'
                 },
                 {
                     id: 'bili-floating-comment-input',
-                    title: '屏蔽悬浮评论输入框',
-                    description: '隐藏底部悬浮输入框。'
+                    title: '悬浮评论输入框',
+                    description: '播放 > 评论区 > 底部悬浮输入框'
                 }
             ]
         }
@@ -559,170 +573,167 @@
     const RULE_HINTS = {
         style: {
             tieba: {
-                '.main-page-wrap': '取消主内容区域的最大宽度限制。',
-                '.nav-bar-v2-fixed': '取消顶部固定导航栏的最大宽度限制。'
+                '.main-page-wrap': '首页 > 主内容区 > 宽度限制',
+                '.nav-bar-v2-fixed': '顶栏 > 固定导航栏 > 宽度限制'
             },
             zhihu: {
-                '.Question-main': '主内容容器铺满可用宽度，并移除主栏之间的间距。',
-                '.Question-mainColumn': '让正文主栏扩展到可用宽度，不再受固定宽度限制。',
-                '.css-1gl8cva': '主栏内部容器铺满宽度，清除左右留白。',
-                '.Topstory-container': '内容外层铺满宽度，移除左右内边距。',
-                '.Topstory-mainColumn': '主内容栏占满剩余空间，取消宽度上限和右侧空白。',
-                '.Topstory-mainColumnCard': '主栏卡片铺满可用宽度。',
-                '.Topstory-content': '信息流内容区域铺满可用宽度。',
-                '.Topstory-recommend': '推荐内容区域铺满可用宽度。',
-                'div:has(> header.AppHeader)': '让固定顶栏容器跟随页面实际宽度，避免滚动条造成横向溢出。',
-                'header.AppHeader': '让知乎顶栏本身铺满宽度并取消左右外边距。',
-                'header.AppHeader > div': '让顶栏内部容器铺满宽度，取消内部最大宽度限制。',
-                'header.AppHeader > div > .css-51utkw': '扩展顶栏中间的导航与搜索区域，使其能利用剩余空间。',
-                'header.AppHeader > div > .css-51utkw > .css-51utkw': '扩展顶栏内部嵌套区域，避免导航和搜索容器被固定宽度限制。',
-                'header.AppHeader .css-1ndlr1n': '限制顶栏子区域不超过可用宽度，并允许其在窄屏下收缩。',
-                '.css-x84wzl': '让顶栏搜索区域占据导航和头像之间的剩余空间，并将搜索框靠右排列。',
-                '.css-x84wzl .SearchBar': '在较宽屏幕上把搜索框设为响应式宽度（约 400–540px）。',
-                '.css-x84wzl .SearchBar-tool': '让搜索工具栏填满搜索框可用宽度。',
-                '.css-14iuq0r': '取消顶栏相关区域的最大宽度限制，使其可以向左侧扩展。',
-                '.QuestionHeader': '让标题区域铺满可用宽度并取消左右外边距。',
-                '.QuestionHeader-content': '让标题内容铺满宽度，并移除左右内边距。',
-                '.QuestionHeader-main': '让标题主区域占满父容器宽度。',
-                '.ContentItem-actions > :nth-child(2)': '移除内容操作栏第二个按钮左侧的多余间距。',
-                '.ContentItem-actions': '扩展内容操作栏，使按钮区域与卡片内容边缘对齐。',
-                '.css-1qqx3d0 > :nth-child(2)': '移除内容操作栏第二个按钮左侧的多余间距。',
-                '.css-1qqx3d0': '扩展内容操作栏，使按钮区域与卡片内容边缘对齐。',
-                '.Search-container': '搜索结果容器铺满宽度，并移除外层内边距。',
-                '#SearchMain': '主内容区域铺满宽度，取消右侧空白。',
-                '.SearchTabs-inner': '顶部标签栏铺满宽度并取消居中宽度限制。',
-                '.SearchTabs-searchBarContainer': '将搜索框容器推到标签栏的右侧。'
+                '.Question-main': '问答 > 内容区 > 主栏容器',
+                '.Question-mainColumn': '问答 > 内容区 > 正文主栏',
+                '.css-1gl8cva': '问答 > 内容区 > 主栏内层容器',
+                '.Topstory-container': '首页 > 内容区 > 外层容器',
+                '.Topstory-mainColumn': '首页 > 内容区 > 主栏',
+                '.Topstory-mainColumnCard': '首页 > 内容区 > 主栏卡片',
+                '.Topstory-content': '首页 > 内容区 > 信息流',
+                '.Topstory-recommend': '首页 > 内容区 > 推荐区域',
+                'div:has(> header.AppHeader)': '通用 > 顶栏 > 固定容器宽度',
+                'header.AppHeader': '通用 > 顶栏 > 外层容器宽度和左右边距',
+                'header.AppHeader > div': '通用 > 顶栏 > 内层容器宽度',
+                'header.AppHeader > div > .css-51utkw': '通用 > 顶栏 > 中间导航和搜索容器',
+                'header.AppHeader > div > .css-51utkw > .css-51utkw': '通用 > 顶栏 > 内层导航和搜索容器',
+                'header.AppHeader .css-1ndlr1n': '通用 > 顶栏 > 子区域宽度和收缩',
+                '.css-x84wzl': '通用 > 顶栏 > 搜索区域位置和伸缩',
+                '.css-x84wzl .SearchBar': '通用 > 顶栏 > 搜索框响应式宽度',
+                '.css-x84wzl .SearchBar-tool': '通用 > 顶栏 > 搜索工具栏宽度',
+                '.css-14iuq0r': '通用 > 顶栏 > 左侧区域宽度',
+                '.QuestionHeader': '问答 > 问题标题区 > 外层容器宽度',
+                '.QuestionHeader-content': '问答 > 问题标题区 > 内容容器宽度',
+                '.QuestionHeader-main': '问答 > 问题标题区 > 主内容区宽度',
+                '.ContentItem-actions > :nth-child(2)': '通用 > 内容卡片 > 操作栏 > 第二个按钮左侧间距',
+                '.ContentItem-actions': '通用 > 内容卡片 > 操作栏 > 左右边距',
+                '.css-1qqx3d0 > :nth-child(2)': '搜索 > 搜索结果 > 操作栏 > 第二个按钮左侧间距',
+                '.css-1qqx3d0': '搜索 > 搜索结果 > 操作栏 > 左右边距',
+                '.Search-container': '搜索 > 内容区 > 外层容器宽度和内边距',
+                '#SearchMain': '搜索 > 内容区 > 主内容宽度',
+                '.SearchTabs-inner': '搜索 > 顶栏 > 标签栏宽度和对齐',
+                '.SearchTabs-searchBarContainer': '搜索 > 顶栏 > 搜索框位置'
             },
             bilibili: {
-                'main': '主内容区铺满整行，解除侧栏布局造成的列宽限制。'
+                'main': '动态 > 内容区 > 主栏宽度和布局'
             }
         },
         block: {
             tieba: {
-                '.login': '隐藏帖子底部悬浮操作栏，以及回帖旁的点赞操作。',
-                '.icon_tshows': '隐藏楼主昵称旁边的图标。',
-                '.level-icon': '隐藏回帖用户昵称旁边的等级图标。',
-                '.interaction-bar': '隐藏页面上的操作栏。'
+                '.login': '帖子 > 底部 > 悬浮操作栏和回帖点赞',
+                '.icon_tshows': '帖子 > 楼主昵称 > 图标',
+                '.level-icon': '帖子 > 回帖用户昵称 > 等级图标',
+                '.interaction-bar': '首页 > 内容区 > 操作栏'
             },
             '115': {
-                '#js_bottom_notification': '隐藏页面底部左侧的通知弹窗。',
-                '.feature-float': '隐藏页面底部右侧的悬浮功能弹窗。',
-                '.container-leftside': '隐藏网盘页面左侧栏。',
-                '[data-nav="photo"]': '隐藏顶栏中的照片入口（替代原来的 album 链接选择器）。',
-                '[data-nav="credentials"]': '隐藏顶栏中的密档/证件入口。',
-                '[data-nav="note"]': '隐藏顶栏中的记事入口。',
-                '.ceiling-feature': '隐藏顶栏中间的广告区域。',
-                '.ceiling-link-temp': '隐藏顶栏中的提示链接/提示条。'
+                '#js_bottom_notification': '网盘 > 底部左侧 > 通知弹窗',
+                '.feature-float': '网盘 > 底部右侧 > 悬浮功能弹窗',
+                '.container-leftside': '网盘 > 左侧栏',
+                '[data-nav="photo"]': '网盘 > 顶栏 > 照片入口',
+                '[data-nav="credentials"]': '网盘 > 顶栏 > 密档/证件入口',
+                '[data-nav="note"]': '网盘 > 顶栏 > 记事入口',
+                '.ceiling-feature': '网盘 > 顶栏中间 > 广告区域',
+                '.ceiling-link-temp': '网盘 > 顶栏 > 提示链接/提示条'
             },
             '115vod': {
-                '.feature-float': '隐藏底部右侧的悬浮弹窗。'
+                '.feature-float': '播放 > 播放器 > 底部右侧 > 悬浮弹窗'
             },
             nga: {
-                '.topicrow .c3': '隐藏帖子列表中的发帖人和发帖时间。',
-                '.topicrow .c4': '隐藏帖子列表中的最后回帖人和最后回帖时间。',
-                '.c1': '隐藏 c1 信息列中的发帖/回帖人数及发帖人信息。',
-                '.cell': '隐藏使用 cell 类的单元格区域，其中包含搜索框、发表新帖等按钮。',
-                '#toptopics': '隐藏顶部的大块版头/主题聚合区域，其中包含版块公告、热帖等内容。',
-                '#fast_post_c': '隐藏快速发帖区域。'
+                '.topicrow .c3': '首页 > 帖子列表 > 发帖人和发帖时间',
+                '.topicrow .c4': '首页 > 帖子列表 > 最后回帖人和最后回帖时间',
+                '.c1': '帖子 > 信息列 > 发帖/回帖总人数、发帖人/回帖人信息',
+                '.cell': '帖子 > 单元格 > 搜索框、发表新帖等按钮',
+                '#toptopics': '首页 > 版头 > 公告、热帖等聚合区域',
+                '#fast_post_c': '帖子 > 快速发帖区'
             },
             '123pan': {
-                '.notice-box': '隐藏页面底部右侧的公告提示框。',
-                '.entry_p0tlq': '隐藏公告上方的广告模块。',
-                '.mfy-main-layout__head': '隐藏云盘主布局顶部区域。',
-                'aside': '隐藏页面左侧栏。',
-                '.withSideMenuLayoutSider_ELJ6a': '隐藏右侧主要界面布局内部额外的左侧菜单栏。'
+                '.notice-box': '网盘 > 底部右侧 > 公告',
+                '.entry_p0tlq': '网盘 > 底部右侧 > 广告（公告上方）',
+                '.mfy-main-layout__head': '网盘 > 顶部 > 主布局区域',
+                'aside': '网盘 > 左侧栏',
+                '.withSideMenuLayoutSider_ELJ6a': '网盘 > 主内容区 > 左侧菜单栏'
             },
             zhihu: {
-                '.css-bkewaf': '隐藏知乎侧栏。',
-                '.QuestionHeader-side': '隐藏问题标题区域右侧栏，包括滚动时出现的浮动标题栏侧栏。',
-                '[href="https://www.zhihu.com/column-square"]': '隐藏顶栏中的专栏广场入口。',
-                '[href="https://www.zhihu.com/ring-feeds"]': '隐藏顶栏中的圈子入口。',
-                '.css-53paqb': '隐藏顶栏中用于分隔导航入口的竖线。',
-                '[href="https://www.zhihu.com/project-square"]': '隐藏顶栏中的 AI Works / 项目广场入口。',
-                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '隐藏顶栏中的会员故事入口。',
-                '[href="https://zhida.zhihu.com/"]': '隐藏顶栏中的 AI 直答入口。',
-                '.SearchBar-askContainer': '隐藏搜索框旁边的用户发布/提问入口。',
-                '.css-1vbrp2j': '隐藏顶栏中的消息和私信入口。',
-                '.css-ruapjk': '隐藏顶栏最右侧的头像/用户界面入口。',
-                '.QuestionHeader-footer': '隐藏问题标题区域底部的操作模块（关注问题、写回答等）。',
-                '.FollowButton': '隐藏问题/回答区域中面向答主的关注按钮。',
-                '.Reward': '隐藏回答区域中可能出现的赞赏按钮。',
-                '[aria-label="喜欢"]': '隐藏回答操作栏中的喜欢按钮。',
-                '[data-tooltip="解释这篇内容"]': '隐藏回答操作栏中的解释内容按钮。',
-                '.WriteArea': '隐藏写回答区域。',
-                '.CornerButtonsGroup': '隐藏角落的悬浮按钮组（AI 助手）。',
-                '[aria-label="知乎"]': '隐藏顶栏中的知乎 Logo/名称区域。',
-                '.ContentItem-actions > :first-child': '隐藏回答操作栏第一个按钮，统一覆盖赞同和反对；VoteButton 已包含在这一项中。',
-                '.css-1qqx3d0 > :first-child': '隐藏新版回答操作栏的第一个按钮。'
+                '.css-bkewaf': '通用 > 页面布局 > 侧栏',
+                '.QuestionHeader-side': '回答 > 问题标题区 > 右侧栏',
+                '[href="https://www.zhihu.com/column-square"]': '通用 > 顶栏 > 专栏广场入口',
+                '[href="https://www.zhihu.com/ring-feeds"]': '通用 > 顶栏 > 圈子入口',
+                '.css-53paqb': '通用 > 顶栏 > 导航入口分隔符',
+                '[href="https://www.zhihu.com/project-square"]': '通用 > 顶栏 > AI Works/项目广场入口',
+                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '通用 > 顶栏 > 会员故事入口',
+                '[href="https://zhida.zhihu.com/"]': '通用 > 顶栏 > AI 直答入口',
+                '.SearchBar-askContainer': '通用 > 顶栏 > 搜索框旁 > 用户发布入口',
+                '.css-1vbrp2j': '通用 > 顶栏 > 消息和私信入口',
+                '.css-ruapjk': '通用 > 顶栏 > 最右侧 > 头像/用户界面入口',
+                '.QuestionHeader-footer': '回答 > 问题标题区 > 底部操作模块',
+                '.FollowButton': '回答 > 内容区 > 答主关注按钮',
+                '.Reward': '回答 > 内容区 > 赞赏按钮',
+                '[aria-label="喜欢"]': '回答 > 内容卡片 > 操作栏 > 喜欢按钮',
+                '[data-tooltip="解释这篇内容"]': '回答 > 内容卡片 > 操作栏 > 解释内容按钮',
+                '.WriteArea': '首页 > 内容区 > 写回答区域',
+                '.CornerButtonsGroup': '通用 > 页面角落 > 悬浮按钮组（AI 助手）',
+                '[aria-label="知乎"]': '通用 > 顶栏 > Logo/名称区域',
+                '.ContentItem-actions > :first-child': '回答 > 内容卡片 > 操作栏 > 第一个按钮（赞同/反对）',
+                '.css-1qqx3d0 > :first-child': '搜索 > 搜索结果 > 操作栏 > 第一个按钮（赞同/反对）'
             },
             bilibili: {
-                '.adblock-tips': '隐藏广告拦截提示，避免第三方广告拦截实现触发的提示占位。',
-                '.recommended-swipe': '隐藏轮播图区域。',
-                '.floor-single-card': '隐藏单张分区卡片；其中包含烦人的广告、直播等内容。',
-                '.feed-card:not(:has(.enable-no-interest))': '隐藏初始加载的信息流卡片中不含“不感兴趣”入口的卡片。',
-                '.bili-feed-card:not(:has(.enable-no-interest))': '隐藏页面下滑后动态加载的信息流卡片中不含“不感兴趣”入口的卡片。',
-                '.left-entry-main > :nth-child(n+4)': '隐藏哔哩哔哩顶栏左侧从第 4 项开始的入口。',
-                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧只保留第 4 至第 6 个入口，隐藏其余入口。',
-                'aside': '隐藏右侧栏。',
-                '.bili-dyn-publishing': '隐藏发布/投稿区域。'
+                '.adblock-tips': '通用 > 页面 > 广告拦截提示',
+                '.recommended-swipe': '首页 > 顶部 > 轮播图',
+                '.floor-single-card': '首页 > 分区 > 单张卡片（广告、直播等）',
+                '.feed-card:not(:has(.enable-no-interest))': '首页 > 信息流 > 初始加载卡片（无“不感兴趣”入口）',
+                '.bili-feed-card:not(:has(.enable-no-interest))': '首页 > 信息流 > 下滑后加载卡片（无“不感兴趣”入口）',
+                '.left-entry-main > :nth-child(n+4)': '通用 > 顶栏 > 左侧入口 > 第 4 项起',
+                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '通用 > 顶栏 > 右侧入口 > 第 4 至第 6 项以外',
+                'aside': '动态 > 右侧栏',
+                '.bili-dyn-publishing': '动态 > 发布区域'
             },
             x: {
-                '[aria-label="主页时间线"] > :nth-child(3)': '隐藏时间线中的发帖输入/发布区域（第 3 个直接子元素）。',
-                'article .r-kzbkwu > :last-child': '隐藏帖子底部的操作栏。'
+                '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 时间线 > 输入框（顶部）',
+                'article .r-kzbkwu > :last-child': '首页/帖子页 > 帖子 > 操作栏（底部）'
             },
             douyin: {
-                '.VAQA49VP': '隐藏评论信息中的发布时间和发布地区。',
-                '.Ctt1baq8': '隐藏抖音评论区每条评论的操作栏。',
-                '.comment-input-container': '隐藏评论输入框。',
-                '.semiTabrelated_card': '隐藏相关内容推荐卡片。',
-                '.semiTabai_card': '隐藏 AI 相关功能卡片。'
+                '.Ctt1baq8': '评论区 > 评论 > 操作栏（底部）',
+                '.VAQA49VP': '评论区 > 评论 > 发布时间和发布地区（底部，操作栏上方）',
+                '.comment-input-container': '评论区 > 输入框（底部）',
+                '.semiTabrelated_card': '评论区 > 顶栏 > 切换推荐按钮',
+                '.semiTabai_card': '评论区 > 顶栏 > 切换 AI 按钮'
             }
         }
     };
 
-
-
     // 设置界面中的页面分类。没有细分页面的站点保留一个总览页签。
+    // 设置界面中的页面分类。
     const SITE_PAGES = {
         tieba: [
             { id: 'home', label: '首页' },
-            { id: 'thread', label: '帖子详情页' }
+            { id: 'thread', label: '帖子' }
         ],
         '115': [
-            { id: 'cloud', label: '网盘页' }
-        ],
-        '115vod': [
-            { id: 'video', label: '视频页' }
+            { id: 'cloud', label: '网盘' },
+            { id: 'play', label: '播放' }
         ],
         nga: [
             { id: 'home', label: '首页' },
-            { id: 'detail', label: '帖子详情页' }
+            { id: 'detail', label: '帖子' }
         ],
         '123pan': [
-            { id: 'cloud', label: '网盘页' }
+            { id: 'cloud', label: '网盘' }
         ],
         zhihu: [
             { id: 'home', label: '首页' },
-            { id: 'question', label: '问答页' },
-            { id: 'search', label: '搜索页' }
+            { id: 'question', label: '回答' },
+            { id: 'search', label: '搜索' }
         ],
         bilibili: [
             { id: 'home', label: '首页' },
-            { id: 'video', label: '视频页' },
-            { id: 'dynamic', label: '动态页' }
+            { id: 'video', label: '播放' },
+            { id: 'dynamic', label: '动态' }
         ],
         x: [
             { id: 'home', label: '首页' },
-            { id: 'detail', label: '帖子详情页' }
+            { id: 'post', label: '帖子' }
         ],
         douyin: [
-            { id: 'video', label: '作品/评论页' }
+            { id: 'home', label: '首页' }
         ]
     };
 
     /*
-     * 规则所属页面。未在此列出的规则视为全站通用，会显示在该网站的每个页面页签中。
-     * 同一规则可属于多个页面；所有页签共用同一条规则的保存状态。
+     * 规则所属页面。未标记的规则视为该站点所有页面通用。
+     * 115.com 与 115vod.com 共用「115 网盘」网站设置，但各自落在网盘/播放页签。
      */
     const RULE_PAGE_MAP = {
         style: {
@@ -761,6 +772,19 @@
                 '.level-icon': ['thread'],
                 '.interaction-bar': ['home']
             },
+            '115': {
+                '#js_bottom_notification': ['cloud'],
+                '.feature-float': ['cloud'],
+                '.container-leftside': ['cloud'],
+                '[data-nav="photo"]': ['cloud'],
+                '[data-nav="credentials"]': ['cloud'],
+                '[data-nav="note"]': ['cloud'],
+                '.ceiling-feature': ['cloud'],
+                '.ceiling-link-temp': ['cloud']
+            },
+            '115vod': {
+                '.feature-float': ['play']
+            },
             nga: {
                 '.topicrow .c3': ['home'],
                 '.topicrow .c4': ['home'],
@@ -790,7 +814,7 @@
             },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': ['home'],
-                'article .r-kzbkwu > :last-child': ['home', 'detail']
+                'article .r-kzbkwu > :last-child': ['home', 'post']
             }
         },
         special: {
@@ -814,12 +838,12 @@
         }
     };
 
-    const getRulePages = (site, feature, ruleKey, isSpecial = false) => {
+    const getRulePages = (site, feature, ruleKey, isSpecial = false, ruleSiteId = site.id) => {
         const pageIds = (SITE_PAGES[site.id] || [{ id: 'all', label: '全部' }])
             .map(page => page.id);
         const map = isSpecial
             ? RULE_PAGE_MAP.special?.[feature]?.[site.id]
-            : RULE_PAGE_MAP[feature]?.[site.id];
+            : RULE_PAGE_MAP[feature]?.[ruleSiteId];
         return map?.[ruleKey] || pageIds;
     };
 
@@ -843,7 +867,7 @@
                 feature: 'style',
                 title: selector,
                 description: RULE_HINTS.style[site.id]?.[selector] ||
-                    '此项美化规则的具体作用待确认。',
+                    '其他 > 位置待补充',
                 pages: getRulePages(site, 'style', selector),
                 detail: rule.media ? '媒体条件：' + rule.media : '',
                 rule,
@@ -860,18 +884,21 @@
                     domain.endsWith('.' + siteDomain)
                 )
             ))
-            .flatMap(rule => rule.selectors.map(selector => ({
-                id: ruleItemId('block', rule, selector),
-                feature: 'block',
-                title: selector,
-                description: RULE_HINTS.block[site.id]?.[selector] ||
-                    '此项屏蔽规则的具体作用待确认。',
-                pages: getRulePages(site, 'block', selector),
-                detail: '',
-                rule,
-                selector,
-                defaultEnabled: rule.enabled !== false
-            })));
+            .flatMap(rule => {
+                const ruleSiteId = rule.domains?.includes('115vod.com') ? '115vod' : site.id;
+                return rule.selectors.map(selector => ({
+                    id: ruleItemId('block', rule, selector),
+                    feature: 'block',
+                    title: selector,
+                    description: RULE_HINTS.block[ruleSiteId]?.[selector] ||
+                        '其他 > 位置待补充',
+                    pages: getRulePages(site, 'block', selector, false, ruleSiteId),
+                    detail: '',
+                    rule,
+                    selector,
+                    defaultEnabled: rule.enabled !== false
+                }));
+            });
 
         const special = SPECIAL_RULES[site.id] || { style: [], block: [] };
         return {
@@ -936,6 +963,8 @@
             '.close-button{width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:#657287;font-size:25px;line-height:1;cursor:pointer;}',
             '.close-button:hover{background:#f0f2f6;color:#263247;}',
             '.content{min-height:0;flex:1;display:grid;grid-template-columns:236px minmax(0,1fr);}',
+            '.right-panel{min-width:0;min-height:0;display:flex;flex-direction:column;}',
+            '.right-panel .pagebar{flex:0 0 auto;}',
             '.sidebar{min-height:0;overflow:auto;background:#fff;border-right:1px solid #e4e8ef;padding:24px 14px;}',
             '.side-heading{padding:0 10px 12px;color:#8994a5;font-size:11px;font-weight:750;letter-spacing:.09em;}',
             '.site-list{display:flex;flex-direction:column;gap:4px;}',
@@ -947,6 +976,14 @@
             '.main{min-width:0;min-height:0;overflow:auto;padding:24px clamp(18px,4vw,52px) 50px;}',
             '.main-inner{max-width:980px;margin:0 auto;}',
             '.groups{display:grid;grid-template-columns:1fr;gap:18px;}',
+            '.path-group{border-bottom:1px solid #f0f2f6;}',
+            '.path-group:last-child{border-bottom:0;}',
+            '.path-summary{display:flex;align-items:center;gap:9px;padding:11px 0;color:#4c5d74;font-size:13px;font-weight:700;cursor:pointer;list-style:none;}',
+            '.path-summary::-webkit-details-marker{display:none;}',
+            '.path-summary::before{content:"›";display:inline-block;color:#8492a7;font-size:18px;line-height:1;transform:rotate(0deg);transition:transform .15s ease;}',
+            '.path-group[open]>.path-summary::before{transform:rotate(90deg);}',
+            '.path-count{margin-left:auto;color:#9aa5b5;font-size:11px;font-weight:500;}',
+            '.path-rule-list{padding:0 0 4px 24px;}',
             '.group{background:#fff;border:1px solid #e5e9f0;border-radius:13px;overflow:hidden;box-shadow:0 3px 12px rgba(24,39,65,.035);}',
             '.group-head{display:flex;align-items:center;gap:14px;padding:17px 20px;border-bottom:1px solid #edf0f4;}',
             '.group-heading{min-width:0;flex:1;}',
@@ -969,7 +1006,7 @@
             '.empty{padding:22px 0;color:#a0a9b6;font-size:13px;}',
             '.master-off .rule-list{opacity:.65;}',
             '.footer-note{margin:18px 2px 0;color:#98a2b1;font-size:12px;}',
-            '@media(max-width:700px){.shell{width:calc(100vw - 16px);height:calc(100dvh - 24px);border-radius:12px;}.topbar{padding:0 14px;gap:10px;}.pagebar{min-height:48px;padding:0 10px;gap:4px;}.page-tab{padding:8px 11px;font-size:12px;}.save-hint{display:none;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:18px 12px 36px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.group-desc{max-width:180px;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
+            '@media(max-width:700px){.shell{width:calc(100vw - 16px);height:calc(100dvh - 24px);border-radius:12px;}.topbar{padding:0 14px;gap:10px;}.pagebar{min-height:48px;padding:0 10px;gap:4px;}.page-tab{padding:8px 11px;font-size:12px;}.save-hint{display:none;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:18px 12px 36px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.path-rule-list{padding-left:12px;}.path-summary{padding:9px 0;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
         ].join('\n');
 
         const makeElement = (tag, className, text) => {
@@ -1004,11 +1041,14 @@
         const siteList = makeElement('nav', 'site-list');
         siteList.setAttribute('aria-label', '网站设置');
         sidebar.append(siteList);
+        const rightPanel = makeElement('section', 'right-panel');
+        rightPanel.append(pagebar);
         const main = makeElement('main', 'main');
         const mainInner = makeElement('div', 'main-inner');
         main.append(mainInner);
-        contentArea.append(sidebar, main);
-        shell.append(topbar, pagebar, contentArea);
+        rightPanel.append(main);
+        contentArea.append(sidebar, rightPanel);
+        shell.append(topbar, contentArea);
         root.append(style, shell);
 
         function closeSettings() {
@@ -1101,11 +1141,28 @@
             );
 
             head.append(heading, count, master.label);
+
             const list = makeElement('div', 'rule-list');
-            if (items.length === 0) {
-                list.append(makeElement('div', 'empty', '这个网站暂时没有配置此类规则。'));
-            } else {
-                for (const item of items) list.append(makeRuleRow(site, feature, item));
+            const pathGroups = new Map();
+            for (const item of items) {
+                const path = item.description || '其他 > 位置待补充';
+                const firstSegment = path.split(' > ')[0] || '其他';
+                if (!pathGroups.has(firstSegment)) pathGroups.set(firstSegment, []);
+                pathGroups.get(firstSegment).push(item);
+            }
+
+            for (const [pathName, pathItems] of pathGroups) {
+                const details = makeElement('details', 'path-group');
+                details.open = true;
+                const summary = makeElement('summary', 'path-summary');
+                summary.append(
+                    makeElement('span', '', pathName),
+                    makeElement('span', 'path-count', pathItems.length + ' 项')
+                );
+                const pathList = makeElement('div', 'path-rule-list');
+                for (const item of pathItems) pathList.append(makeRuleRow(site, feature, item));
+                details.append(summary, pathList);
+                list.append(details);
             }
 
             group.append(head, list);
@@ -1131,13 +1188,26 @@
             const visibleStyle = items.style.filter(item => item.pages.includes(pageId));
             const visibleBlock = items.block.filter(item => item.pages.includes(pageId));
             const groups = makeElement('div', 'groups');
-            groups.append(
-                renderGroup(site, 'style', '页面美化', '调整当前页面的布局、宽度和间距。', visibleStyle),
-                renderGroup(site, 'block', '元素屏蔽', '隐藏当前页面不需要的元素。', visibleBlock)
-            );
+
+            if (visibleStyle.length) {
+                groups.append(renderGroup(
+                    site, 'style', '页面美化', '当前页面的布局、宽度和间距调整。',
+                    visibleStyle
+                ));
+            }
+            if (visibleBlock.length) {
+                groups.append(renderGroup(
+                    site, 'block', '元素屏蔽', '当前页面各位置的元素规则。',
+                    visibleBlock
+                ));
+            }
+
+            if (!visibleStyle.length && !visibleBlock.length) {
+                groups.append(makeElement('div', 'empty', '这个页面暂时没有美化或屏蔽规则。'));
+            }
+
             mainInner.append(groups);
 
-            const page = getPages(site).find(item => item.id === pageId);
             for (const button of pagebar.querySelectorAll('.page-tab')) {
                 const active = button.dataset.pageId === pageId;
                 button.classList.toggle('active', active);
