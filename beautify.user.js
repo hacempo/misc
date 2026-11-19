@@ -647,48 +647,214 @@
     };
 
 
-    // 将实际 declarations 转成可核对的中文说明，避免美化描述只说位置、不说如何修改。
-    const CSS_PROPERTY_LABELS = {
-        width: '宽度',
-        'max-width': '最大宽度上限',
-        'min-width': '最小宽度下限',
-        height: '高度',
-        'max-height': '最大高度上限',
-        'min-height': '最小高度下限',
-        display: '布局显示方式',
-        flex: '弹性布局参数',
-        'flex-grow': '弹性伸展系数',
-        'flex-shrink': '弹性收缩系数',
-        'flex-basis': '弹性基准尺寸',
-        'grid-column': '网格列占位',
-        gap: '项目间距',
-        'column-gap': '列间距',
-        'row-gap': '行间距',
-        margin: '外边距',
-        'margin-left': '左外边距',
-        'margin-right': '右外边距',
-        'margin-top': '上外边距',
-        'margin-bottom': '下外边距',
-        padding: '内边距',
-        'padding-left': '左内边距',
-        'padding-right': '右内边距',
-        'padding-top': '上内边距',
-        'padding-bottom': '下内边距',
-        'align-items': '交叉轴对齐方式',
-        'justify-content': '主轴对齐方式',
-        'box-sizing': '盒模型计算方式'
+    // 美化项的显示名称、目标元素和效果说明；样式规则文本直接由真实 declarations 生成。
+    const STYLE_PRESENTATION = {
+    "tieba": {
+        ".main-page-wrap": {
+            "title": "主页主内容容器",
+            "element": "贴吧移动端主页的主内容容器 .main-page-wrap",
+            "effect": "取消内容容器的最大宽度上限，让页面主体可随可用空间伸展。"
+        },
+        ".nav-bar-v2-fixed": {
+            "title": "固定顶栏容器",
+            "element": "贴吧移动端顶部固定导航栏容器 .nav-bar-v2-fixed",
+            "effect": "取消导航栏的最大宽度上限，使固定导航栏可使用全部可用宽度。"
+        }
+    },
+    "zhihu": {
+        ".Question-main": {
+            "title": "问题页主栏容器",
+            "element": "知乎问题页的主要内容容器 .Question-main",
+            "effect": "让问题页主栏宽度铺满可用区域，清除左右外边距和内边距。"
+        },
+        ".Question-mainColumn": {
+            "title": "回答正文主栏",
+            "element": "问题页承载回答正文的主栏 .Question-mainColumn",
+            "effect": "让正文主栏作为弹性项目占据剩余空间，并允许其按布局需要收缩。"
+        },
+        ".css-1gl8cva": {
+            "title": "主栏内部容器",
+            "element": "问题页主栏内层内容容器 .css-1gl8cva",
+            "effect": "让内层内容容器铺满宽度，并清除左右外边距和内边距。"
+        },
+        ".Topstory-container": {
+            "title": "首页内容外层容器",
+            "element": "知乎首页信息流外层容器 .Topstory-container",
+            "effect": "取消首页外层容器的宽度上限并清除左右内边距。"
+        },
+        ".Topstory-mainColumn": {
+            "title": "首页信息流主栏",
+            "element": "知乎首页信息流主栏 .Topstory-mainColumn",
+            "effect": "让主栏铺满宽度、允许弹性收缩，并移除右侧外边距。"
+        },
+        ".Topstory-mainColumnCard": {
+            "title": "首页主栏卡片",
+            "element": "首页主栏中的内容卡片 .Topstory-mainColumnCard",
+            "effect": "让卡片宽度铺满父容器，并取消最大宽度限制。"
+        },
+        ".Topstory-content": {
+            "title": "首页信息流内容区",
+            "element": "首页信息流内容容器 .Topstory-content",
+            "effect": "让信息流内容区宽度铺满父容器，并取消最大宽度限制。"
+        },
+        ".Topstory-recommend": {
+            "title": "首页推荐内容区",
+            "element": "首页推荐内容容器 .Topstory-recommend",
+            "effect": "让推荐内容区宽度铺满父容器，并取消最大宽度限制。"
+        },
+        "div:has(> header.AppHeader)": {
+            "title": "顶栏固定外层容器",
+            "element": "直接包含 header.AppHeader 的固定定位外层 div",
+            "effect": "将固定顶栏外层宽度绑定到 body 的实际宽度，避免使用 100vw 时把滚动条宽度也计算进去而产生横向溢出。"
+        },
+        "header.AppHeader": {
+            "title": "顶栏主容器",
+            "element": "知乎顶部导航主容器 header.AppHeader",
+            "effect": "让顶栏主容器铺满宽度，并清除左右外边距。"
+        },
+        "header.AppHeader > div": {
+            "title": "顶栏内容内层",
+            "element": "header.AppHeader 下的第一层 div 内容容器",
+            "effect": "让顶栏内层宽度铺满父容器，同时将最大宽度限制在父容器的 100%。"
+        },
+        "header.AppHeader > div > .css-51utkw": {
+            "title": "顶栏中间导航和搜索区",
+            "element": "顶栏内承载导航与搜索的中间区域 .css-51utkw",
+            "effect": "通过弹性布局占据顶栏剩余空间；宽度设为 auto，弹性基准为 0%。"
+        },
+        "header.AppHeader > div > .css-51utkw > .css-51utkw": {
+            "title": "顶栏导航内层",
+            "element": "顶栏中间区域内部的导航容器 .css-51utkw",
+            "effect": "让导航内层铺满父容器，并允许其按内容自然伸展。"
+        },
+        "header.AppHeader .css-1ndlr1n": {
+            "title": "顶栏导航子区域",
+            "element": "顶栏中的子区域 .css-1ndlr1n",
+            "effect": "将最大宽度限制为父级的 100%，允许宽度收缩，并使用 border-box 计算尺寸。"
+        },
+        ".css-x84wzl": {
+            "title": "顶栏搜索区域",
+            "element": "知乎顶栏中的搜索区域 .css-x84wzl",
+            "effect": "允许搜索区域收缩并占据导航与头像之间的剩余空间，内部内容靠右排列。"
+        },
+        ".css-x84wzl .SearchBar": {
+            "title": "顶栏搜索框",
+            "element": ".css-x84wzl 内的搜索框 .SearchBar",
+            "effect": "视口宽度达到 800px 时，将搜索框宽度设为 400px 至 540px 的响应式范围，同时限制其不超过父容器。"
+        },
+        ".css-x84wzl .SearchBar-tool": {
+            "title": "搜索框工具栏",
+            "element": "搜索框内部工具栏 .SearchBar-tool",
+            "effect": "让搜索工具栏铺满父容器，并将最大宽度限制在父容器的 100%。"
+        },
+        ".css-14iuq0r": {
+            "title": "顶栏左侧区域",
+            "element": "知乎顶栏及悬浮顶栏中的左侧区域 .css-14iuq0r",
+            "effect": "取消左侧区域的最大宽度上限，避免其被固定宽度约束。"
+        },
+        ".QuestionHeader": {
+            "title": "顶部问题栏容器",
+            "element": "问题页顶部问题栏容器 .QuestionHeader",
+            "effect": "让问题栏容器宽度铺满可用区域，并清除左右外边距。"
+        },
+        ".QuestionHeader-content": {
+            "title": "问题栏内容区",
+            "element": ".QuestionHeader 内的内容容器 .QuestionHeader-content",
+            "effect": "让问题栏内容区铺满宽度，并清除左右内边距。"
+        },
+        ".QuestionHeader-main": {
+            "title": "问题栏主内容区",
+            "element": ".QuestionHeader 内承载问题标题的主内容区 .QuestionHeader-main",
+            "effect": "将问题栏主内容区宽度设为父容器的 100%。"
+        },
+        ".ContentItem-actions > :nth-child(2)": {
+            "title": "回答操作栏第二个按钮",
+            "element": ".ContentItem-actions 中从左向右的第二个直接子元素",
+            "effect": "将操作栏第二个按钮的左外边距清零，收紧按钮之间的间距。"
+        },
+        ".ContentItem-actions": {
+            "title": "回答操作栏容器",
+            "element": "回答卡片底部操作按钮容器 .ContentItem-actions",
+            "effect": "将操作栏左右外边距各设为 -16px，使操作栏向两侧扩展 16px。"
+        },
+        ".css-1qqx3d0 > :nth-child(2)": {
+            "title": "搜索结果操作栏第二个按钮",
+            "element": ".css-1qqx3d0 中从左向右的第二个直接子元素",
+            "effect": "将搜索结果操作栏第二个按钮的左外边距清零，收紧按钮之间的间距。"
+        },
+        ".css-1qqx3d0": {
+            "title": "搜索结果操作栏容器",
+            "element": "搜索结果回答卡片的操作栏容器 .css-1qqx3d0",
+            "effect": "将操作栏左右外边距各设为 -16px，使操作栏向两侧扩展 16px。"
+        },
+        ".Search-container": {
+            "title": "搜索页外层容器",
+            "element": "知乎搜索页面的外层容器 .Search-container",
+            "effect": "清除外层容器内边距，并将宽度设为 100%。"
+        },
+        "#SearchMain": {
+            "title": "搜索页主内容区",
+            "element": "知乎搜索页面主内容容器 #SearchMain",
+            "effect": "清除右外边距，并将主内容区宽度设为 100%。"
+        },
+        ".SearchTabs-inner": {
+            "title": "搜索页悬浮工具栏",
+            "element": "搜索页顶部悬浮工具栏内层 .SearchTabs-inner",
+            "effect": "改为 flex 布局，清除外边距和最大宽度限制，并让工具栏铺满宽度、垂直居中。"
+        },
+        ".SearchTabs-searchBarContainer": {
+            "title": "搜索页工具栏搜索框",
+            "element": "搜索页悬浮工具栏中的搜索框容器 .SearchTabs-searchBarContainer",
+            "effect": "将搜索框容器自动推到工具栏右侧，并保持其按内容决定基础宽度。"
+        }
+    },
+    "bilibili": {
+        "main": {
+            "title": "动态页主内容区",
+            "element": "哔哩哔哩动态页的主内容区 main 元素",
+            "effect": "让主内容区铺满父容器、清除左右外边距，并跨越网格布局的全部列。"
+        }
+    },
+    "x": {
+        ".r-113js5t": {
+            "title": "X 主内容区域",
+            "element": "X 页面承载主内容的外层容器 .r-113js5t",
+            "effect": "将主内容区域宽度设为 100%，并取消最大宽度限制。"
+        },
+        ".r-1ye8kvj": {
+            "title": "X 主栏内容容器",
+            "element": "X 页面中的主栏内容容器 .r-1ye8kvj",
+            "effect": "将主栏宽度设为 100%，取消最大宽度限制并允许其收缩。"
+        }
+    }
+};
+
+    const getStylePresentation = (siteId, selector, rule) => {
+        if (siteId === 'zhihu' && selector === '.Question-main' && rule.declarations.gap !== undefined) {
+            return {
+                title: '问题页主栏间距',
+                element: '知乎问题页的主要内容容器 .Question-main',
+                effect: '将主栏内部 gap 和 column-gap 都设为 0，清除主栏内部的列间距。'
+            };
+        }
+        if (siteId === 'zhihu' && selector === '.Question-mainColumn' && rule.declarations.flex !== undefined) {
+            return {
+                title: '回答正文主栏弹性布局',
+                element: '问题页承载回答正文的主栏 .Question-mainColumn',
+                effect: '设置 flex: 1 1 0%，让正文主栏占据剩余空间并可随布局收缩。'
+            };
+        }
+        return STYLE_PRESENTATION[siteId]?.[selector] || {
+            title: selector,
+            element: '匹配选择器 ' + selector + ' 的页面元素',
+            effect: '按下方列出的 CSS 属性和值覆盖页面原样式。'
+        };
     };
 
-    const describeCssDeclarations = declarations =>
-        Object.entries(declarations).map(([property, value]) => {
-            const label = CSS_PROPERTY_LABELS[property] || property;
-            const valueText = value === 'none'
-                ? '取消限制'
-                : value === '0' || value === '0px'
-                    ? '清零'
-                    : '设为 ' + value;
-            return label + valueText + '（' + property + ': ' + value + '）';
-        }).join('；');
+    const formatCssStyle = declarations =>
+        Object.entries(declarations)
+            .map(([property, value]) => property + ': ' + value + ' !important')
+            .join('; ');
 
     // 每条规则的可读说明；美化项会自动附加实际选择器与 declarations。
     const RULE_HINTS = {
