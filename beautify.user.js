@@ -1505,28 +1505,55 @@
             const pathTree = { children: new Map(), items: [] };
 
             for (const item of items) {
-                const segments = (item.description || '其他 > 位置待补充')
-                    .split(' > ')
-                    .map(segment => segment.trim())
-                    .filter(Boolean);
+                if (feature === 'style') {
+                    const segments = (item.path || '其他 > 位置待补充')
+                        .split(' > ')
+                        .map(segment => segment.trim())
+                        .filter(Boolean);
 
-                // “通用”只用于说明规则适用于多个页面，不作为实际位置层级。
-                if (segments[0] === '通用') segments.shift();
-
-                // 最后一段保留为规则的具体位置说明，前面的路径层级负责折叠分组。
-                const groupSegments = segments.slice(0, -1);
-                let node = pathTree;
-                for (const segment of groupSegments) {
-                    if (!node.children.has(segment)) {
-                        node.children.set(segment, { children: new Map(), items: [] });
+                    let node = pathTree;
+                    for (const segment of segments) {
+                        if (!node.children.has(segment)) {
+                            node.children.set(segment, { children: new Map(), items: [] });
+                        }
+                        node = node.children.get(segment);
                     }
-                    node = node.children.get(segment);
+
+                    const selectorKey = '__selector__:' + (item.pathSelector || item.selector || '待补充');
+                    if (!node.children.has(selectorKey)) {
+                        node.children.set(selectorKey, {
+                            children: new Map(),
+                            items: [],
+                            kind: 'selector',
+                            selector: item.pathSelector || item.selector || '待补充'
+                        });
+                    }
+                    node.children.get(selectorKey).items.push(item);
+                } else {
+                    const segments = (item.description || '其他 > 位置待补充')
+                        .split(' > ')
+                        .map(segment => segment.trim())
+                        .filter(Boolean);
+
+                    if (segments[0] === '通用') segments.shift();
+
+                    const groupSegments = segments.slice(0, -1);
+                    let node = pathTree;
+                    for (const segment of groupSegments) {
+                        if (!node.children.has(segment)) {
+                            node.children.set(segment, { children: new Map(), items: [] });
+                        }
+                        node = node.children.get(segment);
+                    }
+                    node.items.push(item);
                 }
-                node.items.push(item);
             }
 
             const renderPathNode = (pathName, node, depth = 0) => {
-                const details = makeElement('details', 'path-group path-depth-' + depth);
+                const details = makeElement(
+                    'details',
+                    'path-group path-depth-' + depth + (node.kind === 'selector' ? ' path-selector-group' : '')
+                );
                 details.open = true;
 
                 const summary = makeElement('summary', 'path-summary');
@@ -1536,10 +1563,15 @@
                         (sum, child) => sum + countPathItems(child), 0
                     );
                 const total = countPathItems(node);
-                summary.append(
-                    makeElement('span', '', pathName),
-                    makeElement('span', 'path-count', total + ' 项')
-                );
+                if (node.kind === 'selector') {
+                    summary.append(
+                        makeElement('span', 'path-selector-label', '选择器'),
+                        makeElement('code', 'path-selector-code', node.selector)
+                    );
+                } else {
+                    summary.append(makeElement('span', '', pathName));
+                }
+                summary.append(makeElement('span', 'path-count', total + ' 项'));
 
                 const body = makeElement('div', 'path-rule-list');
                 for (const item of node.items) body.append(makeRuleRow(site, feature, item));
