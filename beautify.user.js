@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.5
+// @version      6.6
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -525,7 +525,7 @@
                 {
                     id: 'zhihu-header-width',
                     title: '顶栏宽度自适应',
-                    description: '根据主体实际宽度动态设置顶栏宽度。'
+                    description: '通用 > 顶栏 > 宽度自适应'
                 }
             ],
             block: []
@@ -682,7 +682,7 @@
             },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 时间线 > 输入框（顶部）',
-                'article .r-kzbkwu > :last-child': '首页/帖子页 > 帖子 > 操作栏（底部）'
+                'article .r-kzbkwu > :last-child': '主页/帖子页 > 帖子 > 操作栏（底部）'
             },
             douyin: {
                 '.Ctt1baq8': '评论区 > 评论 > 操作栏（底部）',
@@ -1173,10 +1173,12 @@
                 details.open = true;
 
                 const summary = makeElement('summary', 'path-summary');
-                const total = node.items.length +
-                    [...node.children.values()].reduce((sum, child) =>
-                        sum + child.items.length + [...child.children.values()]
-                            .reduce((nestedSum, nested) => nestedSum + nested.items.length, 0), 0);
+                const countPathItems = current =>
+                    current.items.length +
+                    [...current.children.values()].reduce(
+                        (sum, child) => sum + countPathItems(child), 0
+                    );
+                const total = countPathItems(node);
                 summary.append(
                     makeElement('span', '', pathName),
                     makeElement('span', 'path-count', total + ' 项')
