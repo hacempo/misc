@@ -983,6 +983,8 @@
             '.path-summary::before{content:"›";display:inline-block;color:#8492a7;font-size:18px;line-height:1;transform:rotate(0deg);transition:transform .15s ease;}',
             '.path-group[open]>.path-summary::before{transform:rotate(90deg);}',
             '.path-count{margin-left:auto;color:#9aa5b5;font-size:11px;font-weight:500;}',
+            '.path-depth-1>.path-summary{font-size:12px;color:#718097;}',
+            '.path-depth-2>.path-summary{font-size:12px;color:#8793a5;}',
             '.path-rule-list{padding:0 0 4px 24px;}',
             '.group{background:#fff;border:1px solid #e5e9f0;border-radius:13px;overflow:hidden;box-shadow:0 3px 12px rgba(24,39,65,.035);}',
             '.group-head{display:flex;align-items:center;gap:14px;padding:17px 20px;border-bottom:1px solid #edf0f4;}',
@@ -1143,27 +1145,57 @@
             head.append(heading, count, master.label);
 
             const list = makeElement('div', 'rule-list');
-            const pathGroups = new Map();
+            const pathTree = { children: new Map(), items: [] };
+
             for (const item of items) {
-                const path = item.description || '其他 > 位置待补充';
-                const firstSegment = path.split(' > ')[0] || '其他';
-                if (!pathGroups.has(firstSegment)) pathGroups.set(firstSegment, []);
-                pathGroups.get(firstSegment).push(item);
+                const segments = (item.description || '其他 > 位置待补充')
+                    .split(' > ')
+                    .map(segment => segment.trim())
+                    .filter(Boolean);
+
+                // “通用”只用于说明规则适用于多个页面，不作为实际位置层级。
+                if (segments[0] === '通用') segments.shift();
+
+                // 最后一段保留为规则的具体位置说明，前面的路径层级负责折叠分组。
+                const groupSegments = segments.slice(0, -1);
+                let node = pathTree;
+                for (const segment of groupSegments) {
+                    if (!node.children.has(segment)) {
+                        node.children.set(segment, { children: new Map(), items: [] });
+                    }
+                    node = node.children.get(segment);
+                }
+                node.items.push(item);
             }
 
-            for (const [pathName, pathItems] of pathGroups) {
-                const details = makeElement('details', 'path-group');
+            const renderPathNode = (pathName, node, depth = 0) => {
+                const details = makeElement('details', 'path-group path-depth-' + depth);
                 details.open = true;
+
                 const summary = makeElement('summary', 'path-summary');
+                const total = node.items.length +
+                    [...node.children.values()].reduce((sum, child) =>
+                        sum + child.items.length + [...child.children.values()]
+                            .reduce((nestedSum, nested) => nestedSum + nested.items.length, 0), 0);
                 summary.append(
                     makeElement('span', '', pathName),
-                    makeElement('span', 'path-count', pathItems.length + ' 项')
+                    makeElement('span', 'path-count', total + ' 项')
                 );
-                const pathList = makeElement('div', 'path-rule-list');
-                for (const item of pathItems) pathList.append(makeRuleRow(site, feature, item));
-                details.append(summary, pathList);
-                list.append(details);
+
+                const body = makeElement('div', 'path-rule-list');
+                for (const item of node.items) body.append(makeRuleRow(site, feature, item));
+                for (const [childName, childNode] of node.children) {
+                    body.append(renderPathNode(childName, childNode, depth + 1));
+                }
+
+                details.append(summary, body);
+                return details;
+            };
+
+            for (const [pathName, node] of pathTree.children) {
+                list.append(renderPathNode(pathName, node));
             }
+            for (const item of pathTree.items) list.append(makeRuleRow(site, feature, item));
 
             group.append(head, list);
             group.classList.toggle('master-off', !master.input.checked);
