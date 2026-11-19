@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      6.9
+// @version      7.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://*/*
 // @run-at       document-start
@@ -9,7 +9,7 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @grant       GM_addValueChangeListener
+// @grant        GM_addValueChangeListener
 // ==/UserScript==
 
 (function () {
@@ -581,42 +581,42 @@
     const RULE_HINTS = {
         style: {
             tieba: {
-                '.main-page-wrap': '首页 > 主内容区 > 宽度限制',
-                '.nav-bar-v2-fixed': '顶栏 > 固定导航栏 > 宽度限制'
+                '.main-page-wrap': '首页 > 主内容区 > 取消最大宽度限制（max-width: none）',
+                '.nav-bar-v2-fixed': '顶栏 > 固定导航栏 > 取消最大宽度限制（max-width: none）'
             },
             zhihu: {
-                '.Question-main': '问答 > 内容区 > 主栏容器',
-                '.Question-mainColumn': '问答 > 内容区 > 正文主栏',
-                '.css-1gl8cva': '问答 > 内容区 > 主栏内层容器',
-                '.Topstory-container': '首页 > 内容区 > 外层容器',
-                '.Topstory-mainColumn': '首页 > 内容区 > 主栏',
-                '.Topstory-mainColumnCard': '首页 > 内容区 > 主栏卡片',
-                '.Topstory-content': '首页 > 内容区 > 信息流',
-                '.Topstory-recommend': '首页 > 内容区 > 推荐区域',
-                'div:has(> header.AppHeader)': '通用 > 顶栏 > 固定容器宽度',
-                'header.AppHeader': '通用 > 顶栏 > 外层容器宽度和左右边距',
-                'header.AppHeader > div': '通用 > 顶栏 > 内层容器宽度',
-                'header.AppHeader > div > .css-51utkw': '通用 > 顶栏 > 中间导航和搜索容器',
-                'header.AppHeader > div > .css-51utkw > .css-51utkw': '通用 > 顶栏 > 内层导航和搜索容器',
-                'header.AppHeader .css-1ndlr1n': '通用 > 顶栏 > 子区域宽度和收缩',
-                '.css-x84wzl': '通用 > 顶栏 > 搜索区域位置和伸缩',
-                '.css-x84wzl .SearchBar': '通用 > 顶栏 > 搜索框响应式宽度',
-                '.css-x84wzl .SearchBar-tool': '通用 > 顶栏 > 搜索工具栏宽度',
-                '.css-14iuq0r': '通用 > 顶栏 > 左侧区域宽度',
-                '.QuestionHeader': '问答 > 问题标题区 > 外层容器宽度',
-                '.QuestionHeader-content': '问答 > 问题标题区 > 内容容器宽度',
-                '.QuestionHeader-main': '问答 > 问题标题区 > 主内容区宽度',
-                '.ContentItem-actions > :nth-child(2)': '通用 > 内容卡片 > 操作栏 > 第二个按钮左侧间距',
-                '.ContentItem-actions': '通用 > 内容卡片 > 操作栏 > 左右边距',
-                '.css-1qqx3d0 > :nth-child(2)': '搜索 > 搜索结果 > 操作栏 > 第二个按钮左侧间距',
-                '.css-1qqx3d0': '搜索 > 搜索结果 > 操作栏 > 左右边距',
-                '.Search-container': '搜索 > 内容区 > 外层容器宽度和内边距',
-                '#SearchMain': '搜索 > 内容区 > 主内容宽度',
-                '.SearchTabs-inner': '搜索 > 顶栏 > 标签栏宽度和对齐',
-                '.SearchTabs-searchBarContainer': '搜索 > 顶栏 > 搜索框位置'
+                '.Question-main': '回答页 > 主要内容 > 主栏 > 铺满可用宽度、清除左右留白并压缩列间距',
+                '.Question-mainColumn': '回答页 > 主要内容 > 正文主栏 > 铺满剩余空间并清除左右留白',
+                '.css-1gl8cva': '回答页 > 主要内容 > 主栏内层 > 宽度铺满并清除左右留白',
+                '.Topstory-container': '首页 > 主要内容 > 外层容器 > 宽度铺满并清除左右内边距',
+                '.Topstory-mainColumn': '首页 > 主要内容 > 主栏 > 铺满宽度、允许收缩并移除右侧空隙',
+                '.Topstory-mainColumnCard': '首页 > 主要内容 > 主栏卡片 > 宽度铺满父容器',
+                '.Topstory-content': '首页 > 主要内容 > 信息流 > 宽度铺满父容器',
+                '.Topstory-recommend': '首页 > 主要内容 > 推荐区域 > 宽度铺满父容器',
+                'div:has(> header.AppHeader)': '全站 > 顶栏 > 固定外层容器 > 按 body 实际宽度设置宽度，避免 100vw 引起横向溢出',
+                'header.AppHeader': '全站 > 顶栏 > 主容器 > 宽度铺满并取消左右外边距',
+                'header.AppHeader > div': '全站 > 顶栏 > 内层容器 > 宽度铺满父级',
+                'header.AppHeader > div > .css-51utkw': '全站 > 顶栏 > 中间导航和搜索区 > 使用弹性布局占据剩余空间',
+                'header.AppHeader > div > .css-51utkw > .css-51utkw': '全站 > 顶栏 > 导航内层 > 宽度铺满并允许弹性伸展',
+                'header.AppHeader .css-1ndlr1n': '全站 > 顶栏 > 子区域 > 限制最大宽度并允许收缩，避免挤出容器',
+                '.css-x84wzl': '全站 > 顶栏 > 搜索区域 > 允许收缩并靠右排列',
+                '.css-x84wzl .SearchBar': '全站 > 顶栏 > 搜索框 > 屏幕宽度至少 800px 时设为 400–540px 响应式宽度',
+                '.css-x84wzl .SearchBar-tool': '全站 > 顶栏 > 搜索工具栏 > 宽度铺满可用区域',
+                '.css-14iuq0r': '全站 > 顶栏 > 左侧区域 > 取消最大宽度限制',
+                '.QuestionHeader': '回答页 > 顶部问题栏 > 容器宽度铺满并取消左右外边距',
+                '.QuestionHeader-content': '回答页 > 顶部问题栏 > 内容区 > 宽度铺满并清除左右内边距',
+                '.QuestionHeader-main': '回答页 > 顶部问题栏 > 主内容区 > 宽度设为 100%',
+                '.ContentItem-actions > :nth-child(2)': '全站 > 主要内容 > 回答操作栏 > 第二个按钮取消左侧间距',
+                '.ContentItem-actions': '全站 > 主要内容 > 回答操作栏 > 左右各向外扩展 16px',
+                '.css-1qqx3d0 > :nth-child(2)': '搜索 > 主要内容 > 具体回答 > 操作栏 > 第二个按钮取消左侧间距',
+                '.css-1qqx3d0': '搜索 > 主要内容 > 具体回答 > 操作栏 > 左右各向外扩展 16px',
+                '.Search-container': '搜索 > 主要内容 > 外层容器 > 清除内边距并铺满宽度',
+                '#SearchMain': '搜索 > 主要内容 > 主内容区 > 铺满宽度并取消右侧外边距',
+                '.SearchTabs-inner': '搜索 > 顶部 > 悬浮工具栏 > 改为 flex 布局，宽度铺满并取消外边距和最大宽度限制',
+                '.SearchTabs-searchBarContainer': '搜索 > 顶部 > 悬浮工具栏 > 搜索框 > 自动靠右并保持内容宽度'
             },
             bilibili: {
-                'main': '动态 > 内容区 > 主栏宽度和布局'
+                'main': '动态 > 主要内容 > 主栏 > 宽度铺满、清除左右外边距并跨满网格列'
             }
         },
         block: {
@@ -655,7 +655,7 @@
                 '.withSideMenuLayoutSider_ELJ6a': '网盘 > 主内容区 > 左侧菜单栏'
             },
             zhihu: {
-                '.css-bkewaf': '首页 > 主要内容 > 右栏',
+                '.css-bkewaf': '全站 > 主要内容 > 右栏',
                 '[aria-label="知乎"]': '全站 > 顶栏 > Logo',
                 '[href="https://www.zhihu.com/column-square"]': '全站 > 顶栏 > 专栏',
                 '[href="https://www.zhihu.com/ring-feeds"]': '全站 > 顶栏 > 圈子',
@@ -675,7 +675,7 @@
                 '.QuestionHeader-footer': '回答页 > 顶部问题栏 > 底部操作栏',
                 '.FollowButton': '回答页 > 关注按钮（多个地方：关注用户、关注问题）',
                 '.Reward': '回答页 > 主要内容 > 具体回答 > 赞赏（可能会出现在底部）',
-                '.css-1qqx3d0 > :first-child': '搜索 > 搜索结果 > 操作栏 > 第一个按钮（赞同/反对）'
+                '.css-1qqx3d0 > :first-child': '搜索 > 主要内容 > 具体回答 > 操作栏 > 赞同/反对'
             },
             bilibili: {
                 '.adblock-tips': '通用 > 页面 > 广告拦截提示',
@@ -1288,11 +1288,12 @@
             currentName.textContent = site.name;
             pagebar.replaceChildren();
 
-            const pages = getPages(site);
+            const allPages = getPages(site);
+            const pages = allPages.filter(page => getPageRuleCounts(site, page.id) > 0);
             const rememberedPage = selectedPageBySite.get(site.id);
             const initialPageId = pages.some(page => page.id === rememberedPage)
                 ? rememberedPage
-                : pages[0].id;
+                : (pages[0]?.id || allPages[0].id);
 
             for (const page of pages) {
                 const button = makeElement('button', 'page-tab');
@@ -1342,9 +1343,9 @@
     const buildStyleRule = rule => {
         const declarations = Object.entries(rule.declarations)
             .map(([property, value]) => `    ${property}: ${value} !important;`)
-            .join('\\n');
-        const body = `${rule.selectors.join(',\\n')} {\\n${declarations}\\n}`;
-        return rule.media ? `@media ${rule.media} {\\n${body}\\n}` : body;
+            .join('\n');
+        const body = `${rule.selectors.join(',\n')} {\n${declarations}\n}`;
+        return rule.media ? `@media ${rule.media} {\n${body}\n}` : body;
     };
 
     const currentRuleItems = allSiteRuleItems.get(currentSite.id);
@@ -1412,10 +1413,10 @@
                     isRuleActive(item.rule) &&
                     isItemEnabled('block', currentSite.id, item.id, item.defaultEnabled)
                 )
-                .map(item => `${item.selector} {\\n    display: none !important;\\n}`)
+                .map(item => `${item.selector} {\n    display: none !important;\n}`)
             : [];
 
-        mountStyle([...styleCss, ...blockCss].join('\\n\\n'));
+        mountStyle([...styleCss, ...blockCss].join('\n\n'));
         syncZhihuContentWidth();
         syncBilibiliRules();
     };
@@ -1472,47 +1473,6 @@
             zhihuWidthBodyObserver.observe(document.documentElement, { childList: true });
         }
     };
-
-
-    /* =====================================================================
-     * 知乎：按 body 实际宽度动态设置顶栏宽度变量 --beautify-content-width
-     * ===================================================================== */
-
-    const watchZhihuContentWidth = () => {
-        const update = () => {
-            const width = document.body.getBoundingClientRect().width;
-
-            if (width > 0) {
-                document.documentElement.style.setProperty(
-                    '--beautify-content-width',
-                    width + 'px'
-                );
-            }
-        };
-
-        const start = () => new ResizeObserver(update).observe(document.body);
-
-        // document-start 时 body 可能尚未创建
-        if (document.body) {
-            start();
-            return;
-        }
-
-        const observer = new MutationObserver(() => {
-            if (!document.body) return;
-            observer.disconnect();
-            start();
-        });
-        observer.observe(document.documentElement, { childList: true });
-    };
-
-    if (
-        currentSite.id === 'zhihu' &&
-        currentSettings.style &&
-        isItemEnabled('style', 'zhihu', 'zhihu-header-width')
-    ) {
-        watchZhihuContentWidth();
-    }
 
 
     /* =====================================================================
