@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.11.1
+// @version      7.12.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -21,8 +21,8 @@
 // @match        *://*.x.com/*
 // @match        *://douyin.com/*
 // @match        *://*.douyin.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.11.1
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.11.1
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.12.0
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.12.0
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -605,7 +605,7 @@
                     title: '顶栏宽度自适应',
                     path: '全站 > 顶栏 > 固定外层容器',
                     elementName: 'div:has(> header.AppHeader)',
-                    effectDescription: '通过 ResizeObserver 监听 body 实际宽度，并将固定顶栏宽度同步为该宽度，避免 100vw 把滚动条宽度也计入而造成横向溢出。'
+                    effectDescription: '让顶部导航栏与页面内容左右对齐，避免右侧出现横向溢出。'
                 }
             ],
             block: []
@@ -617,14 +617,14 @@
                     title: '评论区内容顶部间距',
                     path: '播放 > 评论区 > 内容区',
                     elementName: '#commentapp > bili-comments 的 Shadow DOM 内 #contents',
-                    effectDescription: '将 padding-top 设为 0px，清除评论区内容区域顶部留白。'
+                    effectDescription: '收紧评论区内容顶部的空白，让评论内容更靠近上方导航。'
                 },
                 {
                     id: 'bili-comment-navbar-margin',
                     title: '评论区导航栏间距',
                     path: '播放 > 评论区 > 顶部导航栏',
                     elementName: '#commentapp > bili-comments > #header > bili-comments-header-renderer 的 Shadow DOM 内 #navbar',
-                    effectDescription: '将 margin-bottom 设为 0px，清除评论区顶部导航栏下方的多余间距。'
+                    effectDescription: '缩小评论区顶部导航栏下方的空白，让评论列表更紧凑。'
                 }
             ],
             block: [
@@ -648,7 +648,7 @@
                     title: '评论输入框',
                     path: '播放 > 评论区 > 顶部输入框',
                     elementName: 'bili-comments-header-renderer >>> #commentbox',
-                    effectDescription: '评论输入框',
+                    effectDescription: '评论框',
                     positionDescription: '评论区顶部'
                 },
                 {
@@ -656,7 +656,7 @@
                     title: '悬浮评论输入框',
                     path: '播放 > 评论区 > 底部悬浮输入框',
                     elementName: 'bili-comments-header-renderer >>> .bili-comments-bottom-fixed-wrapper',
-                    effectDescription: '悬浮评论输入框',
+                    effectDescription: '悬浮评论框',
                     positionDescription: '评论区底部'
                 }
             ]
@@ -846,6 +846,51 @@
     }
 };
 
+    const STYLE_EFFECT_HINTS = {
+        tieba: {
+            '.main-page-wrap': '让主页内容区域充分利用屏幕宽度。',
+            '.nav-bar-v2-fixed': '让顶部导航栏铺满可用宽度。'
+        },
+        zhihu: {
+            '.Question-main': '让问题页主内容区域铺满可用宽度，并收紧内部栏间距。',
+            '.Question-mainColumn': '让回答正文区域占据主栏的可用空间。',
+            '.css-1gl8cva': '让回答正文内层区域铺满宽度。',
+            '.Topstory-container': '让首页内容区域铺满可用宽度。',
+            '.Topstory-mainColumn': '让首页信息流主栏扩展到可用宽度。',
+            '.Topstory-mainColumnCard': '让首页内容卡片铺满主栏。',
+            '.Topstory-content': '让首页信息流内容铺满主栏。',
+            '.Topstory-recommend': '让首页推荐内容铺满主栏。',
+            'div:has(> header.AppHeader)': '让顶部导航栏与页面内容左右对齐，避免横向溢出。',
+            'header.AppHeader': '让顶部导航栏铺满可用宽度。',
+            'header.AppHeader > div': '让顶部导航栏内部内容充分利用可用宽度。',
+            'header.AppHeader > div > .css-51utkw': '为顶部导航和搜索区域留出充足空间。',
+            'header.AppHeader > div > .css-51utkw > .css-51utkw': '让顶部导航内容自然延展，不受多余宽度限制。',
+            'header.AppHeader .css-1ndlr1n': '避免顶部导航子区域被挤窄或撑出容器。',
+            '.css-x84wzl': '让搜索区域灵活使用导航栏剩余空间，并靠右排列。',
+            '.css-x84wzl .SearchBar': '让顶部搜索框在较宽屏幕上保持舒适宽度。',
+            '.css-x84wzl .SearchBar-tool': '让搜索框工具区域铺满可用空间。',
+            '.css-14iuq0r': '让顶部左侧区域不再受固定宽度限制。',
+            '.QuestionHeader': '让问题标题栏铺满可用宽度。',
+            '.QuestionHeader-content': '让问题标题栏内容铺满区域。',
+            '.QuestionHeader-main': '让问题标题和主要信息充分利用横向空间。',
+            '.ContentItem-actions > :nth-child(2)': '收紧回答操作按钮之间的空隙。',
+            '.ContentItem-actions': '让回答底部操作栏与卡片内容边缘对齐。',
+            '.css-1qqx3d0 > :nth-child(2)': '收紧搜索结果操作按钮之间的空隙。',
+            '.css-1qqx3d0': '让搜索结果底部操作栏与卡片内容边缘对齐。',
+            '.Search-container': '让搜索页面内容铺满可用宽度。',
+            '#SearchMain': '让搜索结果主区域铺满可用宽度。',
+            '.SearchTabs-inner': '让搜索页顶部工具栏铺满宽度，内容保持整齐排列。',
+            '.SearchTabs-searchBarContainer': '让搜索框靠到顶部工具栏右侧。'
+        },
+        bilibili: {
+            'main': '让动态页主内容区域铺满页面宽度。'
+        },
+        x: {
+            'main > :only-child': '让 X 的主内容区域铺满可用宽度。',
+            '.r-1ye8kvj': '让 X 的主栏内容充分利用可用宽度。'
+        }
+    };
+
     const getStylePresentation = (siteId, selector, rule) => {
         if (siteId === 'zhihu' && selector === '.Question-main' && rule.declarations.gap !== undefined) {
             return {
@@ -967,7 +1012,7 @@
                 '[aria-label="喜欢"]': '全站 > 主要内容 > 具体回答 > 操作栏 > 喜欢',
                 '[data-tooltip="解释这篇内容"]': '全站 > 主要内容 > 具体回答 > 操作栏 > 解释',
                 '.WriteArea': '首页 > 主要内容 > 写回答（顶部）',
-                '.CornerButtonsGroup': '全站 > AI 助手（右下角）',
+                '.CornerButtonsGroup': '全站 > AI 助手',
                 '.QuestionHeader-side': '回答页 > 悬浮顶栏 > 右侧栏',
                 '.QuestionHeader-footer': '回答页 > 顶部问题栏 > 底部操作栏',
                 '.FollowButton': '回答页 > 关注按钮（多个地方：关注用户、关注问题）',
@@ -978,15 +1023,15 @@
                 '.adblock-tips': '通用 > 页面 > 广告拦截提示',
                 '.recommended-swipe': '首页 > 信息流',
                 '.floor-single-card': '首页 > 信息流',
-                '.feed-card:not(:has(.enable-no-interest))': '首页 > 信息流 > 初始加载卡片（无“不感兴趣”入口）',
-                '.bili-feed-card:not(:has(.enable-no-interest))': '首页 > 信息流 > 下滑后加载卡片（无“不感兴趣”入口）',
+                '.feed-card:not(:has(.enable-no-interest))': '首页 > 信息流',
+                '.bili-feed-card:not(:has(.enable-no-interest))': '首页 > 信息流',
                 '.left-entry-main > :nth-child(n+4)': '通用 > 顶栏 > 左侧入口 > 第 4 项起',
                 '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '通用 > 顶栏 > 右侧入口 > 第 4 至第 6 项以外',
                 'aside': '动态 > 右侧栏',
                 '.bili-dyn-publishing': '动态 > 发布区域'
             },
             x: {
-                '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 输入框（仅 x.com/home）',
+                '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 输入框',
                 'article .r-qklmqi > :first-child': '帖子页 > 楼主帖子 > 操作栏',
                 'article .r-kzbkwu > :last-child': '首页/帖子页 > 信息流中的其他帖子 > 操作栏',
                 '[data-testid="inline_reply_offscreen"]': '帖子页 > 回复输入框',
@@ -1002,14 +1047,88 @@
             }
         },
         meaning: {
+            tieba: {
+                '.login': '登录提示',
+                '.icon_tshows': '楼主标识图标',
+                '.level-icon': '用户等级图标',
+                '.interaction-bar': '内容操作栏'
+            },
+            '115': {
+                '#js_bottom_notification': '底部通知弹窗',
+                '.feature-float': '悬浮功能弹窗',
+                '.container-leftside': '左侧栏',
+                '[data-nav="photo"]': '照片入口',
+                '[data-nav="credentials"]': '密档和证件入口',
+                '[data-nav="note"]': '记事入口',
+                '.ceiling-feature': '顶部推广区域',
+                '.ceiling-link-temp': '顶部提示链接'
+            },
+            '115vod': {
+                '.feature-float': '悬浮弹窗'
+            },
+            nga: {
+                '.topicrow .c3': '发帖人和发帖时间',
+                '.topicrow .c4': '最后回复人和回复时间',
+                '.c1': '帖子人数统计及用户信息',
+                '.cell': '功能按钮单元格',
+                '#toptopics': '公告和热门话题区域',
+                '#fast_post_c': '快速发帖区域'
+            },
+            '123pan': {
+                '.notice-box': '公告',
+                '.entry_p0tlq': '推广内容',
+                '.mfy-main-layout__head': '顶部主区域',
+                'aside': '左侧栏',
+                '.withSideMenuLayoutSider_ELJ6a': '侧边菜单'
+            },
+            zhihu: {
+                '.css-bkewaf': '右侧栏',
+                '.css-18opwoy': '评论中的回复和点赞区域',
+                '.css-79elbk > :first-child': '评论回复框',
+                '[aria-label="知乎"]': '知乎 Logo',
+                '[href="https://www.zhihu.com/column-square"]': '专栏入口',
+                '[href="https://www.zhihu.com/ring-feeds"]': '圈子入口',
+                '.css-53paqb': '导航分隔线',
+                '[href="https://www.zhihu.com/project-square"]': 'AI Works 入口',
+                '[href="https://www.zhihu.com/fiore/h5/vip-web"]': '故事入口',
+                '[href="https://zhida.zhihu.com/"]': '直答入口',
+                '.SearchBar-askContainer': '发布入口',
+                '.css-1vbrp2j': '消息和私信入口',
+                '.css-ruapjk': '头像入口',
+                '.ContentItem-actions > :first-child': '回答赞同和反对按钮',
+                '[aria-label="喜欢"]': '喜欢按钮',
+                '[data-tooltip="解释这篇内容"]': '解释按钮',
+                '.WriteArea': '写回答区域',
+                '.CornerButtonsGroup': 'AI 助手',
+                '.QuestionHeader-side': '问题栏右侧区域',
+                '.QuestionHeader-footer': '问题栏底部操作区',
+                '.FollowButton': '关注按钮',
+                '.Reward': '赞赏入口',
+                '.css-1qqx3d0 > :first-child': '搜索结果赞同和反对按钮'
+            },
             bilibili: {
-                '.recommended-swipe': '轮播图',
-                '.floor-single-card': '分区推荐卡片（广告、直播等）'
+                '.adblock-tips': '广告拦截提示',
+                '.recommended-swipe': '首页轮播推荐区',
+                '.floor-single-card': '分区推广卡片',
+                '.feed-card:not(:has(.enable-no-interest))': '初始加载的推广卡片',
+                '.bili-feed-card:not(:has(.enable-no-interest))': '下滑加载的推广卡片',
+                '.left-entry-main > :nth-child(n+4)': '顶栏左侧多余入口',
+                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧非核心入口',
+                'aside': '动态页右侧栏',
+                '.bili-dyn-publishing': '动态发布区域'
+            },
+            x: {
+                '[aria-label="主页时间线"] > :nth-child(3)': '发帖输入区域',
+                'article .r-qklmqi > :first-child': '楼主帖子的操作栏',
+                'article .r-kzbkwu > :last-child': '其他帖子的操作栏',
+                '[data-testid="inline_reply_offscreen"]': '回复输入框',
+                'header[role="banner"]': '左侧导航栏',
+                '[data-testid="sidebarColumn"]': '右侧推荐栏'
             },
             douyin: {
                 '.Ctt1baq8': '操作栏',
                 '.VAQA49VP': '发布时间和发布地区',
-                '.comment-input-container': '评论输入框',
+                '.comment-input-container': '评论框',
                 '.semiTabrelated_card': '切换推荐按钮',
                 '.semiTabai_card': '切换 AI 按钮'
             }
@@ -1017,6 +1136,9 @@
         position: {
             bilibili: {
                 '.recommended-swipe': '左上角'
+            },
+            zhihu: {
+                '.CornerButtonsGroup': '右下角'
             },
             douyin: {
                 '.Ctt1baq8': '底部',
@@ -1216,8 +1338,9 @@
                     title: selector,
                     path: RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充',
                     elementName: selector,
-                    effectDescription: presentation.effect +
-                        (rule.media ? '（生效条件：' + rule.media + '）' : ''),
+                    effectDescription: STYLE_EFFECT_HINTS[site.id]?.[selector] ||
+                        '让该区域更充分利用页面空间，减少不必要的布局限制。' +
+                        (rule.media ? '（较宽屏幕下生效）' : ''),
                     pages: getRulePages(site, 'style', selector),
                     detail: '',
                     rule,
@@ -1357,8 +1480,11 @@
             '.rule-row{min-height:54px;display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid #f0f2f6;}',
             '.rule-row:last-child{border-bottom:0;}',
             '.rule-info{min-width:0;flex:1;}',
-            '.rule-details{display:grid;gap:4px;}',
-            '.rule-detail-line{min-width:0;color:#647187;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}',
+            '.rule-details{display:grid;gap:5px;}',
+            '.rule-selector{min-width:0;color:#929cac;font-size:11px;line-height:1.4;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;}',
+            '.rule-description{display:flex;align-items:center;flex-wrap:wrap;gap:6px 9px;}',
+            '.rule-detail-line{min-width:0;color:#34445d;font-size:13px;font-weight:550;line-height:1.5;overflow-wrap:anywhere;}',
+            '.rule-position{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;background:#f1f4f8;color:#778397;font-size:11px;line-height:1.5;white-space:nowrap;}',
             '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
             '.rule-detail{margin-top:4px;color:#929cac;font-size:10px;overflow-wrap:anywhere;}',
             '.rule-toggle{flex:0 0 auto;width:18px;height:18px;accent-color:#2868cf;cursor:pointer;}',
@@ -1442,16 +1568,18 @@
             const info = makeElement('div', 'rule-info');
             const details = makeElement('div', 'rule-details');
             details.append(
-                makeElement('div', 'rule-detail-line', item.elementName || item.selector || '元素位置待补充'),
-                makeElement(
-                    'div',
-                    'rule-detail-line',
-                    item.effectDescription || (feature === 'block' ? '隐藏该元素。' : '效果说明待补充')
-                )
+                makeElement('div', 'rule-selector', item.elementName || item.selector || '元素位置待补充')
             );
+            const description = makeElement('div', 'rule-description');
+            description.append(makeElement(
+                'div',
+                'rule-detail-line',
+                item.effectDescription || (feature === 'block' ? '相关页面元素' : '调整页面布局')
+            ));
             if (item.positionDescription) {
-                details.append(makeElement('div', 'rule-detail-line', item.positionDescription));
+                description.append(makeElement('span', 'rule-position', '⌖ ' + item.positionDescription));
             }
+            details.append(description);
             info.append(details);
 
             const checkbox = makeElement('input', 'rule-toggle');
