@@ -1248,7 +1248,7 @@
                         path,
                         elementName: selector,
                         effectDescription: RULE_HINTS.meaning?.[ruleSiteId]?.[selector] ||
-                            (pathLeaf && pathLeaf !== '位置待补充' ? '隐藏' + pathLeaf + '。' : '隐藏该元素。'),
+                            (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素'),
                         positionDescription: RULE_HINTS.position?.[ruleSiteId]?.[selector] || '',
                         pages: getRulePages(site, 'block', selector, false, ruleSiteId),
                         detail: '',
