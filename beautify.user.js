@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.10.1
+// @version      7.11.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -21,8 +21,8 @@
 // @match        *://*.x.com/*
 // @match        *://douyin.com/*
 // @match        *://*.douyin.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.1
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.10.1
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.11.0
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.11.0
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -337,7 +337,7 @@
         x: [
             {
                 // 主内容容器占满视口可用宽度。
-                selectors: ['.r-113js5t'],
+                selectors: ['main > :only-child'],
                 declarations: { width: '100%', 'max-width': 'none' }
             },
             {
@@ -631,30 +631,33 @@
                 {
                     id: 'bili-goods-comments',
                     title: '商品标记评论',
-                    path: '播放 > 评论区 > 评论 > 推广评论',
-                    elementName: '包含 [data-type="goods"] 的 bili-comment-thread-renderer',
-                    effectDescription: '检测到商品标记后，隐藏其所属的整条评论线程。'
+                    path: '播放 > 评论区 > 评论',
+                    elementName: 'bili-comment-thread-renderer:has([data-type="goods"])',
+                    effectDescription: '包含商品推广的评论'
                 },
                 {
                     id: 'bili-comment-footers',
                     title: '评论操作栏',
-                    path: '播放 > 评论区 > 评论 > 操作栏',
-                    elementName: 'bili-comment-renderer / bili-comment-reply-renderer 的 Shadow DOM 内 #footer',
-                    effectDescription: '隐藏主评论和回复下方的操作栏。'
+                    path: '播放 > 评论区 > 评论',
+                    elementName: 'bili-comment-renderer >>> #footer, bili-comment-reply-renderer >>> #footer',
+                    effectDescription: '操作栏',
+                    positionDescription: '主评论和回复下方'
                 },
                 {
                     id: 'bili-comment-input',
                     title: '评论输入框',
                     path: '播放 > 评论区 > 顶部输入框',
-                    elementName: 'bili-comments-header-renderer 的 Shadow DOM 内 #commentbox',
-                    effectDescription: '隐藏评论区顶部的评论输入框。'
+                    elementName: 'bili-comments-header-renderer >>> #commentbox',
+                    effectDescription: '评论输入框',
+                    positionDescription: '评论区顶部'
                 },
                 {
                     id: 'bili-floating-comment-input',
                     title: '悬浮评论输入框',
                     path: '播放 > 评论区 > 底部悬浮输入框',
-                    elementName: '.bili-comments-bottom-fixed-wrapper（位于 bili-comments-header-renderer 的 Shadow DOM）',
-                    effectDescription: '隐藏评论区底部的悬浮评论输入框。'
+                    elementName: 'bili-comments-header-renderer >>> .bili-comments-bottom-fixed-wrapper',
+                    effectDescription: '悬浮评论输入框',
+                    positionDescription: '评论区底部'
                 }
             ]
         }
@@ -830,9 +833,9 @@
         }
     },
     "x": {
-        ".r-113js5t": {
+        "main > :only-child": {
             "title": "X 主内容区域",
-            "element": "X 页面承载主内容的外层容器 .r-113js5t",
+            "element": "main 的唯一子元素 main > :only-child",
             "effect": "将主内容区域宽度设为 100%，并取消最大宽度限制。"
         },
         ".r-1ye8kvj": {
@@ -907,7 +910,7 @@
                 'main': '动态 > 主要内容 > 主栏'
             },
             x: {
-                '.r-113js5t': '全站 > 主要内容 > 主容器',
+                'main > :only-child': '全站 > 主要内容 > 主容器',
                 '.r-1ye8kvj': '全站 > 主要内容 > 主栏'
             }
         },
@@ -973,8 +976,8 @@
             },
             bilibili: {
                 '.adblock-tips': '通用 > 页面 > 广告拦截提示',
-                '.recommended-swipe': '首页 > 顶部 > 轮播图',
-                '.floor-single-card': '首页 > 分区 > 单张卡片（广告、直播等）',
+                '.recommended-swipe': '首页 > 信息流',
+                '.floor-single-card': '首页 > 信息流',
                 '.feed-card:not(:has(.enable-no-interest))': '首页 > 信息流 > 初始加载卡片（无“不感兴趣”入口）',
                 '.bili-feed-card:not(:has(.enable-no-interest))': '首页 > 信息流 > 下滑后加载卡片（无“不感兴趣”入口）',
                 '.left-entry-main > :nth-child(n+4)': '通用 > 顶栏 > 左侧入口 > 第 4 项起',
@@ -991,11 +994,34 @@
                 '[data-testid="sidebarColumn"]': '全站 > 主要内容 > 右栏'
             },
             douyin: {
-                '.Ctt1baq8': '评论区 > 评论 > 操作栏（底部）',
-                '.VAQA49VP': '评论区 > 评论 > 发布时间和发布地区（底部，操作栏上方）',
-                '.comment-input-container': '评论区 > 输入框（底部）',
-                '.semiTabrelated_card': '评论区 > 顶栏 > 切换推荐按钮',
-                '.semiTabai_card': '评论区 > 顶栏 > 切换 AI 按钮'
+                '.Ctt1baq8': '评论区 > 评论',
+                '.VAQA49VP': '评论区 > 评论',
+                '.comment-input-container': '评论区',
+                '.semiTabrelated_card': '评论区 > 顶栏',
+                '.semiTabai_card': '评论区 > 顶栏'
+            }
+        },
+        meaning: {
+            bilibili: {
+                '.recommended-swipe': '轮播图',
+                '.floor-single-card': '分区推荐卡片（广告、直播等）'
+            },
+            douyin: {
+                '.Ctt1baq8': '操作栏',
+                '.VAQA49VP': '发布时间和发布地区',
+                '.comment-input-container': '评论输入框',
+                '.semiTabrelated_card': '切换推荐按钮',
+                '.semiTabai_card': '切换 AI 按钮'
+            }
+        },
+        position: {
+            bilibili: {
+                '.recommended-swipe': '左上角'
+            },
+            douyin: {
+                '.Ctt1baq8': '底部',
+                '.VAQA49VP': '底部，操作栏上方',
+                '.comment-input-container': '底部'
             }
         }
     };
@@ -1221,9 +1247,9 @@
                         title: selector,
                         path,
                         elementName: selector,
-                        effectDescription: pathLeaf && pathLeaf !== '位置待补充'
-                            ? '隐藏' + pathLeaf + '。'
-                            : '隐藏该元素。',
+                        effectDescription: RULE_HINTS.meaning?.[ruleSiteId]?.[selector] ||
+                            (pathLeaf && pathLeaf !== '位置待补充' ? '隐藏' + pathLeaf + '。' : '隐藏该元素。'),
+                        positionDescription: RULE_HINTS.position?.[ruleSiteId]?.[selector] || '',
                         pages: getRulePages(site, 'block', selector, false, ruleSiteId),
                         detail: '',
                         rule,
@@ -1423,6 +1449,9 @@
                     item.effectDescription || (feature === 'block' ? '隐藏该元素。' : '效果说明待补充')
                 )
             );
+            if (item.positionDescription) {
+                details.append(makeElement('div', 'rule-detail-line', item.positionDescription));
+            }
             info.append(details);
 
             const checkbox = makeElement('input', 'rule-toggle');
