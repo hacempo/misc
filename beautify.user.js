@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.12.0
+// @version      7.13.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -21,8 +21,10 @@
 // @match        *://*.x.com/*
 // @match        *://douyin.com/*
 // @match        *://*.douyin.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.12.0
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.12.0
+// @match        *://south-plus.net/*
+// @match        *://*.south-plus.net/*
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.13.0
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.13.0
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -46,7 +48,8 @@
         { id: 'zhihu', name: '知乎', domains: ['www.zhihu.com'] },
         { id: 'bilibili', name: '哔哩哔哩', domains: ['bilibili.com'] },
         { id: 'x', name: '推特', domains: ['x.com'] },
-        { id: 'douyin', name: '抖音', domains: ['douyin.com'] }
+        { id: 'douyin', name: '抖音', domains: ['douyin.com'] },
+        { id: 'southplus', name: '南+', domains: ['south-plus.net'] }
     ];
 
     const hostname = location.hostname.toLowerCase();
@@ -516,6 +519,11 @@
                 '.semiTabrelated_card',
                 '.semiTabai_card'
             ]
+        },
+        {
+            // 南+：第二个表格中每行仅保留第二个单元格。
+            domains: ['south-plus.net'],
+            selectors: ['#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))']
         }
     ];
 
@@ -1044,6 +1052,9 @@
                 '.comment-input-container': '评论区',
                 '.semiTabrelated_card': '评论区 > 顶栏',
                 '.semiTabai_card': '评论区 > 顶栏'
+            },
+            southplus: {
+                '#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))': '首页 > 表格 > 第二个表格 > 内容列'
             }
         },
         meaning: {
@@ -1131,6 +1142,9 @@
                 '.comment-input-container': '评论框',
                 '.semiTabrelated_card': '切换推荐按钮',
                 '.semiTabai_card': '切换 AI 按钮'
+            },
+            southplus: {
+                '#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))': '表格中的其他内容列'
             }
         },
         position: {
