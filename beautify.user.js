@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.14.0
+// @version      7.15.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -27,8 +27,8 @@
 // @match        *://*.laowang.vip/*
 // @match        *://18comic.vip/*
 // @match        *://*.18comic.vip/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.14.0
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.14.0
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.15.0
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.15.0
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -408,9 +408,8 @@
             ]
         },
         {
-            // NGA：平板竖屏下首页帖子信息行。
+            // NGA：首页帖子信息行。
             domains: ['ngabbs.com'],
-            media: '(orientation: portrait) and (min-width: 768px) and (max-width: 1366px)',
             selectors: ['.posterInfoLine']
         },
         {
@@ -419,9 +418,8 @@
             selectors: ['.anti-scam-warning', '.top_lev']
         },
         {
-            // 老王论坛：平板竖屏下顶部 App 下载提示。
+            // 老王论坛：顶部 App 下载提示。
             domains: ['laowang.vip'],
-            media: '(orientation: portrait) and (min-width: 768px) and (max-width: 1366px)',
             selectors: ['#close']
         },
         {
@@ -550,13 +548,13 @@
             ]
         },
         {
-            // 南+：第二个表格中每行仅保留第二个单元格。
+            // 南+：第二个 tbody 下的每行仅保留第二个元素。
             domains: ['south-plus.net'],
-            selectors: ['#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))']
+            selectors: ['#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))']
         },
         { domains: ['18comic.vip'], selectors: ['.col-sm-3'] },
         { domains: ['www.bilibili.com'], selectors: ['.video-resource-list'] },
-        { domains: ['www.zhihu.com'], selectors: ['.css-140jo2', '.css-dvccr2', '.css-a3pqj1'] }
+        { domains: ['www.zhihu.com'], selectors: ['.css-140jo2', '.css-dvccr2', '.css-a3pqj1', '.css-kt4t4n'] }
     ];
 
     /*
@@ -577,7 +575,6 @@
      * www.zhihu.com##.css-140jo2
      * www.zhihu.com##.css-a3pqj1
      * www.zhihu.com##.css-dvccr2
-     * www.zhihu.com##.css-kt4t4n
      * www.zhihu.com##.css-upmq18
      * www.zhihu.com##.css-1fo89v5
      * www.zhihu.com##.css-1m4ta6s
@@ -1086,7 +1083,7 @@
                 '.semiTabai_card': '评论区 > 顶栏'
             },
             southplus: {
-                '#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))': '首页 > 表格 > 第二个表格 > 内容列'
+                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '首页 > 表格 > 第二个 tbody > 内容列'
             },
             laowang: {
                 '.anti-scam-warning': '帖子页 > 评论区 > 评论 > 警告',
@@ -1104,7 +1101,8 @@
             zhihu: {
                 '.css-140jo2': '回答 > 评论区 > 评论信息',
                 '.css-dvccr2': '回答 > 顶部 > 赞同人数',
-                '.css-a3pqj1': '评论页 > 评论框'
+                '.css-a3pqj1': '评论页 > 评论框',
+                '.css-kt4t4n': '回答 > 评论区 > 悬浮评论框'
             },
             bilibili: { '.video-resource-list': '视频页 > 推广区域' }
         },
@@ -1195,7 +1193,7 @@
                 '.semiTabai_card': '切换 AI 按钮'
             },
             southplus: {
-                '#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))': '表格中的其他内容列'
+                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '表格中的其他内容'
             },
             laowang: {
                 '.anti-scam-warning': '防诈骗警告', '.top_lev': '用户等级', '#close': 'App 下载提示'
@@ -1208,7 +1206,7 @@
             },
             x: { '.r-ttdzmv': '评论之间的空隙' },
             zhihu: {
-                '.css-140jo2': '评论发布时间和地点', '.css-dvccr2': '文章赞同人数', '.css-a3pqj1': '评论框'
+                '.css-140jo2': '评论发布时间和地点', '.css-dvccr2': '文章赞同人数', '.css-a3pqj1': '评论框', '.css-kt4t4n': '悬浮评论框'
             },
             bilibili: { '.video-resource-list': '视频推广' }
         },
@@ -1353,7 +1351,7 @@
                 '.bili-dyn-publishing': ['dynamic']
             },
             nga: { '.posterInfoLine': ['home'] },
-            zhihu: { '.css-140jo2': ['question'], '.css-dvccr2': ['question'], '.css-a3pqj1': ['question'] },
+            zhihu: { '.css-140jo2': ['question'], '.css-dvccr2': ['question'], '.css-a3pqj1': ['question'], '.css-kt4t4n': ['question'] },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': ['home'],
                 'article .r-qklmqi > :first-child': ['post'],
