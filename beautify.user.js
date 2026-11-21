@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.13.0
+// @version      7.14.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -23,8 +23,12 @@
 // @match        *://*.douyin.com/*
 // @match        *://south-plus.net/*
 // @match        *://*.south-plus.net/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.13.0
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.13.0
+// @match        *://laowang.vip/*
+// @match        *://*.laowang.vip/*
+// @match        *://18comic.vip/*
+// @match        *://*.18comic.vip/*
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.14.0
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.14.0
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -49,7 +53,9 @@
         { id: 'bilibili', name: '哔哩哔哩', domains: ['bilibili.com'] },
         { id: 'x', name: '推特', domains: ['x.com'] },
         { id: 'douyin', name: '抖音', domains: ['douyin.com'] },
-        { id: 'southplus', name: '南+', domains: ['south-plus.net'] }
+        { id: 'southplus', name: '南+', domains: ['south-plus.net'] },
+        { id: 'laowang', name: '老王论坛', domains: ['laowang.vip'] },
+        { id: '18comic', name: '禁漫天堂', domains: ['18comic.vip'] }
     ];
 
     const hostname = location.hostname.toLowerCase();
@@ -398,8 +404,25 @@
                 '.c1',
                 '.cell',
                 '#toptopics',
-                '#fast_post_c'
+                '#fast_post_c', '#m_nav', '#mainmenu', '#m_pbtntop', '#b_nav', '#footer'
             ]
+        },
+        {
+            // NGA：平板竖屏下首页帖子信息行。
+            domains: ['ngabbs.com'],
+            media: '(orientation: portrait) and (min-width: 768px) and (max-width: 1366px)',
+            selectors: ['.posterInfoLine']
+        },
+        {
+            // 老王论坛：评论区提示和用户等级。
+            domains: ['laowang.vip'],
+            selectors: ['.anti-scam-warning', '.top_lev']
+        },
+        {
+            // 老王论坛：平板竖屏下顶部 App 下载提示。
+            domains: ['laowang.vip'],
+            media: '(orientation: portrait) and (min-width: 768px) and (max-width: 1366px)',
+            selectors: ['#close']
         },
         {
             // 123 云盘：公告/广告、顶部区域及两处左侧栏
@@ -510,6 +533,12 @@
             selectors: ['header[role="banner"]', '[data-testid="sidebarColumn"]']
         },
         {
+            // X：帖子详情页评论之间的间隔。
+            domains: ['x.com'],
+            onlyPathIncludes: ['/status/'],
+            selectors: ['.r-ttdzmv']
+        },
+        {
             // 抖音：评论信息/操作栏及相关输入、推荐模块
             domains: ['douyin.com'],
             selectors: [
@@ -524,7 +553,10 @@
             // 南+：第二个表格中每行仅保留第二个单元格。
             domains: ['south-plus.net'],
             selectors: ['#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))']
-        }
+        },
+        { domains: ['18comic.vip'], selectors: ['.col-sm-3'] },
+        { domains: ['www.bilibili.com'], selectors: ['.video-resource-list'] },
+        { domains: ['www.zhihu.com'], selectors: ['.css-140jo2', '.css-dvccr2', '.css-a3pqj1'] }
     ];
 
     /*
@@ -1055,7 +1087,26 @@
             },
             southplus: {
                 '#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))': '首页 > 表格 > 第二个表格 > 内容列'
-            }
+            },
+            laowang: {
+                '.anti-scam-warning': '帖子页 > 评论区 > 评论 > 警告',
+                '.top_lev': '帖子页 > 评论区 > 评论 > 用户栏 > 用户等级',
+                '#close': '全站 > 顶部 > App 下载提示'
+            },
+            '18comic': { '.col-sm-3': '全站 > 页面 > 广告栏' },
+            nga: {
+                '.posterInfoLine': '首页 > 帖子信息',
+                '#m_nav': '全站 > 上方导航栏', '#mainmenu': '全站 > 顶栏',
+                '#m_pbtntop': '帖子页 > 上方翻页栏', '#b_nav': '全站 > 下方导航栏',
+                '#footer': '全站 > 页脚'
+            },
+            x: { '.r-ttdzmv': '帖子页 > 评论区 > 评论间隔' },
+            zhihu: {
+                '.css-140jo2': '回答 > 评论区 > 评论信息',
+                '.css-dvccr2': '回答 > 顶部 > 赞同人数',
+                '.css-a3pqj1': '评论页 > 评论框'
+            },
+            bilibili: { '.video-resource-list': '视频页 > 推广区域' }
         },
         meaning: {
             tieba: {
@@ -1145,7 +1196,21 @@
             },
             southplus: {
                 '#ajaxtable > table:nth-of-type(2) tr > td:not(:nth-child(2))': '表格中的其他内容列'
-            }
+            },
+            laowang: {
+                '.anti-scam-warning': '防诈骗警告', '.top_lev': '用户等级', '#close': 'App 下载提示'
+            },
+            '18comic': { '.col-sm-3': '广告栏' },
+            nga: {
+                '.posterInfoLine': '发帖人、发帖时间及最后回复信息',
+                '#m_nav': '导航栏', '#mainmenu': '主菜单', '#m_pbtntop': '翻页栏',
+                '#b_nav': '导航栏', '#footer': '页脚'
+            },
+            x: { '.r-ttdzmv': '评论之间的空隙' },
+            zhihu: {
+                '.css-140jo2': '评论发布时间和地点', '.css-dvccr2': '文章赞同人数', '.css-a3pqj1': '评论框'
+            },
+            bilibili: { '.video-resource-list': '视频推广' }
         },
         position: {
             bilibili: {
@@ -1283,14 +1348,18 @@
                 '.floor-single-card': ['home'],
                 '.feed-card:not(:has(.enable-no-interest))': ['home'],
                 '.bili-feed-card:not(:has(.enable-no-interest))': ['home'],
+                '.video-resource-list': ['video'],
                 'aside': ['dynamic'],
                 '.bili-dyn-publishing': ['dynamic']
             },
+            nga: { '.posterInfoLine': ['home'] },
+            zhihu: { '.css-140jo2': ['question'], '.css-dvccr2': ['question'], '.css-a3pqj1': ['question'] },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': ['home'],
                 'article .r-qklmqi > :first-child': ['post'],
                 'article .r-kzbkwu > :last-child': ['home', 'post'],
-                '[data-testid="inline_reply_offscreen"]': ['post']
+                '[data-testid="inline_reply_offscreen"]': ['post'],
+                '.r-ttdzmv': ['post']
             }
         },
         special: {
@@ -1384,8 +1453,9 @@
                         title: selector,
                         path,
                         elementName: selector,
-                        effectDescription: RULE_HINTS.meaning?.[ruleSiteId]?.[selector] ||
-                            (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素'),
+                        effectDescription: (RULE_HINTS.meaning?.[ruleSiteId]?.[selector] ||
+                            (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素')) +
+                            (rule.media ? '（平板竖屏）' : ''),
                         positionDescription: RULE_HINTS.position?.[ruleSiteId]?.[selector] || '',
                         pages: getRulePages(site, 'block', selector, false, ruleSiteId),
                         detail: '',
@@ -1890,7 +1960,10 @@
                     isRuleActive(item.rule) &&
                     isItemEnabled('block', currentSite.id, item.id, item.defaultEnabled)
                 )
-                .map(item => `${item.selector} {\n    display: none !important;\n}`)
+                .map(item => {
+                    const ruleCss = `${item.selector} {\n    display: none !important;\n}`;
+                    return item.rule.media ? `@media ${item.rule.media} {\n${ruleCss}\n}` : ruleCss;
+                })
             : [];
 
         mountStyle([...styleCss, ...blockCss].join('\n\n'));
