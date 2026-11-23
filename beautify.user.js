@@ -1538,7 +1538,31 @@
         "block|southplus|.blockquote": "帖子页 > 带资源楼层",
         "block|laowang|.anti-scam-warning": "帖子页 > 楼层",
         "block|laowang|.top_lev": "帖子页 > 楼层",
-        "block|laowang|#close": "全站"
+        "block|laowang|#close": "全站",
+        "block|tieba|.login": "帖子 > 底部",
+        "block|tieba|.icon_tshows": "帖子 > 楼主昵称",
+        "block|tieba|.level-icon": "帖子 > 回帖用户昵称",
+        "block|tieba|.interaction-bar": "首页 > 内容区",
+        "block|115|.feature-float": "网盘 > 底部右侧",
+        "block|115|.container-leftside": "网盘",
+        "block|115|[data-nav=\"photo\"]": "网盘 > 顶栏",
+        "block|115|[data-nav=\"credentials\"]": "网盘 > 顶栏",
+        "block|115|[data-nav=\"note\"]": "网盘 > 顶栏",
+        "block|115|.ceiling-link-temp": "网盘 > 顶栏",
+        "block|115vod|.feature-float": "播放 > 播放器 > 底部右侧",
+        "block|123pan|.mfy-main-layout__head": "网盘",
+        "block|123pan|aside": "网盘",
+        "block|123pan|.withSideMenuLayoutSider_ELJ6a": "网盘 > 主内容区",
+        "block|zhihu|.css-bkewaf": "全站 > 主要内容",
+        "block|bilibili|.recommended-swipe": "首页 > 信息流",
+        "block|bilibili|.floor-single-card": "首页 > 信息流",
+        "block|bilibili|.feed-card:not(:has(.enable-no-interest))": "首页 > 信息流",
+        "block|bilibili|.bili-feed-card:not(:has(.enable-no-interest))": "首页 > 信息流",
+        "block|bilibili|aside": "动态",
+        "block|xsijishe|.footer": "全站",
+        "block|xsijishe|.xxm-bottom": "全站",
+        "block|xsijishe|.xxmgapb": "全站",
+        "block|xsijishe|.mtw": "帖子页"
 };
     const getRuleDirectoryPath = (feature, siteId, selector, path) => {
         const key = feature + '|' + siteId + '|' + selector;
@@ -1610,6 +1634,7 @@
             .filter(item => item.siteId === site.id)
             .map(item => ({
                 ...item, feature: 'block', title: item.elementName,
+                path: item.path.split(' > ').slice(0, -1).join(' > ') || '全站',
                 defaultEnabled: false, displayOnly: true,
                 rule: { domains: site.domains, enabled: false }
             }));
@@ -1618,6 +1643,7 @@
         return {
             style: [...style, ...special.style.map(item => ({
                 ...item,
+                path: getRuleDirectoryPath('style', site.id, item.id, item.path),
                 feature: 'style',
                 pages: getRulePages(site, 'style', item.id, true),
                 detail: '',
@@ -1626,6 +1652,7 @@
             }))],
             block: [...block, ...displayOnlyBlock, ...special.block.map(item => ({
                 ...item,
+                path: getRuleDirectoryPath('block', site.id, item.id, item.path.split(' > ').slice(0, -1).join(' > ') || '全站'),
                 feature: 'block',
                 pages: getRulePages(site, 'block', item.id, true),
                 detail: '',
