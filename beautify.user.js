@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.2
+// @version      7.17.3
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -1038,7 +1038,13 @@
                 '.c1': '帖子 > 信息列 > 发帖/回帖总人数、发帖人/回帖人信息',
                 '.cell': '帖子 > 单元格 > 搜索框、发表新帖等按钮',
                 '#toptopics': '首页 > 版头 > 公告、热帖等聚合区域',
-                '#fast_post_c': '帖子 > 快速发帖区'
+                '#fast_post_c': '帖子 > 快速发帖区',
+                '.posterInfoLine': '首页 > 帖子信息',
+                '#m_nav': '全站 > 上方导航栏',
+                '#mainmenu': '全站 > 顶栏',
+                '#m_pbtntop': '帖子页 > 上方翻页栏',
+                '#b_nav': '全站 > 下方导航栏',
+                '#footer': '全站 > 页脚'
             },
             '123pan': {
                 '.notice-box': '网盘 > 底部右侧 > 公告',
@@ -1070,7 +1076,11 @@
                 '.QuestionHeader-footer': '回答页 > 顶部问题栏 > 底部操作栏',
                 '.FollowButton': '回答页 > 关注按钮（多个地方：关注用户、关注问题）',
                 '.Reward': '回答页 > 主要内容 > 具体回答 > 赞赏（可能会出现在底部）',
-                '.css-1qqx3d0 > :first-child': '搜索 > 主要内容 > 具体回答 > 操作栏 > 赞同/反对'
+                '.css-1qqx3d0 > :first-child': '搜索 > 主要内容 > 具体回答 > 操作栏 > 赞同/反对',
+                '.css-140jo2': '回答 > 评论区 > 评论信息',
+                '.css-dvccr2': '回答 > 顶部 > 赞同人数',
+                '.css-a3pqj1': '评论页 > 评论框',
+                '.css-kt4t4n': '回答 > 评论区 > 悬浮评论框'
             },
             bilibili: {
                 '.adblock-tips': '全站 > 页面',
@@ -1081,7 +1091,8 @@
                 '.left-entry-main > :nth-child(n+4)': '全站 > 顶栏 > 左侧按钮',
                 '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '全站 > 顶栏 > 右侧按钮',
                 'aside': '动态 > 右侧栏',
-                '.bili-dyn-publishing': '动态 > 发布区域'
+                '.bili-dyn-publishing': '动态 > 发布区域',
+                '.video-resource-list': '视频页 > 推广区域'
             },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': '首页 > 输入框',
@@ -1090,7 +1101,8 @@
                 '[data-testid="inline_reply_offscreen"]': '帖子页 > 回复输入框',
                 'header[role="banner"]': '全站 > 左栏 > 导航区域',
                 '[data-testid="sidebarColumn"]': '全站 > 主要内容 > 右栏',
-                '.r-494qqr': '首页 > App 下载提示'
+                '.r-494qqr': '首页 > App 下载提示',
+                '.r-ttdzmv': '帖子页 > 评论区 > 评论间隔'
             },
             douyin: {
                 '.Ctt1baq8': '评论区 > 评论',
@@ -1115,21 +1127,7 @@
                 '#close': '全站 > 顶部 > App 下载提示'
             },
             '18comic': { '.col-sm-3': '全站 > 页面 > 广告栏' },
-            nga: {
-                '.posterInfoLine': '首页 > 帖子信息',
-                '#m_nav': '全站 > 上方导航栏', '#mainmenu': '全站 > 顶栏',
-                '#m_pbtntop': '帖子页 > 上方翻页栏', '#b_nav': '全站 > 下方导航栏',
-                '#footer': '全站 > 页脚'
-            },
-            x: { '.r-ttdzmv': '帖子页 > 评论区 > 评论间隔' },
-            zhihu: {
-                '.css-140jo2': '回答 > 评论区 > 评论信息',
-                '.css-dvccr2': '回答 > 顶部 > 赞同人数',
-                '.css-a3pqj1': '评论页 > 评论框',
-                '.css-kt4t4n': '回答 > 评论区 > 悬浮评论框'
-            },
-            bilibili: { '.video-resource-list': '视频页 > 推广区域' },
-            sehuatang: { '.n5_zdtys>ul': '综合讨论区页 > 通知区域' },
+                sehuatang: { '.n5_zdtys>ul': '综合讨论区页 > 通知区域' },
             xsijishe: {
                 '.xxm-reply-meta': '帖子页 > 楼层',
                 '.xxm-ratelog': '帖子页 > 楼层',
@@ -1168,7 +1166,10 @@
                 '.c1': '帖子人数统计及用户信息',
                 '.cell': '功能按钮单元格',
                 '#toptopics': '公告和热门话题区域',
-                '#fast_post_c': '快速发帖区域'
+                '#fast_post_c': '快速发帖区域',
+                '.posterInfoLine': '发帖人、发帖时间及最后回复信息',
+                '#m_nav': '导航栏', '#mainmenu': '主菜单', '#m_pbtntop': '翻页栏',
+                '#b_nav': '导航栏', '#footer': '页脚'
             },
             '123pan': {
                 '.notice-box': '公告',
@@ -1200,7 +1201,11 @@
                 '.QuestionHeader-footer': '问题栏底部操作区',
                 '.FollowButton': '关注按钮',
                 '.Reward': '赞赏入口',
-                '.css-1qqx3d0 > :first-child': '搜索结果赞同和反对按钮'
+                '.css-1qqx3d0 > :first-child': '搜索结果赞同和反对按钮',
+                '.css-140jo2': '评论发布时间和地点',
+                '.css-dvccr2': '文章赞同人数',
+                '.css-a3pqj1': '评论框',
+                '.css-kt4t4n': '悬浮评论框'
             },
             bilibili: {
                 '.adblock-tips': '检测到广告屏蔽器的提示',
@@ -1211,7 +1216,8 @@
                 '.left-entry-main > :nth-child(n+4)': '顶栏左侧按钮（保留前 3 项）',
                 '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧按钮（保留第 4 至第 6 项）',
                 'aside': '动态页右侧栏',
-                '.bili-dyn-publishing': '动态发布区域'
+                '.bili-dyn-publishing': '动态发布区域',
+                '.video-resource-list': '视频推广'
             },
             x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': '发帖输入区域',
@@ -1219,7 +1225,9 @@
                 'article .r-kzbkwu > :last-child': '其他帖子的操作栏',
                 '[data-testid="inline_reply_offscreen"]': '回复输入框',
                 'header[role="banner"]': '左侧导航栏',
-                '[data-testid="sidebarColumn"]': '右侧推荐栏'
+                '[data-testid="sidebarColumn"]': '右侧推荐栏',
+                '.r-ttdzmv': '评论之间的空隙',
+                '.r-494qqr': 'App 下载提示条'
             },
             douyin: {
                 '.Ctt1baq8': '操作栏',
@@ -1242,17 +1250,7 @@
                 '.anti-scam-warning': '防诈骗警告', '.top_lev': '用户等级', '#close': 'App 下载提示'
             },
             '18comic': { '.col-sm-3': '广告栏' },
-            nga: {
-                '.posterInfoLine': '发帖人、发帖时间及最后回复信息',
-                '#m_nav': '导航栏', '#mainmenu': '主菜单', '#m_pbtntop': '翻页栏',
-                '#b_nav': '导航栏', '#footer': '页脚'
-            },
-            x: { '.r-ttdzmv': '评论之间的空隙' },
-            zhihu: {
-                '.css-140jo2': '评论发布时间和地点', '.css-dvccr2': '文章赞同人数', '.css-a3pqj1': '评论框', '.css-kt4t4n': '悬浮评论框'
-            },
-            bilibili: { '.video-resource-list': '视频推广' },
-            sehuatang: { '.n5_zdtys>ul': '综合讨论区通知' },
+                sehuatang: { '.n5_zdtys>ul': '综合讨论区通知' },
             xsijishe: {
                 '.xxm-reply-meta': '发帖时间、点赞、点踩',
                 '.xxm-ratelog': '评分信息',
@@ -1264,8 +1262,7 @@
                 '.jnpar-m-tip': '楼层购买提示',
                 '.mtw': '楼主楼层观看人数'
             },
-            x: { '.r-494qqr': 'App 下载提示条' }
-        },
+         },
         position: {
             southplus: { '.btn-danger': '右上角' },
             bilibili: { '.recommended-swipe': '左上角' },
@@ -1437,7 +1434,8 @@
                 '.c1': ['home', 'detail'],
                 '.cell': ['home', 'detail'],
                 '#toptopics': ['home'],
-                '#fast_post_c': ['home', 'detail']
+                '#fast_post_c': ['home', 'detail'],
+                '.posterInfoLine': ['home']
             },
             zhihu: {
                 '.css-bkewaf': ['home', 'question'],
@@ -1448,7 +1446,9 @@
                 '.ContentItem-actions > :first-child': ['home', 'question'],
                 '.css-1qqx3d0 > :first-child': ['search'],
                 '.WriteArea': ['home'],
-                '.CornerButtonsGroup': ['home', 'question']
+                '.CornerButtonsGroup': ['home', 'question'],
+                '.css-140jo2': ['question'], '.css-dvccr2': ['question'],
+                '.css-a3pqj1': ['question'], '.css-kt4t4n': ['question']
             },
             bilibili: {
                 '.recommended-swipe': ['home'],
@@ -1459,9 +1459,7 @@
                 'aside': ['dynamic'],
                 '.bili-dyn-publishing': ['dynamic']
             },
-            nga: { '.posterInfoLine': ['home'] },
-            zhihu: { '.css-140jo2': ['question'], '.css-dvccr2': ['question'], '.css-a3pqj1': ['question'], '.css-kt4t4n': ['question'] },
-            x: {
+              x: {
                 '[aria-label="主页时间线"] > :nth-child(3)': ['home'],
                 'article .r-qklmqi > :first-child': ['post'],
                 'article .r-kzbkwu > :last-child': ['home', 'post'],
