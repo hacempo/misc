@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.16.0
+// @version      7.16.1
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,8 +31,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.0
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.0
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.1
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.1
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -1078,7 +1078,7 @@
                 '.css-1qqx3d0 > :first-child': '搜索 > 主要内容 > 具体回答 > 操作栏 > 赞同/反对'
             },
             bilibili: {
-                '.adblock-tips': '通用 > 页面 > 广告拦截提示',
+                '.adblock-tips': '通用 > 页面 > 广告屏蔽提示条',
                 '.recommended-swipe': '首页 > 信息流',
                 '.floor-single-card': '首页 > 信息流',
                 '.feed-card:not(:has(.enable-no-interest))': '首页 > 信息流',
@@ -1094,7 +1094,8 @@
                 'article .r-kzbkwu > :last-child': '首页/帖子页 > 信息流中的其他帖子 > 操作栏',
                 '[data-testid="inline_reply_offscreen"]': '帖子页 > 回复输入框',
                 'header[role="banner"]': '全站 > 左栏 > 导航区域',
-                '[data-testid="sidebarColumn"]': '全站 > 主要内容 > 右栏'
+                '[data-testid="sidebarColumn"]': '全站 > 主要内容 > 右栏',
+                '.r-494qqr': '首页 > App 下载提示'
             },
             douyin: {
                 '.Ctt1baq8': '评论区 > 评论',
@@ -1133,7 +1134,19 @@
                 '.css-a3pqj1': '评论页 > 评论框',
                 '.css-kt4t4n': '回答 > 评论区 > 悬浮评论框'
             },
-            bilibili: { '.video-resource-list': '视频页 > 推广区域' }
+            bilibili: { '.video-resource-list': '视频页 > 推广区域' },
+            sehuatang: { '.n5_zdtys>ul': '综合讨论区页 > 通知区域' },
+            xsijishe: {
+                '.xxm-reply-meta': '帖子页 > 楼层 > 发帖时间和点赞点踩',
+                '.xxm-ratelog': '帖子页 > 楼层 > 评分',
+                '.authortitle': '帖子页 > 楼层 > 用户栏 > 等级',
+                '.vtxxmpost': '帖子页 > 输入框',
+                '.footer': '全站 > 页脚',
+                '.xxm-bottom': '全站 > 页脚 > 下方区域',
+                '.xxmgapb': '全站 > 页脚 > 下方间隔区域',
+                '.jnpar-m-tip': '帖子页 > 楼层 > 购买提示',
+                '.mtw': '帖子页 > 楼主楼层 > 观看人数'
+            }
         },
         meaning: {
             tieba: {
@@ -1261,6 +1274,7 @@
             x: { '.r-494qqr': 'App 下载提示条' }
         },
         position: {
+            southplus: { '.btn-danger': '右上角' },
             bilibili: { '.recommended-swipe': '左上角' },
             zhihu: { '.CornerButtonsGroup': '右下角' },
             douyin: {
@@ -1776,6 +1790,11 @@
             details.append(description);
             details.append(makeElement('div', 'rule-selector', item.selector || item.elementName || '元素位置待补充'));
             info.append(details);
+
+            if (item.displayOnly) {
+                row.append(info);
+                return row;
+            }
 
             const checkbox = makeElement('input', 'rule-toggle');
             checkbox.type = 'checkbox';
