@@ -204,3 +204,46 @@ tieba.baidu.com##.frs-right-sidebar
     padding: 0 !important;
 }
 
+
+
+===== beautify.user.js：未启用的历史屏蔽规则 =====
+/*
+ * 未确认/暂不启用的历史屏蔽规则（统一归档在此处，不参与注入）。
+ *
+ * NGA：旧版元信息条、页脚、导航和菜单项；当前改用 .c1 及用户确认的列表项。
+ * ngabbs.com##.posterInfoLine
+ * ngabbs.com##.posterInfoLineB
+ * ngabbs.com###footer
+ * ngabbs.com###b_nav
+ * ngabbs.com###m_nav
+ * ngabbs.com###m_pbtntop
+ * ngabbs.com###mainmenu
+ * ngabbs.com###custombg
+ *
+ * 知乎：用途未确认的动态类名、文章卡片或推广卡片。
+ * www.zhihu.com##.css-jghqwm
+ * www.zhihu.com##.css-140jo2
+ * www.zhihu.com##.css-a3pqj1
+ * www.zhihu.com##.css-dvccr2
+ * www.zhihu.com##.css-upmq18
+ * www.zhihu.com##.css-1fo89v5
+ * www.zhihu.com##.css-1m4ta6s
+ * www.zhihu.com##.ContentItem-time
+ * www.zhihu.com##.TopstoryItem:has(.ArticleItem)
+ * www.zhihu.com##.TopstoryItem--advertCard
+ * www.zhihu.com##.SearchTabs-profile
+ *
+ * VoteButton 不单独启用：已由 .ContentItem-actions > :first-child 覆盖。
+ * www.zhihu.com##.VoteButton
+ *
+ * 哔哩哔哩：资源/推荐区域的用途或出现条件尚未确认。
+ * www.bilibili.com##.video-resource-list
+ * www.bilibili.com##.video-page-special-card-small
+ *
+ * X：旧版动态类名/侧栏及回复容器选择器，现已由用户确认的首页发帖区和帖子操作栏替代。
+ * x.com##header
+ * x.com##[data-testid="sidebarColumn"]
+ * x.com##[data-testid="inline_reply_offscreen"]
+ * x.com##.r-rull8r
+ * x.com##[aria-label="主页时间线"] > .r-184en5c
+ */
