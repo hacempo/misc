@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.11
+// @version      7.17.12
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,8 +31,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.11
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.11
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.12
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.12
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -48,7 +48,7 @@
      * 站点列表。每个站点的美化与屏蔽分别控制。
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
-    const SCRIPT_VERSION = '7.17.11';
+    const SCRIPT_VERSION = '7.17.12';
 
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
@@ -1199,7 +1199,7 @@
             },
             southplus: {
                 '.btn-outline-secondary': '回复当前楼层按钮',
-                'form[name="FORM"]': '评论内容',
+                'form[name="FORM"]': '评论框',
                 '.container>center': '切换桌面版按钮',
                 'body>center': '脚注',
                 '.pages': '顶部翻页栏',
