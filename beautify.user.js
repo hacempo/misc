@@ -60,8 +60,8 @@
         { id: 'southplus', name: '南+', domains: ['south-plus.net'] },
         { id: 'laowang', name: '老王论坛', domains: ['laowang.vip'] },
         { id: '18comic', name: '禁漫天堂', domains: ['18comic.vip'] },
-        { id: 'sehuatang', name: '色花堂', domains: ['sehuatang.net'] },
-        { id: 'xsijishe', name: 'xsijishe.com', domains: ['xsijishe.com'] }
+        { id: 'sehuatang', name: '98 堂', domains: ['sehuatang.net'] },
+        { id: 'xsijishe', name: '司机社', domains: ['xsijishe.com'] }
     ];
 
     const hostname = location.hostname.toLowerCase();
@@ -552,11 +552,6 @@
                 '.semiTabrelated_card',
                 '.semiTabai_card'
             ]
-        },
-        {
-            // 南+：第二个 tbody 下的每行仅保留第二个元素。
-            domains: ['south-plus.net'],
-            selectors: ['#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))']
         },
         { domains: ['18comic.vip'], selectors: ['.col-sm-3'] },
         { domains: ['www.bilibili.com'], selectors: ['.video-resource-list'] },
@@ -1078,13 +1073,13 @@
                 '.css-1qqx3d0 > :first-child': '搜索 > 主要内容 > 具体回答 > 操作栏 > 赞同/反对'
             },
             bilibili: {
-                '.adblock-tips': '通用 > 页面 > 广告屏蔽提示条',
+                '.adblock-tips': '全站 > 页面',
                 '.recommended-swipe': '首页 > 信息流',
                 '.floor-single-card': '首页 > 信息流',
                 '.feed-card:not(:has(.enable-no-interest))': '首页 > 信息流',
                 '.bili-feed-card:not(:has(.enable-no-interest))': '首页 > 信息流',
-                '.left-entry-main > :nth-child(n+4)': '通用 > 顶栏 > 左侧入口 > 第 4 项起',
-                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '通用 > 顶栏 > 右侧入口 > 第 4 至第 6 项以外',
+                '.left-entry-main > :nth-child(n+4)': '全站 > 顶栏 > 左侧按钮',
+                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '全站 > 顶栏 > 右侧按钮',
                 'aside': '动态 > 右侧栏',
                 '.bili-dyn-publishing': '动态 > 发布区域'
             },
@@ -1100,12 +1095,11 @@
             douyin: {
                 '.Ctt1baq8': '评论区 > 评论',
                 '.VAQA49VP': '评论区 > 评论',
-                '.comment-input-container': '评论区',
+                '.comment-input-container': '评论区 > 评论框',
                 '.semiTabrelated_card': '评论区 > 顶栏',
                 '.semiTabai_card': '评论区 > 顶栏'
             },
             southplus: {
-                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '首页 > 表格 > 第二个 tbody > 内容列',
                 '.btn-outline-secondary': '帖子页 > 楼层 > 回复当前楼层按钮',
                 'form[name="FORM"]': '帖子页 > 评论区域',
                 '.container>center': '全站 > 底部 > 切换桌面版按钮',
@@ -1116,8 +1110,8 @@
                 '.blockquote': '帖子页 > 带资源楼层 > 购买警告'
             },
             laowang: {
-                '.anti-scam-warning': '帖子页 > 评论区 > 评论 > 警告',
-                '.top_lev': '帖子页 > 评论区 > 评论 > 用户栏 > 用户等级',
+                '.anti-scam-warning': '帖子页 > 楼层',
+                '.top_lev': '帖子页 > 楼层',
                 '#close': '全站 > 顶部 > App 下载提示'
             },
             '18comic': { '.col-sm-3': '全站 > 页面 > 广告栏' },
@@ -1137,15 +1131,15 @@
             bilibili: { '.video-resource-list': '视频页 > 推广区域' },
             sehuatang: { '.n5_zdtys>ul': '综合讨论区页 > 通知区域' },
             xsijishe: {
-                '.xxm-reply-meta': '帖子页 > 楼层 > 发帖时间和点赞点踩',
-                '.xxm-ratelog': '帖子页 > 楼层 > 评分',
-                '.authortitle': '帖子页 > 楼层 > 用户栏 > 等级',
+                '.xxm-reply-meta': '帖子页 > 楼层',
+                '.xxm-ratelog': '帖子页 > 楼层',
+                '.authortitle': '帖子页 > 楼层 > 用户栏',
                 '.vtxxmpost': '帖子页 > 输入框',
                 '.footer': '全站 > 页脚',
-                '.xxm-bottom': '全站 > 页脚 > 下方区域',
-                '.xxmgapb': '全站 > 页脚 > 下方间隔区域',
-                '.jnpar-m-tip': '帖子页 > 楼层 > 购买提示',
-                '.mtw': '帖子页 > 楼主楼层 > 观看人数'
+                '.xxm-bottom': '全站 > 页脚',
+                '.xxmgapb': '全站 > 页脚',
+                '.jnpar-m-tip': '帖子页 > 楼层',
+                '.mtw': '帖子页 > 楼主楼层'
             }
         },
         meaning: {
@@ -1209,13 +1203,13 @@
                 '.css-1qqx3d0 > :first-child': '搜索结果赞同和反对按钮'
             },
             bilibili: {
-                '.adblock-tips': '广告屏蔽提示条',
-                '.recommended-swipe': '首页轮播推荐区',
+                '.adblock-tips': '检测到广告屏蔽器的提示',
+                '.recommended-swipe': '首页轮播推荐内容',
                 '.floor-single-card': '分区推广卡片',
                 '.feed-card:not(:has(.enable-no-interest))': '初始加载的推广卡片',
                 '.bili-feed-card:not(:has(.enable-no-interest))': '下滑加载的推广卡片',
-                '.left-entry-main > :nth-child(n+4)': '顶栏左侧多余入口',
-                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧非核心入口',
+                '.left-entry-main > :nth-child(n+4)': '顶栏左侧第 4 项起的按钮',
+                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧第 4 至第 6 项以外的按钮',
                 'aside': '动态页右侧栏',
                 '.bili-dyn-publishing': '动态发布区域'
             },
@@ -1231,11 +1225,10 @@
                 '.Ctt1baq8': '操作栏',
                 '.VAQA49VP': '发布时间和发布地区',
                 '.comment-input-container': '评论框',
-                '.semiTabrelated_card': '切换推荐按钮',
-                '.semiTabai_card': '切换 AI 按钮'
+                '.semiTabrelated_card': '切换推荐',
+                '.semiTabai_card': '切换 AI'
             },
             southplus: {
-                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '表格中的其他内容',
                 '.btn-outline-secondary': '回复当前楼层按钮',
                 'form[name="FORM"]': '评论区域',
                 '.container>center': '切换桌面版按钮',
@@ -1261,13 +1254,13 @@
             bilibili: { '.video-resource-list': '视频推广' },
             sehuatang: { '.n5_zdtys>ul': '综合讨论区通知区域' },
             xsijishe: {
-                '.xxm-reply-meta': '楼层发帖时间及点赞、点踩信息',
-                '.xxm-ratelog': '楼层评分信息',
+                '.xxm-reply-meta': '发帖时间、点赞、点踩',
+                '.xxm-ratelog': '评分信息',
                 '.authortitle': '用户等级',
                 '.vtxxmpost': '帖子输入框',
                 '.footer': '页脚',
-                '.xxm-bottom': '页脚下方区域',
-                '.xxmgapb': '页脚下方间隔区域',
+                '.xxm-bottom': '',
+                '.xxmgapb': '间隔',
                 '.jnpar-m-tip': '楼层购买提示',
                 '.mtw': '楼主楼层观看人数'
             },
@@ -1276,6 +1269,7 @@
         position: {
             southplus: { '.btn-danger': '右上角' },
             bilibili: { '.recommended-swipe': '左上角' },
+            xsijishe: { '.xxm-bottom': '页脚下方' },
             zhihu: { '.CornerButtonsGroup': '右下角' },
             douyin: {
                 '.Ctt1baq8': '底部',
@@ -1284,6 +1278,19 @@
             }
         },
         kind: {
+            bilibili: {
+                '.adblock-tips': '区域',
+                '.recommended-swipe': '区域',
+                '.floor-single-card': '区域',
+                '.feed-card:not(:has(.enable-no-interest))': '区域',
+                '.bili-feed-card:not(:has(.enable-no-interest))': '区域',
+                '.left-entry-main > :nth-child(n+4)': '按钮',
+                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '按钮'
+            },
+            douyin: {
+                '.semiTabrelated_card': '按钮',
+                '.semiTabai_card': '按钮'
+            },
             southplus: {
                 '.btn-outline-secondary': '按钮', 'form[name="FORM"]': '区域',
                 '.container>center': '按钮', 'body>center': '区域',
@@ -1366,7 +1373,8 @@
             { id: 'tea', label: '茶馆' }, { id: 'post', label: '帖子' }
         ],
         sehuatang: [{ id: 'discussion', label: '综合讨论区' }],
-        xsijishe: [{ id: 'global', label: '全站' }, { id: 'post', label: '帖子' }]
+        xsijishe: [{ id: 'global', label: '全站' }, { id: 'post', label: '帖子' }],
+        laowang: [{ id: 'global', label: '全站' }, { id: 'post', label: '帖子页' }]
     };
 
     /*
@@ -1471,6 +1479,9 @@
                 '.xxm-reply-meta': ['post'], '.xxm-ratelog': ['post'], '.authortitle': ['post'],
                 '.vtxxmpost': ['post'], '.footer': ['global'], '.xxm-bottom': ['global'],
                 '.xxmgapb': ['global'], '.jnpar-m-tip': ['post'], '.mtw': ['post']
+            },
+            laowang: {
+                '.anti-scam-warning': ['post'], '.top_lev': ['post'], '#close': ['global']
             }
         },
         special: {
@@ -1565,7 +1576,9 @@
                         path,
                         elementName: selector,
                         effectDescription: (RULE_HINTS.meaning?.[ruleSiteId]?.[selector] ||
-                            (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素')) +
+                            ((RULE_HINTS.position?.[ruleSiteId]?.[selector] || RULE_HINTS.kind?.[ruleSiteId]?.[selector])
+                                ? ''
+                                : (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素'))) +
                             (rule.media ? '（平板竖屏）' : ''),
                         positionDescription: RULE_HINTS.position?.[ruleSiteId]?.[selector] || '',
                         kindDescription: RULE_HINTS.kind?.[ruleSiteId]?.[selector] || '',
@@ -1773,11 +1786,9 @@
             const info = makeElement('div', 'rule-info');
             const details = makeElement('div', 'rule-details');
             const description = makeElement('div', 'rule-description');
-            description.append(makeElement(
-                'div',
-                'rule-detail-line',
-                item.effectDescription || (feature === 'block' ? '相关页面元素' : '调整页面布局')
-            ));
+            if (item.effectDescription) {
+                description.append(makeElement('div', 'rule-detail-line', item.effectDescription));
+            }
             if (item.positionDescription) {
                 description.append(makeElement('span', 'rule-position', '⌖ ' + item.positionDescription));
             }
