@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.3
+// @version      7.17.4
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,7 +31,7 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.1
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.4
 // @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.1
 // @run-at       document-start
 // @noframes
@@ -49,7 +49,7 @@
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
     const SITES = [
-        { id: 'tieba', name: '百度贴吧（移动版）', domains: ['tieba.baidu.com'] },
+        { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
         { id: '115', name: '115 网盘', domains: ['115.com', '115vod.com'] },
         { id: 'nga', name: 'NGA 玩家社区', domains: ['ngabbs.com'] },
         { id: '123pan', name: '123 云盘', domains: ['yun.123pan.cn'] },
@@ -1250,17 +1250,17 @@
                 '.anti-scam-warning': '防诈骗警告', '.top_lev': '用户等级', '#close': 'App 下载提示'
             },
             '18comic': { '.col-sm-3': '广告栏' },
-                sehuatang: { '.n5_zdtys>ul': '综合讨论区通知' },
+                sehuatang: { '.n5_zdtys>ul': '通知' },
             xsijishe: {
                 '.xxm-reply-meta': '发帖时间、点赞、点踩',
                 '.xxm-ratelog': '评分信息',
                 '.authortitle': '用户等级',
-                '.vtxxmpost': '帖子输入框',
+                '.vtxxmpost': '输入框',
                 '.footer': '页脚',
                 '.xxm-bottom': '',
                 '.xxmgapb': '间隔',
-                '.jnpar-m-tip': '楼层购买提示',
-                '.mtw': '楼主楼层观看人数'
+                '.jnpar-m-tip': '购买提示',
+                '.mtw': '观看人数'
             },
          },
         position: {
@@ -1302,10 +1302,7 @@
         }
     };
 
-    const TIEBA_DESKTOP_ARCHIVE = {
-        block: "! 百度贴吧【桌面端网页】屏蔽规则（存档）。\n! 已从 beautify.user.js 中移除；脚本现在只针对移动端网页。\n! 格式：域名##选择器\ntieba.baidu.com##.home-left\ntieba.baidu.com##.right-menu\ntieba.baidu.com##.thread-action-area\ntieba.baidu.com##.pc-pb-first-floor-interactive\ntieba.baidu.com##.pc-pb-comments-desc\ntieba.baidu.com##.pc-pb-reply-box\ntieba.baidu.com##.right-nav-bar\ntieba.baidu.com##.frs-right-sidebar\n\n! 以下为原脚本注释中“暂不启用”的规则\n! tieba.baidu.com##.head-line\n",
-        style: "/*\n * 百度贴吧【桌面端网页】样式规则（存档）。\n * 已从 beautify.user.js 中移除；脚本现在只针对移动端网页。\n * 如需恢复桌面端，把这里的 CSS 重新放回脚本的样式规则中即可。\n */\n\n/* =========================\n   百度贴吧\n   ========================= */\n\n/*\n * 首页内容容器。\n * 默认左右各有 60px 内边距，会让中心栏无法利用完整主区域。\n */\n.home-page-wrapper > .container {\n    padding-left: 0 !important;\n    padding-right: 0 !important;\n    box-sizing: border-box !important;\n}\n\n/* 首页主体：占满可用宽度，并保留右侧栏出现时的 flex 空间分配。 */\n.home-page-wrapper .center-content {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    flex: 1 1 0% !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n/*\n * 主页和帖子详情页共用的主体布局修正。\n *\n * 折叠侧栏仍参与 flex 排版，占据 261px；主体通过\n * -261px 左外边距抵消占位，并以 100% 宽度铺满视口。\n * 同时将侧栏完全移出视口，避免其 z-index 覆盖主体\n * 左侧内容（原 left:-244px 会残留约 17px）。\n */\n.pc-main-page-layout .content-container:has(> .left-content.is-collapsed) {\n    justify-content: flex-start !important;\n}\n\n.pc-main-page-layout .content-container:has(> .left-content.is-collapsed) > .left-content.is-collapsed {\n    flex: 0 0 261px !important;\n    width: 261px !important;\n    left: -261px !important;\n    box-sizing: border-box !important;\n}\n\n.pc-main-page-layout .content-container:has(> .left-content.is-collapsed) > .main-content.is-expanded {\n    flex: 0 0 100% !important;\n    width: 100% !important;\n    margin-left: -261px !important;\n    box-sizing: border-box !important;\n}\n\n/*\n * 帖子详情页外层容器。\n *\n * Tieba 默认 .container 有 1060px 的最大宽度，\n * 并带有左右自动外边距及额外内边距。\n * 这些限制会让 center-content 无法随外层主区域展开。\n */\n.pc-pb-box .container {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    padding-left: 0 !important;\n    padding-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n/*\n * 贴吧吧页禁止横向滚动。\n * .frs-page-wrap 是吧页的页面滚动容器，保留纵向滚动。\n */\n.frs-page-wrap {\n    overflow-x: hidden !important;\n}\n\n.frs-page-wrap .frs-container {\n    overflow-x: hidden !important;\n}\n\n/*\n * 贴吧吧页全宽布局。\n *\n * .frs-container 默认 max-width:1059px 且左右各有 60px padding，\n * 导致整个吧页内容被限制在中间。这里解除宽度和内边距限制，\n * 并让顶部头图区、下方主内容区同步铺满。\n */\n\n.frs-page-wrap .frs-container.frs-page-container {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    padding-left: 0 !important;\n    padding-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n.frs-page-wrap .frs-container .head-pic-area {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n    box-sizing: border-box !important;\n}\n\n.frs-page-wrap .frs-container .frs-main-container {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n    box-sizing: border-box !important;\n}\n\n/* 隐藏吧页右侧栏，让左侧帖子列表自然占满下方区域。 */\n.frs-page-wrap .frs-container .frs-main-container .frs-right-sidebar {\n    display: none !important;\n}\n\n.frs-page-wrap .frs-container .frs-main-container .left-container {\n    min-width: 0 !important;\n    max-width: none !important;\n    box-sizing: border-box !important;\n}\n\n/*\n * 帖子详情页禁止横向滚动。\n * .pc-pb-box 是实际发生 11px 内部溢出的滚动容器；\n * 只关闭横向溢出，保留原有纵向滚动。\n */\n.pc-pb-box {\n    overflow-x: hidden !important;\n}\n\n/* 正文左右留出与主页相近的呼吸空间，避免文字和图片贴边。 */\n.pc-pb-box .center-content {\n    padding-left: 12px !important;\n    padding-right: 12px !important;\n    box-sizing: border-box !important;\n}\n\n/*\n * 帖子详情页正文主栏。\n * 移除原有 47px 右边距，填满 .container 的可用宽度。\n */\n.pc-pb-box .center-content {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    flex: 1 1 0% !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n\n/* =========================\n   原 SITE_STYLE_RULES.tieba（补充覆盖样式）\n   ========================= */\n\n/* 贴吧顶栏搜索区靠左并去除顶栏内边距 */\n.search-mid {\n    margin: 0 !important;\n}\n\n#top-bar {\n    padding: 0 !important;\n}\n"
-    };
+
 
     const DISPLAY_ONLY_RULES = [
         {
@@ -1330,7 +1327,7 @@
     const SITE_PAGES = {
         tieba: [
             { id: 'global', label: '全站' }, { id: 'home', label: '首页' },
-            { id: 'thread', label: '帖子' }, { id: 'desktopArchive', label: '桌面版存档' }
+            { id: 'thread', label: '帖子' }
         ],
         '115': [
             { id: 'global', label: '全站' },
@@ -1787,6 +1784,9 @@
             if (item.effectDescription) {
                 description.append(makeElement('div', 'rule-detail-line', item.effectDescription));
             }
+            if (item.path) {
+                description.append(makeElement('div', 'rule-detail-line', '路径：' + item.path));
+            }
             if (item.positionDescription) {
                 description.append(makeElement('span', 'rule-position', '⌖ ' + item.positionDescription));
             }
@@ -1927,7 +1927,6 @@
         const getPages = site => SITE_PAGES[site.id] || [{ id: 'all', label: '全部' }];
 
         const getPageRuleCounts = (site, pageId) => {
-            if (site.id === 'tieba' && pageId === 'desktopArchive') return 2;
             const items = allSiteRuleItems.get(site.id);
             return items.style.filter(item => item.pages.includes(pageId)).length +
                 items.block.filter(item => item.pages.includes(pageId)).length;
@@ -1942,31 +1941,12 @@
             const visibleBlock = items.block.filter(item => item.pages.includes(pageId));
             const groups = makeElement('div', 'groups');
 
-            if (site.id === 'tieba' && pageId === 'desktopArchive') {
-                const addArchivePanel = (title, description, source) => {
-                    const panel = makeElement('section', 'group');
-                    const head = makeElement('div', 'group-head');
-                    const heading = makeElement('div', 'group-heading');
-                    heading.append(makeElement('div', 'group-title', title),
-                        makeElement('div', 'group-desc', description));
-                    head.append(heading);
-                    panel.append(head, makeElement('pre', 'archive-content', source));
-                    groups.append(panel);
-                };
-                addArchivePanel('桌面版屏蔽规则存档',
-                    '原 block.txt 完整内容；仅供查看，不会注入页面，注释规则也保留。',
-                    TIEBA_DESKTOP_ARCHIVE.block);
-                addArchivePanel('桌面版样式规则存档',
-                    '原 style.txt 完整内容；仅供查看，不会应用到移动版。',
-                    TIEBA_DESKTOP_ARCHIVE.style);
-            } else {
-                if (visibleStyle.length) groups.append(renderGroup(
-                    site, 'style', '页面美化', '当前页面的布局、宽度和间距调整。', visibleStyle));
-                if (visibleBlock.length) groups.append(renderGroup(
-                    site, 'block', '元素屏蔽', '当前页面各位置的元素规则。', visibleBlock));
-                if (!visibleStyle.length && !visibleBlock.length) {
-                    groups.append(makeElement('div', 'empty', '这个页面暂时没有美化或屏蔽规则。'));
-                }
+            if (visibleStyle.length) groups.append(renderGroup(
+                site, 'style', '页面美化', '当前页面的布局、宽度和间距调整。', visibleStyle));
+            if (visibleBlock.length) groups.append(renderGroup(
+                site, 'block', '元素屏蔽', '当前页面各位置的元素规则。', visibleBlock));
+            if (!visibleStyle.length && !visibleBlock.length) {
+                groups.append(makeElement('div', 'empty', '这个页面暂时没有美化或屏蔽规则。'));
             }
             mainInner.append(groups);
 
