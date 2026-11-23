@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.15.0
+// @version      7.16.0
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -27,8 +27,12 @@
 // @match        *://*.laowang.vip/*
 // @match        *://18comic.vip/*
 // @match        *://*.18comic.vip/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.15.0
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.15.0
+// @match        *://sehuatang.net/*
+// @match        *://*.sehuatang.net/*
+// @match        *://xsijishe.com/*
+// @match        *://*.xsijishe.com/*
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.0
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.0
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -45,7 +49,7 @@
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
     const SITES = [
-        { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
+        { id: 'tieba', name: '百度贴吧（移动版）', domains: ['tieba.baidu.com'] },
         { id: '115', name: '115 网盘', domains: ['115.com', '115vod.com'] },
         { id: 'nga', name: 'NGA 玩家社区', domains: ['ngabbs.com'] },
         { id: '123pan', name: '123 云盘', domains: ['yun.123pan.cn'] },
@@ -55,7 +59,9 @@
         { id: 'douyin', name: '抖音', domains: ['douyin.com'] },
         { id: 'southplus', name: '南+', domains: ['south-plus.net'] },
         { id: 'laowang', name: '老王论坛', domains: ['laowang.vip'] },
-        { id: '18comic', name: '禁漫天堂', domains: ['18comic.vip'] }
+        { id: '18comic', name: '禁漫天堂', domains: ['18comic.vip'] },
+        { id: 'sehuatang', name: '色花堂', domains: ['sehuatang.net'] },
+        { id: 'xsijishe', name: 'xsijishe.com', domains: ['xsijishe.com'] }
     ];
 
     const hostname = location.hostname.toLowerCase();
@@ -554,7 +560,22 @@
         },
         { domains: ['18comic.vip'], selectors: ['.col-sm-3'] },
         { domains: ['www.bilibili.com'], selectors: ['.video-resource-list'] },
-        { domains: ['www.zhihu.com'], selectors: ['.css-140jo2', '.css-dvccr2', '.css-a3pqj1', '.css-kt4t4n'] }
+        { domains: ['www.zhihu.com'], selectors: ['.css-140jo2', '.css-dvccr2', '.css-a3pqj1', '.css-kt4t4n'] },
+        {
+            // 南+移动版：仅 /simple/index.php 下的帖子页、茶馆页和全站元素。
+            domains: ['south-plus.net'], onlyPaths: ['/simple/index.php'], exactPath: true,
+            selectors: ['.btn-outline-secondary', 'form[name="FORM"]', '.container>center', 'body>center', '.pages', '.by', '.btn-danger', '.blockquote']
+        },
+        { domains: ['sehuatang.net'], selectors: ['.n5_zdtys>ul'] },
+        {
+            // xsijishe：帖子楼层信息、输入框、页脚及购买提示。
+            domains: ['xsijishe.com'],
+            selectors: ['.xxm-reply-meta', '.xxm-ratelog', '.authortitle', '.vtxxmpost', '.footer', '.xxm-bottom', '.xxmgapb', '.jnpar-m-tip', '.mtw']
+        },
+        {
+            // X：首页 App 下载提示。
+            domains: ['x.com'], onlyPaths: ['/home'], exactPath: true, selectors: ['.r-494qqr']
+        }
     ];
 
     /*
@@ -1083,7 +1104,15 @@
                 '.semiTabai_card': '评论区 > 顶栏'
             },
             southplus: {
-                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '首页 > 表格 > 第二个 tbody > 内容列'
+                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '首页 > 表格 > 第二个 tbody > 内容列',
+                '.btn-outline-secondary': '帖子页 > 楼层 > 回复当前楼层按钮',
+                'form[name="FORM"]': '帖子页 > 评论区域',
+                '.container>center': '全站 > 底部 > 切换桌面版按钮',
+                'body>center': '全站 > 脚注',
+                '.pages': '茶馆页 > 顶部翻页栏',
+                '.by': '茶馆页 > 信息流 > 帖子 > 帖子信息栏',
+                '.btn-danger': '茶馆页 > 顶部路径栏 > 发布主题按钮',
+                '.blockquote': '帖子页 > 带资源楼层 > 购买警告'
             },
             laowang: {
                 '.anti-scam-warning': '帖子页 > 评论区 > 评论 > 警告',
@@ -1167,7 +1196,7 @@
                 '.css-1qqx3d0 > :first-child': '搜索结果赞同和反对按钮'
             },
             bilibili: {
-                '.adblock-tips': '广告拦截提示',
+                '.adblock-tips': '广告屏蔽提示条',
                 '.recommended-swipe': '首页轮播推荐区',
                 '.floor-single-card': '分区推广卡片',
                 '.feed-card:not(:has(.enable-no-interest))': '初始加载的推广卡片',
@@ -1193,7 +1222,15 @@
                 '.semiTabai_card': '切换 AI 按钮'
             },
             southplus: {
-                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '表格中的其他内容'
+                '#ajaxtable > tbody:nth-of-type(2) > tr > :not(:nth-child(2))': '表格中的其他内容',
+                '.btn-outline-secondary': '回复当前楼层按钮',
+                'form[name="FORM"]': '评论区域',
+                '.container>center': '切换桌面版按钮',
+                'body>center': '脚注区域',
+                '.pages': '顶部翻页栏',
+                '.by': '帖子发布时间等信息',
+                '.btn-danger': '发布主题按钮',
+                '.blockquote': '资源购买警告'
             },
             laowang: {
                 '.anti-scam-warning': '防诈骗警告', '.top_lev': '用户等级', '#close': 'App 下载提示'
@@ -1208,30 +1245,74 @@
             zhihu: {
                 '.css-140jo2': '评论发布时间和地点', '.css-dvccr2': '文章赞同人数', '.css-a3pqj1': '评论框', '.css-kt4t4n': '悬浮评论框'
             },
-            bilibili: { '.video-resource-list': '视频推广' }
+            bilibili: { '.video-resource-list': '视频推广' },
+            sehuatang: { '.n5_zdtys>ul': '综合讨论区通知区域' },
+            xsijishe: {
+                '.xxm-reply-meta': '楼层发帖时间及点赞、点踩信息',
+                '.xxm-ratelog': '楼层评分信息',
+                '.authortitle': '用户等级',
+                '.vtxxmpost': '帖子输入框',
+                '.footer': '页脚',
+                '.xxm-bottom': '页脚下方区域',
+                '.xxmgapb': '页脚下方间隔区域',
+                '.jnpar-m-tip': '楼层购买提示',
+                '.mtw': '楼主楼层观看人数'
+            },
+            x: { '.r-494qqr': 'App 下载提示条' }
         },
         position: {
-            bilibili: {
-                '.recommended-swipe': '左上角'
-            },
-            zhihu: {
-                '.CornerButtonsGroup': '右下角'
-            },
+            bilibili: { '.recommended-swipe': '左上角' },
+            zhihu: { '.CornerButtonsGroup': '右下角' },
             douyin: {
                 '.Ctt1baq8': '底部',
                 '.VAQA49VP': '底部，操作栏上方',
                 '.comment-input-container': '底部'
             }
+        },
+        kind: {
+            southplus: {
+                '.btn-outline-secondary': '按钮', 'form[name="FORM"]': '区域',
+                '.container>center': '按钮', 'body>center': '区域',
+                '.pages': '区域', '.by': '区域', '.btn-danger': '按钮', '.blockquote': '区域'
+            },
+            sehuatang: { '.n5_zdtys>ul': '区域' },
+            xsijishe: {
+                '.xxm-reply-meta': '区域', '.xxm-ratelog': '区域', '.authortitle': '区域',
+                '.vtxxmpost': '区域', '.footer': '区域', '.xxm-bottom': '区域',
+                '.xxmgapb': '区域', '.jnpar-m-tip': '区域', '.mtw': '区域'
+            }
         }
     };
+
+    const TIEBA_DESKTOP_ARCHIVE = {
+        block: "! 百度贴吧【桌面端网页】屏蔽规则（存档）。\n! 已从 beautify.user.js 中移除；脚本现在只针对移动端网页。\n! 格式：域名##选择器\ntieba.baidu.com##.home-left\ntieba.baidu.com##.right-menu\ntieba.baidu.com##.thread-action-area\ntieba.baidu.com##.pc-pb-first-floor-interactive\ntieba.baidu.com##.pc-pb-comments-desc\ntieba.baidu.com##.pc-pb-reply-box\ntieba.baidu.com##.right-nav-bar\ntieba.baidu.com##.frs-right-sidebar\n\n! 以下为原脚本注释中“暂不启用”的规则\n! tieba.baidu.com##.head-line\n",
+        style: "/*\n * 百度贴吧【桌面端网页】样式规则（存档）。\n * 已从 beautify.user.js 中移除；脚本现在只针对移动端网页。\n * 如需恢复桌面端，把这里的 CSS 重新放回脚本的样式规则中即可。\n */\n\n/* =========================\n   百度贴吧\n   ========================= */\n\n/*\n * 首页内容容器。\n * 默认左右各有 60px 内边距，会让中心栏无法利用完整主区域。\n */\n.home-page-wrapper > .container {\n    padding-left: 0 !important;\n    padding-right: 0 !important;\n    box-sizing: border-box !important;\n}\n\n/* 首页主体：占满可用宽度，并保留右侧栏出现时的 flex 空间分配。 */\n.home-page-wrapper .center-content {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    flex: 1 1 0% !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n/*\n * 主页和帖子详情页共用的主体布局修正。\n *\n * 折叠侧栏仍参与 flex 排版，占据 261px；主体通过\n * -261px 左外边距抵消占位，并以 100% 宽度铺满视口。\n * 同时将侧栏完全移出视口，避免其 z-index 覆盖主体\n * 左侧内容（原 left:-244px 会残留约 17px）。\n */\n.pc-main-page-layout .content-container:has(> .left-content.is-collapsed) {\n    justify-content: flex-start !important;\n}\n\n.pc-main-page-layout .content-container:has(> .left-content.is-collapsed) > .left-content.is-collapsed {\n    flex: 0 0 261px !important;\n    width: 261px !important;\n    left: -261px !important;\n    box-sizing: border-box !important;\n}\n\n.pc-main-page-layout .content-container:has(> .left-content.is-collapsed) > .main-content.is-expanded {\n    flex: 0 0 100% !important;\n    width: 100% !important;\n    margin-left: -261px !important;\n    box-sizing: border-box !important;\n}\n\n/*\n * 帖子详情页外层容器。\n *\n * Tieba 默认 .container 有 1060px 的最大宽度，\n * 并带有左右自动外边距及额外内边距。\n * 这些限制会让 center-content 无法随外层主区域展开。\n */\n.pc-pb-box .container {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    padding-left: 0 !important;\n    padding-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n/*\n * 贴吧吧页禁止横向滚动。\n * .frs-page-wrap 是吧页的页面滚动容器，保留纵向滚动。\n */\n.frs-page-wrap {\n    overflow-x: hidden !important;\n}\n\n.frs-page-wrap .frs-container {\n    overflow-x: hidden !important;\n}\n\n/*\n * 贴吧吧页全宽布局。\n *\n * .frs-container 默认 max-width:1059px 且左右各有 60px padding，\n * 导致整个吧页内容被限制在中间。这里解除宽度和内边距限制，\n * 并让顶部头图区、下方主内容区同步铺满。\n */\n\n.frs-page-wrap .frs-container.frs-page-container {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    padding-left: 0 !important;\n    padding-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n.frs-page-wrap .frs-container .head-pic-area {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n    box-sizing: border-box !important;\n}\n\n.frs-page-wrap .frs-container .frs-main-container {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n    box-sizing: border-box !important;\n}\n\n/* 隐藏吧页右侧栏，让左侧帖子列表自然占满下方区域。 */\n.frs-page-wrap .frs-container .frs-main-container .frs-right-sidebar {\n    display: none !important;\n}\n\n.frs-page-wrap .frs-container .frs-main-container .left-container {\n    min-width: 0 !important;\n    max-width: none !important;\n    box-sizing: border-box !important;\n}\n\n/*\n * 帖子详情页禁止横向滚动。\n * .pc-pb-box 是实际发生 11px 内部溢出的滚动容器；\n * 只关闭横向溢出，保留原有纵向滚动。\n */\n.pc-pb-box {\n    overflow-x: hidden !important;\n}\n\n/* 正文左右留出与主页相近的呼吸空间，避免文字和图片贴边。 */\n.pc-pb-box .center-content {\n    padding-left: 12px !important;\n    padding-right: 12px !important;\n    box-sizing: border-box !important;\n}\n\n/*\n * 帖子详情页正文主栏。\n * 移除原有 47px 右边距，填满 .container 的可用宽度。\n */\n.pc-pb-box .center-content {\n    width: 100% !important;\n    max-width: none !important;\n    min-width: 0 !important;\n\n    flex: 1 1 0% !important;\n\n    margin-left: 0 !important;\n    margin-right: 0 !important;\n\n    box-sizing: border-box !important;\n}\n\n\n/* =========================\n   原 SITE_STYLE_RULES.tieba（补充覆盖样式）\n   ========================= */\n\n/* 贴吧顶栏搜索区靠左并去除顶栏内边距 */\n.search-mid {\n    margin: 0 !important;\n}\n\n#top-bar {\n    padding: 0 !important;\n}\n"
+    };
+
+    const DISPLAY_ONLY_RULES = [
+        {
+            id: 'southplus-quote-display-only', siteId: 'southplus', selector: '.quote',
+            path: '帖子页 > 楼层 > 资源信息区域',
+            elementName: '资源售价和购买人数信息',
+            effectDescription: '资源信息区域（仅展示，暂不屏蔽，避免影响资源购买）',
+            pages: ['post']
+        },
+        {
+            id: 'xsijishe-signature-display-only', siteId: 'xsijishe',
+            selector: "div[style=\"font-size: 12px;overflow: hidden;margin-top: 15px;padding-top: 12px;line-height: 1.6;background: url('static/image/common/sigline.gif') no-repeat 0 0;max-height:550px;\"]",
+            path: '帖子页 > 楼层 > 用户栏 > 签名',
+            elementName: '用户签名区域',
+            effectDescription: '用户签名区域（规则尚未完善，仅展示，不启用）',
+            pages: ['post']
+        }
+    ];
 
     // 设置界面中的页面分类。没有细分页面的站点保留一个总览页签。
     // 设置界面中的页面分类。
     const SITE_PAGES = {
         tieba: [
-            { id: 'global', label: '全站' },
-            { id: 'home', label: '首页' },
-            { id: 'thread', label: '帖子' }
+            { id: 'global', label: '全站' }, { id: 'home', label: '首页' },
+            { id: 'thread', label: '帖子' }, { id: 'desktopArchive', label: '桌面版存档' }
         ],
         '115': [
             { id: 'global', label: '全站' },
@@ -1265,7 +1346,13 @@
         ],
         douyin: [
             { id: 'home', label: '首页' }
-        ]
+        ],
+        southplus: [
+            { id: 'global', label: '全站' }, { id: 'home', label: '首页' },
+            { id: 'tea', label: '茶馆' }, { id: 'post', label: '帖子' }
+        ],
+        sehuatang: [{ id: 'discussion', label: '综合讨论区' }],
+        xsijishe: [{ id: 'global', label: '全站' }, { id: 'post', label: '帖子' }]
     };
 
     /*
@@ -1357,7 +1444,19 @@
                 'article .r-qklmqi > :first-child': ['post'],
                 'article .r-kzbkwu > :last-child': ['home', 'post'],
                 '[data-testid="inline_reply_offscreen"]': ['post'],
-                '.r-ttdzmv': ['post']
+                '.r-ttdzmv': ['post'],
+                '.r-494qqr': ['home']
+            },
+            southplus: {
+                '.btn-outline-secondary': ['post'], 'form[name="FORM"]': ['post'],
+                '.container>center': ['global'], 'body>center': ['global'],
+                '.pages': ['tea'], '.by': ['tea'], '.btn-danger': ['tea'], '.blockquote': ['post']
+            },
+            sehuatang: { '.n5_zdtys>ul': ['discussion'] },
+            xsijishe: {
+                '.xxm-reply-meta': ['post'], '.xxm-ratelog': ['post'], '.authortitle': ['post'],
+                '.vtxxmpost': ['post'], '.footer': ['global'], '.xxm-bottom': ['global'],
+                '.xxmgapb': ['global'], '.jnpar-m-tip': ['post'], '.mtw': ['post']
             }
         },
         special: {
@@ -1455,6 +1554,7 @@
                             (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素')) +
                             (rule.media ? '（平板竖屏）' : ''),
                         positionDescription: RULE_HINTS.position?.[ruleSiteId]?.[selector] || '',
+                        kindDescription: RULE_HINTS.kind?.[ruleSiteId]?.[selector] || '',
                         pages: getRulePages(site, 'block', selector, false, ruleSiteId),
                         detail: '',
                         rule,
@@ -1463,6 +1563,14 @@
                     };
                 });
             });
+
+        const displayOnlyBlock = DISPLAY_ONLY_RULES
+            .filter(item => item.siteId === site.id)
+            .map(item => ({
+                ...item, feature: 'block', title: item.elementName,
+                defaultEnabled: false, displayOnly: true,
+                rule: { domains: site.domains, enabled: false }
+            }));
 
         const special = SPECIAL_RULES[site.id] || { style: [], block: [] };
         return {
@@ -1474,7 +1582,7 @@
                 special: true,
                 defaultEnabled: true
             }))],
-            block: [...block, ...special.block.map(item => ({
+            block: [...block, ...displayOnlyBlock, ...special.block.map(item => ({
                 ...item,
                 feature: 'block',
                 pages: getRulePages(site, 'block', item.id, true),
@@ -1569,6 +1677,7 @@
             '.rule-position{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;background:#f1f4f8;color:#778397;font-size:11px;line-height:1.5;white-space:nowrap;}',
             '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
             '.rule-detail{margin-top:4px;color:#929cac;font-size:10px;overflow-wrap:anywhere;}',
+            '.archive-content{margin:0;padding:16px 20px;max-height:520px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#f8f9fb;color:#34445d;font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;}',
             '.rule-toggle{flex:0 0 auto;width:18px;height:18px;accent-color:#2868cf;cursor:pointer;}',
             '.empty{padding:22px 0;color:#a0a9b6;font-size:13px;}',
             '.master-off .rule-list{opacity:.65;}',
@@ -1649,9 +1758,6 @@
             const row = makeElement('div', 'rule-row');
             const info = makeElement('div', 'rule-info');
             const details = makeElement('div', 'rule-details');
-            details.append(
-                makeElement('div', 'rule-selector', item.elementName || item.selector || '元素位置待补充')
-            );
             const description = makeElement('div', 'rule-description');
             description.append(makeElement(
                 'div',
@@ -1661,7 +1767,14 @@
             if (item.positionDescription) {
                 description.append(makeElement('span', 'rule-position', '⌖ ' + item.positionDescription));
             }
+            if (item.kindDescription) {
+                description.append(makeElement('span', 'rule-position', item.kindDescription));
+            }
+            if (item.displayOnly) {
+                description.append(makeElement('span', 'pending-badge', '仅展示 · 不启用'));
+            }
             details.append(description);
+            details.append(makeElement('div', 'rule-selector', item.selector || item.elementName || '元素位置待补充'));
             info.append(details);
 
             const checkbox = makeElement('input', 'rule-toggle');
@@ -1786,6 +1899,7 @@
         const getPages = site => SITE_PAGES[site.id] || [{ id: 'all', label: '全部' }];
 
         const getPageRuleCounts = (site, pageId) => {
+            if (site.id === 'tieba' && pageId === 'desktopArchive') return 2;
             const items = allSiteRuleItems.get(site.id);
             return items.style.filter(item => item.pages.includes(pageId)).length +
                 items.block.filter(item => item.pages.includes(pageId)).length;
@@ -1800,23 +1914,32 @@
             const visibleBlock = items.block.filter(item => item.pages.includes(pageId));
             const groups = makeElement('div', 'groups');
 
-            if (visibleStyle.length) {
-                groups.append(renderGroup(
-                    site, 'style', '页面美化', '当前页面的布局、宽度和间距调整。',
-                    visibleStyle
-                ));
+            if (site.id === 'tieba' && pageId === 'desktopArchive') {
+                const addArchivePanel = (title, description, source) => {
+                    const panel = makeElement('section', 'group');
+                    const head = makeElement('div', 'group-head');
+                    const heading = makeElement('div', 'group-heading');
+                    heading.append(makeElement('div', 'group-title', title),
+                        makeElement('div', 'group-desc', description));
+                    head.append(heading);
+                    panel.append(head, makeElement('pre', 'archive-content', source));
+                    groups.append(panel);
+                };
+                addArchivePanel('桌面版屏蔽规则存档',
+                    '原 block.txt 完整内容；仅供查看，不会注入页面，注释规则也保留。',
+                    TIEBA_DESKTOP_ARCHIVE.block);
+                addArchivePanel('桌面版样式规则存档',
+                    '原 style.txt 完整内容；仅供查看，不会应用到移动版。',
+                    TIEBA_DESKTOP_ARCHIVE.style);
+            } else {
+                if (visibleStyle.length) groups.append(renderGroup(
+                    site, 'style', '页面美化', '当前页面的布局、宽度和间距调整。', visibleStyle));
+                if (visibleBlock.length) groups.append(renderGroup(
+                    site, 'block', '元素屏蔽', '当前页面各位置的元素规则。', visibleBlock));
+                if (!visibleStyle.length && !visibleBlock.length) {
+                    groups.append(makeElement('div', 'empty', '这个页面暂时没有美化或屏蔽规则。'));
+                }
             }
-            if (visibleBlock.length) {
-                groups.append(renderGroup(
-                    site, 'block', '元素屏蔽', '当前页面各位置的元素规则。',
-                    visibleBlock
-                ));
-            }
-
-            if (!visibleStyle.length && !visibleBlock.length) {
-                groups.append(makeElement('div', 'empty', '这个页面暂时没有美化或屏蔽规则。'));
-            }
-
             mainInner.append(groups);
 
             for (const button of pagebar.querySelectorAll('.page-tab')) {
@@ -1864,7 +1987,7 @@
 
         for (const site of SITES) {
             const items = allSiteRuleItems.get(site.id);
-            const total = items.style.length + items.block.length;
+            const total = items.style.length + items.block.length + (site.id === 'tieba' ? 2 : 0);
             const button = makeElement('button', 'site-button');
             button.type = 'button';
             button.dataset.siteId = site.id;
@@ -1955,6 +2078,7 @@
             ? currentRuleItems.block
                 .filter(item =>
                     !item.special &&
+                    !item.displayOnly &&
                     isRuleActive(item.rule) &&
                     isItemEnabled('block', currentSite.id, item.id, item.defaultEnabled)
                 )
