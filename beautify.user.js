@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.1
+// @version      7.17.2
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -1269,7 +1269,7 @@
         position: {
             southplus: { '.btn-danger': '右上角' },
             bilibili: { '.recommended-swipe': '左上角' },
-            xsijishe: { '.xxm-bottom': '页脚下方' },
+            xsijishe: { '.xxm-bottom': '页脚下方', '.xxmgapb': '页脚下方' },
             zhihu: { '.CornerButtonsGroup': '右下角' },
             douyin: {
                 '.Ctt1baq8': '底部',
