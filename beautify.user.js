@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.8
+// @version      7.17.9
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,8 +31,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.8
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.8
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.9
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.9
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -48,6 +48,8 @@
      * 站点列表。每个站点的美化与屏蔽分别控制。
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
+    const SCRIPT_VERSION = '7.17.9';
+
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
         { id: '115', name: '115 网盘', domains: ['115.com', '115vod.com'] },
@@ -571,46 +573,7 @@
         }
     ];
 
-    /*
-     * 未确认/暂不启用的历史屏蔽规则（统一归档在此处，不参与注入）。
-     *
-     * NGA：旧版元信息条、页脚、导航和菜单项；当前改用 .c1 及用户确认的列表项。
-     * ngabbs.com##.posterInfoLine
-     * ngabbs.com##.posterInfoLineB
-     * ngabbs.com###footer
-     * ngabbs.com###b_nav
-     * ngabbs.com###m_nav
-     * ngabbs.com###m_pbtntop
-     * ngabbs.com###mainmenu
-     * ngabbs.com###custombg
-     *
-     * 知乎：用途未确认的动态类名、文章卡片或推广卡片。
-     * www.zhihu.com##.css-jghqwm
-     * www.zhihu.com##.css-140jo2
-     * www.zhihu.com##.css-a3pqj1
-     * www.zhihu.com##.css-dvccr2
-     * www.zhihu.com##.css-upmq18
-     * www.zhihu.com##.css-1fo89v5
-     * www.zhihu.com##.css-1m4ta6s
-     * www.zhihu.com##.ContentItem-time
-     * www.zhihu.com##.TopstoryItem:has(.ArticleItem)
-     * www.zhihu.com##.TopstoryItem--advertCard
-     * www.zhihu.com##.SearchTabs-profile
-     *
-     * VoteButton 不单独启用：已由 .ContentItem-actions > :first-child 覆盖。
-     * www.zhihu.com##.VoteButton
-     *
-     * 哔哩哔哩：资源/推荐区域的用途或出现条件尚未确认。
-     * www.bilibili.com##.video-resource-list
-     * www.bilibili.com##.video-page-special-card-small
-     *
-     * X：旧版动态类名/侧栏及回复容器选择器，现已由用户确认的首页发帖区和帖子操作栏替代。
-     * x.com##header
-     * x.com##[data-testid="sidebarColumn"]
-     * x.com##[data-testid="inline_reply_offscreen"]
-     * x.com##.r-rull8r
-     * x.com##[aria-label="主页时间线"] > .r-184en5c
-     */
+
 
 
     /* =====================================================================
@@ -1272,32 +1235,7 @@
                 '.comment-input-container': '底部'
             }
         },
-        kind: {
-            bilibili: {
-                '.adblock-tips': '区域',
-                '.recommended-swipe': '区域',
-                '.floor-single-card': '区域',
-                '.feed-card:not(:has(.enable-no-interest))': '区域',
-                '.bili-feed-card:not(:has(.enable-no-interest))': '区域',
-                '.left-entry-main > :nth-child(n+4)': '按钮',
-                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '按钮'
-            },
-            douyin: {
-                '.semiTabrelated_card': '按钮',
-                '.semiTabai_card': '按钮'
-            },
-            southplus: {
-                '.btn-outline-secondary': '按钮', 'form[name="FORM"]': '区域',
-                '.container>center': '按钮', 'body>center': '区域',
-                '.pages': '区域', '.by': '区域', '.btn-danger': '按钮', '.blockquote': '区域'
-            },
-            sehuatang: { '.n5_zdtys>ul': '区域' },
-            xsijishe: {
-                '.xxm-reply-meta': '区域', '.xxm-ratelog': '区域', '.authortitle': '区域',
-                '.vtxxmpost': '区域', '.footer': '区域', '.xxm-bottom': '区域',
-                '.xxmgapb': '区域', '.jnpar-m-tip': '区域', '.mtw': '区域'
-            }
-        }
+
     };
 
 
@@ -1526,6 +1464,93 @@
         return 'rule-' + hashRuleIdentity(feature + ':' + identity);
     };
 
+    const RULE_DIRECTORY_OVERRIDES = {
+        "block|18comic|.col-sm-3": "全站",
+        "block|sehuatang|.n5_zdtys>ul": "综合讨论区页",
+        "block|xsijishe|.vtxxmpost": "帖子页",
+        "block|x|[aria-label=\"主页时间线\"] > :nth-child(3)": "首页",
+        "block|x|[data-testid=\"inline_reply_offscreen\"]": "帖子页",
+        "block|bilibili|.adblock-tips": "全站",
+        "block|bilibili|.video-resource-list": "全站",
+        "block|115|#js_bottom_notification": "网盘 > 底部左侧",
+        "block|115|.ceiling-feature": "网盘 > 顶栏中间",
+        "block|123pan|.notice-box": "网盘 > 底部右侧",
+        "block|123pan|.entry_p0tlq": "网盘 > 底部右侧",
+        "block|nga|.topicrow .c3": "首页 > 帖子列表",
+        "block|nga|.topicrow .c4": "首页 > 帖子列表",
+        "block|nga|.c1": "帖子 > 信息列",
+        "block|nga|.cell": "帖子",
+        "block|nga|#toptopics": "首页 > 版头",
+        "block|nga|#fast_post_c": "帖子",
+        "block|nga|.posterInfoLine": "首页",
+        "block|nga|#m_nav": "全站",
+        "block|nga|#mainmenu": "全站",
+        "block|nga|#m_pbtntop": "帖子页",
+        "block|nga|#b_nav": "全站",
+        "block|nga|#footer": "全站",
+        "block|zhihu|.css-18opwoy": "全站 > 主要内容 > 具体回答 > 评论区 > 评论",
+        "block|zhihu|.css-79elbk > :first-child": "全站 > 主要内容 > 具体回答 > 评论区",
+        "block|zhihu|[aria-label=\"知乎\"]": "全站 > 顶栏",
+        "block|zhihu|[href=\"https://www.zhihu.com/column-square\"]": "全站 > 顶栏",
+        "block|zhihu|[href=\"https://www.zhihu.com/ring-feeds\"]": "全站 > 顶栏",
+        "block|zhihu|.css-53paqb": "全站 > 顶栏",
+        "block|zhihu|[href=\"https://www.zhihu.com/project-square\"]": "全站 > 顶栏",
+        "block|zhihu|[href=\"https://www.zhihu.com/fiore/h5/vip-web\"]": "全站 > 顶栏",
+        "block|zhihu|[href=\"https://zhida.zhihu.com/\"]": "全站 > 顶栏",
+        "block|zhihu|.SearchBar-askContainer": "全站 > 顶栏",
+        "block|zhihu|.css-1vbrp2j": "全站 > 顶栏",
+        "block|zhihu|.css-ruapjk": "全站 > 顶栏",
+        "block|zhihu|.ContentItem-actions > :first-child": "全站 > 主要内容 > 具体回答 > 操作栏",
+        "block|zhihu|[aria-label=\"喜欢\"]": "全站 > 主要内容 > 具体回答 > 操作栏",
+        "block|zhihu|[data-tooltip=\"解释这篇内容\"]": "全站 > 主要内容 > 具体回答 > 操作栏",
+        "block|zhihu|.WriteArea": "首页 > 主要内容",
+        "block|zhihu|.CornerButtonsGroup": "全站",
+        "block|zhihu|.QuestionHeader-side": "回答页 > 悬浮顶栏",
+        "block|zhihu|.QuestionHeader-footer": "回答页 > 顶部问题栏",
+        "block|zhihu|.FollowButton": "回答页",
+        "block|zhihu|.Reward": "回答页 > 主要内容 > 具体回答",
+        "block|zhihu|.css-1qqx3d0 > :first-child": "搜索 > 主要内容 > 具体回答 > 操作栏",
+        "block|zhihu|.css-140jo2": "回答 > 评论区",
+        "block|zhihu|.css-dvccr2": "回答 > 顶部",
+        "block|zhihu|.css-a3pqj1": "评论页",
+        "block|zhihu|.css-kt4t4n": "回答 > 评论区",
+        "block|bilibili|.left-entry-main > :nth-child(n+4)": "全站 > 顶栏",
+        "block|bilibili|.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))": "全站 > 顶栏",
+        "block|bilibili|.bili-dyn-publishing": "动态",
+        "block|x|article .r-qklmqi > :first-child": "帖子页 > 楼主帖子",
+        "block|x|article .r-kzbkwu > :last-child": "首页/帖子页 > 信息流中的其他帖子",
+        "block|x|header[role=\"banner\"]": "全站",
+        "block|x|[data-testid=\"sidebarColumn\"]": "全站 > 主要内容",
+        "block|x|.r-494qqr": "首页",
+        "block|x|.r-ttdzmv": "帖子页 > 评论区",
+        "block|douyin|.Ctt1baq8": "评论区",
+        "block|douyin|.VAQA49VP": "评论区",
+        "block|douyin|.comment-input-container": "评论区",
+        "block|douyin|.semiTabrelated_card": "评论区",
+        "block|douyin|.semiTabai_card": "评论区",
+        "block|southplus|.btn-outline-secondary": "帖子页 > 楼层",
+        "block|southplus|form[name=\"FORM\"]": "帖子页",
+        "block|southplus|.container>center": "全站 > 底部",
+        "block|southplus|body>center": "全站",
+        "block|southplus|.pages": "茶馆页",
+        "block|southplus|.by": "茶馆页 > 信息流 > 帖子",
+        "block|southplus|.btn-danger": "茶馆页 > 顶部路径栏",
+        "block|southplus|.blockquote": "帖子页 > 带资源楼层",
+        "block|laowang|.anti-scam-warning": "帖子页 > 楼层",
+        "block|laowang|.top_lev": "帖子页 > 楼层",
+        "block|laowang|#close": "全站"
+};
+    const getRuleDirectoryPath = (feature, siteId, selector, path) => {
+        const key = feature + '|' + siteId + '|' + selector;
+        if (RULE_DIRECTORY_OVERRIDES[key]) return RULE_DIRECTORY_OVERRIDES[key];
+        if (feature === 'style') {
+            const segments = path.split(' > ').filter(Boolean);
+            segments.pop();
+            return segments.join(' > ') || '全站';
+        }
+        return path;
+    };
+
     const getSiteRuleItems = site => {
         const style = (STYLE_RULES[site.id] || []).flatMap(rule =>
             rule.selectors.map(selector => {
@@ -1534,7 +1559,7 @@
                     id: ruleItemId('style', rule, selector),
                     feature: 'style',
                     title: selector,
-                    path: RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充',
+                    path: getRuleDirectoryPath('style', site.id, selector, RULE_HINTS.style[site.id]?.[selector] || '其他 > 位置待补充'),
                     elementName: selector,
                     effectDescription: STYLE_EFFECT_HINTS[site.id]?.[selector] ||
                         '让该区域更充分利用页面空间，减少不必要的布局限制。' +
@@ -1559,8 +1584,8 @@
             .flatMap(rule => {
                 const ruleSiteId = rule.domains?.includes('115vod.com') ? '115vod' : site.id;
                 return rule.selectors.map(selector => {
-                    const path = RULE_HINTS.block[ruleSiteId]?.[selector] ||
-                        '其他 > 位置待补充';
+                    const rawPath = RULE_HINTS.block[ruleSiteId]?.[selector] || '其他 > 位置待补充';
+                    const path = getRuleDirectoryPath('block', ruleSiteId, selector, rawPath);
                     const pathLeaf = path.split(' > ').map(segment => segment.trim()).filter(Boolean).pop();
                     return {
                         id: ruleItemId('block', rule, selector),
@@ -1569,12 +1594,9 @@
                         path,
                         elementName: selector,
                         effectDescription: (RULE_HINTS.meaning?.[ruleSiteId]?.[selector] ||
-                            ((RULE_HINTS.position?.[ruleSiteId]?.[selector] || RULE_HINTS.kind?.[ruleSiteId]?.[selector])
-                                ? ''
-                                : (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素'))) +
+                            (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素')) +
                             (rule.media ? '（平板竖屏）' : ''),
                         positionDescription: RULE_HINTS.position?.[ruleSiteId]?.[selector] || '',
-                        kindDescription: RULE_HINTS.kind?.[ruleSiteId]?.[selector] || '',
                         pages: getRulePages(site, 'block', selector, false, ruleSiteId),
                         detail: '',
                         rule,
@@ -1652,6 +1674,7 @@
             '.current-name{font-size:17px;font-weight:750;color:#202938;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
             '.top-spacer{flex:1;}',
             '.save-hint{color:#778397;font-size:12px;white-space:nowrap;}',
+            '.version-label{padding:4px 8px;border:1px solid #e5e9f0;border-radius:7px;color:#647187;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap;}',
             '.close-button{width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:#657287;font-size:25px;line-height:1;cursor:pointer;}',
             '.close-button:hover{background:#f0f2f6;color:#263247;}',
             '.content{min-height:0;flex:1;display:grid;grid-template-columns:236px minmax(0,1fr);}',
@@ -1691,28 +1714,17 @@
             '.rule-row:last-child{border-bottom:0;}',
             '.rule-info{min-width:0;flex:1;}',
             '.rule-details{display:grid;gap:5px;}',
-            '.rule-selector{min-width:0;color:#929cac;font-size:11px;line-height:1.4;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;}',
-            '.rule-description{display:flex;align-items:center;flex-wrap:wrap;gap:6px 9px;}',
-            '.rule-detail-line{min-width:0;color:#34445d;font-size:13px;font-weight:550;line-height:1.5;overflow-wrap:anywhere;}',
-            '.rule-path-tree{min-width:0;max-width:100%;color:#778397;font-size:11px;line-height:1.5;}',
-            '.rule-path-level{min-width:0;}',
-            '.rule-path-summary{display:flex;align-items:center;gap:7px;padding:2px 0;color:#718097;font-size:11px;cursor:pointer;list-style:none;user-select:none;}',
-            '.rule-path-summary::-webkit-details-marker{display:none;}',
-            '.rule-path-summary::before{content:"›";display:inline-block;color:#8492a7;font-size:15px;line-height:1;transform:rotate(0deg);transition:transform .15s ease;}',
-            '.rule-path-level[open]>.rule-path-summary::before{transform:rotate(90deg);}',
-            '.rule-path-summary:hover{color:#44536a;}',
-            '.rule-path-summary:focus-visible{outline:2px solid #6b9ee8;outline-offset:2px;}',
-            '.rule-path-children{margin-left:8px;padding-left:9px;border-left:1px solid #e1e7ef;}',
-            '.rule-path-level:last-child>.rule-path-summary{font-weight:550;}',
-            '.rule-position{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;background:#f1f4f8;color:#778397;font-size:11px;line-height:1.5;white-space:nowrap;}',
+            '.rule-selector{min-width:0;color:#172235;font-size:13px;font-weight:800;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;}',
+            '.rule-detail-line{min-width:0;color:#34445d;font-size:12px;font-weight:500;line-height:1.55;overflow-wrap:anywhere;}',
+            '.rule-position-text{color:#7a8698;font-size:11px;line-height:1.45;}',
             '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
             '.rule-detail{margin-top:4px;color:#929cac;font-size:10px;overflow-wrap:anywhere;}',
             '.archive-content{margin:0;padding:16px 20px;max-height:520px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#f8f9fb;color:#34445d;font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;}',
             '.rule-toggle{flex:0 0 auto;width:18px;height:18px;accent-color:#2868cf;cursor:pointer;}',
             '.empty{padding:22px 0;color:#a0a9b6;font-size:13px;}',
-            '.master-off .rule-list{opacity:.65;}',
+            '.master-off-style .rule-style,.master-off-block .rule-block{opacity:.45;}',
             '.footer-note{margin:18px 2px 0;color:#98a2b1;font-size:12px;}',
-            '@media(max-width:700px){.shell{width:calc(100vw - 16px);height:calc(100dvh - 24px);border-radius:12px;}.topbar{padding:0 14px;gap:10px;}.pagebar{min-height:48px;padding:0 10px;gap:4px;}.page-tab{padding:8px 11px;font-size:12px;}.save-hint{display:none;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:18px 12px 36px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.path-rule-list{padding-left:12px;}.path-summary{padding:9px 0;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
+            '@media(max-width:700px){.shell{width:calc(100vw - 16px);height:calc(100dvh - 24px);border-radius:12px;}.topbar{padding:0 14px;gap:10px;}.pagebar{min-height:48px;padding:0 10px;gap:4px;}.page-tab{padding:8px 11px;font-size:12px;}.save-hint{display:none;}.version-label{font-size:10px;padding:3px 6px;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:18px 12px 36px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.path-rule-list{padding-left:12px;}.path-summary{padding:9px 0;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
         ].join('\n');
 
         const makeElement = (tag, className, text) => {
@@ -1731,12 +1743,13 @@
         topTitle.append(eyebrow, currentName);
         const spacer = makeElement('div', 'top-spacer');
         const saveHint = makeElement('div', 'save-hint', '开关修改后会立即生效');
+        const versionLabel = makeElement('div', 'version-label', 'v' + SCRIPT_VERSION);
         const closeButton = makeElement('button', 'close-button', '×');
         closeButton.type = 'button';
         closeButton.title = '关闭设置';
         closeButton.setAttribute('aria-label', '关闭设置');
         closeButton.addEventListener('click', closeSettings);
-        topbar.append(mark, topTitle, spacer, saveHint, closeButton);
+        topbar.append(mark, topTitle, spacer, saveHint, versionLabel, closeButton);
 
         const pagebar = makeElement('nav', 'pagebar');
         pagebar.setAttribute('aria-label', '页面类型');
@@ -1785,24 +1798,19 @@
         };
 
         const makeRuleRow = (site, feature, item) => {
-            const row = makeElement('div', 'rule-row');
+            const row = makeElement('div', 'rule-row rule-' + feature);
             const info = makeElement('div', 'rule-info');
             const details = makeElement('div', 'rule-details');
-            const description = makeElement('div', 'rule-description');
+            details.append(makeElement('div', 'rule-selector', item.selector || item.elementName || '元素位置待补充'));
             if (item.effectDescription) {
-                description.append(makeElement('div', 'rule-detail-line', item.effectDescription));
+                details.append(makeElement('div', 'rule-detail-line', item.effectDescription));
             }
             if (item.positionDescription) {
-                description.append(makeElement('span', 'rule-position', '⌖ ' + item.positionDescription));
-            }
-            if (item.kindDescription) {
-                description.append(makeElement('span', 'rule-position', item.kindDescription));
+                details.append(makeElement('div', 'rule-position-text', item.positionDescription));
             }
             if (item.displayOnly) {
-                description.append(makeElement('span', 'pending-badge', '仅展示 · 不启用'));
+                details.append(makeElement('span', 'pending-badge', '仅展示 · 不启用'));
             }
-            details.append(description);
-            details.append(makeElement('div', 'rule-selector', item.selector || item.elementName || '元素位置待补充'));
             info.append(details);
 
             if (item.displayOnly) {
@@ -1826,93 +1834,76 @@
             return row;
         };
 
-        const renderGroup = (site, feature, title, description, items) => {
+        const renderSharedGroup = (site, styleItems, blockItems) => {
             const group = makeElement('section', 'group');
             const head = makeElement('div', 'group-head');
             const heading = makeElement('div', 'group-heading');
             heading.append(
-                makeElement('div', 'group-title', title),
-                makeElement('div', 'group-desc', description)
+                makeElement('div', 'group-title', '页面元素'),
+                makeElement('div', 'group-desc', '区域作为目录，元素作为文件；美化与屏蔽规则共用同一目录树。')
             );
+            head.append(heading);
 
-            const count = makeElement('div', 'group-count', items.length + ' 项');
-            const master = makeToggle(
-                GM_getValue(featureEnabledKey(feature, site.id), true),
-                'master-toggle',
-                enabled => {
-                    GM_setValue(featureEnabledKey(feature, site.id), enabled);
-                    group.classList.toggle('master-off', !enabled);
-                    if (currentSite?.id === site.id && currentSettings) {
-                        currentSettings[feature] = enabled;
-                        refreshCurrentPageRules();
-                    }
-                    updateSavedHint(site);
-                },
-                '全站总开关'
-            );
-
-            head.append(heading, count, master.label);
+            for (const [feature, items, label] of [
+                ['style', styleItems, '美化'],
+                ['block', blockItems, '屏蔽']
+            ]) {
+                if (!items.length) continue;
+                const master = makeToggle(
+                    GM_getValue(featureEnabledKey(feature, site.id), true),
+                    'master-toggle',
+                    enabled => {
+                        GM_setValue(featureEnabledKey(feature, site.id), enabled);
+                        group.classList.toggle('master-off-' + feature, !enabled);
+                        if (currentSite?.id === site.id && currentSettings) {
+                            currentSettings[feature] = enabled;
+                            refreshCurrentPageRules();
+                        }
+                        updateSavedHint(site);
+                    },
+                    label
+                );
+                head.append(master.label);
+                group.classList.toggle('master-off-' + feature, !master.input.checked);
+            }
 
             const list = makeElement('div', 'rule-list');
             const pathTree = { children: new Map(), items: [] };
-
-            for (const item of items) {
-                if (feature === 'style') {
-                    const segments = (item.path || '其他 > 位置待补充')
-                        .split(' > ')
-                        .map(segment => segment.trim())
-                        .filter(Boolean);
-
-                    let node = pathTree;
-                    for (const segment of segments) {
-                        if (!node.children.has(segment)) {
-                            node.children.set(segment, { children: new Map(), items: [] });
-                        }
-                        node = node.children.get(segment);
+            for (const entry of [
+                ...styleItems.map(item => ({ feature: 'style', item })),
+                ...blockItems.map(item => ({ feature: 'block', item }))
+            ]) {
+                const segments = (entry.item.path || '其他')
+                    .split(' > ').map(segment => segment.trim()).filter(Boolean);
+                let node = pathTree;
+                for (const segment of segments) {
+                    if (!node.children.has(segment)) {
+                        node.children.set(segment, { children: new Map(), items: [] });
                     }
-                    node.items.push(item);
-                } else {
-                    const segments = (item.path || item.description || '其他 > 位置待补充')
-                        .split(' > ')
-                        .map(segment => segment.trim())
-                        .filter(Boolean);
-
-                    if (segments[0] === '通用') segments.shift();
-
-                    // 路径每一级都是目录；规则作为最后一级目录中的条目。
-                    let node = pathTree;
-                    for (const segment of segments) {
-                        if (!node.children.has(segment)) {
-                            node.children.set(segment, { children: new Map(), items: [] });
-                        }
-                        node = node.children.get(segment);
-                    }
-                    node.items.push(item);
+                    node = node.children.get(segment);
                 }
+                node.items.push(entry);
             }
 
+            const countPathItems = node =>
+                node.items.length + [...node.children.values()].reduce(
+                    (sum, child) => sum + countPathItems(child), 0
+                );
             const renderPathNode = (pathName, node, depth = 0) => {
                 const details = makeElement('details', 'path-group path-depth-' + depth);
                 details.open = true;
-
                 const summary = makeElement('summary', 'path-summary');
-                const countPathItems = current =>
-                    current.items.length +
-                    [...current.children.values()].reduce(
-                        (sum, child) => sum + countPathItems(child), 0
-                    );
-                const total = countPathItems(node);
                 summary.append(
                     makeElement('span', '', pathName),
-                    makeElement('span', 'path-count', total + ' 项')
+                    makeElement('span', 'path-count', countPathItems(node) + ' 项')
                 );
-
                 const body = makeElement('div', 'path-rule-list');
-                for (const item of node.items) body.append(makeRuleRow(site, feature, item));
+                for (const entry of node.items) {
+                    body.append(makeRuleRow(site, entry.feature, entry.item));
+                }
                 for (const [childName, childNode] of node.children) {
                     body.append(renderPathNode(childName, childNode, depth + 1));
                 }
-
                 details.append(summary, body);
                 return details;
             };
@@ -1920,10 +1911,10 @@
             for (const [pathName, node] of pathTree.children) {
                 list.append(renderPathNode(pathName, node));
             }
-            for (const item of pathTree.items) list.append(makeRuleRow(site, feature, item));
-
+            for (const entry of pathTree.items) {
+                list.append(makeRuleRow(site, entry.feature, entry.item));
+            }
             group.append(head, list);
-            group.classList.toggle('master-off', !master.input.checked);
             return group;
         };
 
@@ -1946,10 +1937,9 @@
             const visibleBlock = items.block.filter(item => item.pages.includes(pageId));
             const groups = makeElement('div', 'groups');
 
-            if (visibleStyle.length) groups.append(renderGroup(
-                site, 'style', '页面美化', '当前页面的布局、宽度和间距调整。', visibleStyle));
-            if (visibleBlock.length) groups.append(renderGroup(
-                site, 'block', '元素屏蔽', '当前页面各位置的元素规则。', visibleBlock));
+            if (visibleStyle.length || visibleBlock.length) {
+                groups.append(renderSharedGroup(site, visibleStyle, visibleBlock));
+            }
             if (!visibleStyle.length && !visibleBlock.length) {
                 groups.append(makeElement('div', 'empty', '这个页面暂时没有美化或屏蔽规则。'));
             }
