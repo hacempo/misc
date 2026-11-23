@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.4
+// @version      7.17.5
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,7 +31,7 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.4
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.5
 // @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.4
 // @run-at       document-start
 // @noframes
@@ -1694,6 +1694,14 @@
             '.rule-selector{min-width:0;color:#929cac;font-size:11px;line-height:1.4;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;}',
             '.rule-description{display:flex;align-items:center;flex-wrap:wrap;gap:6px 9px;}',
             '.rule-detail-line{min-width:0;color:#34445d;font-size:13px;font-weight:550;line-height:1.5;overflow-wrap:anywhere;}',
+            '.rule-path{min-width:0;max-width:100%;color:#778397;font-size:11px;line-height:1.5;}',
+            '.rule-path-summary{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border:1px solid #e5e9f0;border-radius:6px;background:#f8f9fb;cursor:pointer;list-style:none;user-select:none;}',
+            '.rule-path-summary::-webkit-details-marker{display:none;}',
+            '.rule-path-summary::before{content:"›";display:inline-block;transition:transform .15s ease;}',
+            '.rule-path[open]>.rule-path-summary::before{transform:rotate(90deg);}',
+            '.rule-path-summary:hover{background:#eef2f7;color:#44536a;}',
+            '.rule-path-summary:focus-visible{outline:2px solid #6b9ee8;outline-offset:2px;}',
+            '.rule-path-content{margin-top:5px;padding:5px 8px;border-left:2px solid #dce4ef;color:#526178;overflow-wrap:anywhere;}',
             '.rule-position{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;background:#f1f4f8;color:#778397;font-size:11px;line-height:1.5;white-space:nowrap;}',
             '.pending-badge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:5px;background:#fff2d6;color:#95600c;font-size:10px;font-weight:700;vertical-align:1px;}',
             '.rule-detail{margin-top:4px;color:#929cac;font-size:10px;overflow-wrap:anywhere;}',
@@ -1783,7 +1791,11 @@
                 description.append(makeElement('div', 'rule-detail-line', item.effectDescription));
             }
             if (item.path) {
-                description.append(makeElement('div', 'rule-detail-line', '路径：' + item.path));
+                const pathDetails = makeElement('details', 'rule-path');
+                const pathSummary = makeElement('summary', 'rule-path-summary', '路径（点击展开）');
+                const pathContent = makeElement('div', 'rule-path-content', item.path);
+                pathDetails.append(pathSummary, pathContent);
+                description.append(pathDetails);
             }
             if (item.positionDescription) {
                 description.append(makeElement('span', 'rule-position', '⌖ ' + item.positionDescription));
