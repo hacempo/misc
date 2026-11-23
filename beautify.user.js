@@ -32,7 +32,7 @@
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
 // @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.6
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.5
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.6
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
