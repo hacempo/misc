@@ -32,7 +32,7 @@
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
 // @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.4
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.16.1
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.4
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -153,7 +153,7 @@
     const NO_SIDE_PADDING = { 'padding-left': '0', 'padding-right': '0' };
 
     const STYLE_RULES = {
-        // 移动端网页。桌面端规则已归档到仓库的 style.txt。
+        // 百度贴吧页面样式规则。
         tieba: [
             {
                 // 主页及页面主体取消宽度上限，顶部固定导航栏同理。
@@ -366,14 +366,12 @@
     /*
      * 屏蔽规则（display: none）。
      * 按域名（含子域）匹配；每个选择器单独成条，避免其中一条不被支持时连累其他。
-     * 每条规则都在设置界面独立控制；未确认的历史选择器统一归档在 block.txt 末尾注释区。
-     * 当前实际生效规则与 block.txt 上方的规则清单保持同步。
-     *
-     * 贴吧桌面端规则单独归档在 block.txt，不在本脚本中注入。
+     * 每条规则都在设置界面独立控制；未确认的历史选择器保留在脚本注释区。
+     * 百度贴吧桌面版的屏蔽与样式规则完整归档在仓库 trash.txt，不在本脚本中注入。
      */
     const BLOCK_RULES = [
         {
-            // 百度贴吧移动端
+            // 百度贴吧
             domains: ['tieba.baidu.com'],
             selectors: [
                 '.login',
@@ -722,12 +720,12 @@
     "tieba": {
         ".main-page-wrap": {
             "title": "主页主内容容器",
-            "element": "贴吧移动端主页的主内容容器 .main-page-wrap",
+            "element": "贴吧主页的主内容容器 .main-page-wrap",
             "effect": "取消内容容器的最大宽度上限，让页面主体可随可用空间伸展。"
         },
         ".nav-bar-v2-fixed": {
             "title": "固定顶栏容器",
-            "element": "贴吧移动端顶部固定导航栏容器 .nav-bar-v2-fixed",
+            "element": "贴吧顶部固定导航栏容器 .nav-bar-v2-fixed",
             "effect": "取消导航栏的最大宽度上限，使固定导航栏可使用全部可用宽度。"
         }
     },
