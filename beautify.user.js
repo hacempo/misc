@@ -1610,15 +1610,13 @@
                 return rule.selectors.map(selector => {
                     const rawPath = RULE_HINTS.block[ruleSiteId]?.[selector] || '其他 > 位置待补充';
                     const path = getRuleDirectoryPath('block', ruleSiteId, selector, rawPath);
-                    const pathLeaf = path.split(' > ').map(segment => segment.trim()).filter(Boolean).pop();
                     return {
                         id: ruleItemId('block', rule, selector),
                         feature: 'block',
                         title: selector,
                         path,
                         elementName: selector,
-                        effectDescription: (RULE_HINTS.meaning?.[ruleSiteId]?.[selector] ||
-                            (pathLeaf && pathLeaf !== '位置待补充' ? pathLeaf : '元素')) +
+                        effectDescription: (RULE_HINTS.meaning?.[ruleSiteId]?.[selector] || '屏蔽该元素') +
                             (rule.media ? '（平板竖屏）' : ''),
                         positionDescription: RULE_HINTS.position?.[ruleSiteId]?.[selector] || '',
                         pages: getRulePages(site, 'block', selector, false, ruleSiteId),
