@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.0
+// @version      7.17.1
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -1208,8 +1208,8 @@
                 '.floor-single-card': '分区推广卡片',
                 '.feed-card:not(:has(.enable-no-interest))': '初始加载的推广卡片',
                 '.bili-feed-card:not(:has(.enable-no-interest))': '下滑加载的推广卡片',
-                '.left-entry-main > :nth-child(n+4)': '顶栏左侧第 4 项起的按钮',
-                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧第 4 至第 6 项以外的按钮',
+                '.left-entry-main > :nth-child(n+4)': '顶栏左侧按钮（保留前 3 项）',
+                '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))': '顶栏右侧按钮（保留第 4 至第 6 项）',
                 'aside': '动态页右侧栏',
                 '.bili-dyn-publishing': '动态发布区域'
             },
@@ -1230,9 +1230,9 @@
             },
             southplus: {
                 '.btn-outline-secondary': '回复当前楼层按钮',
-                'form[name="FORM"]': '评论区域',
+                'form[name="FORM"]': '评论内容',
                 '.container>center': '切换桌面版按钮',
-                'body>center': '脚注区域',
+                'body>center': '脚注',
                 '.pages': '顶部翻页栏',
                 '.by': '帖子发布时间等信息',
                 '.btn-danger': '发布主题按钮',
@@ -1252,7 +1252,7 @@
                 '.css-140jo2': '评论发布时间和地点', '.css-dvccr2': '文章赞同人数', '.css-a3pqj1': '评论框', '.css-kt4t4n': '悬浮评论框'
             },
             bilibili: { '.video-resource-list': '视频推广' },
-            sehuatang: { '.n5_zdtys>ul': '综合讨论区通知区域' },
+            sehuatang: { '.n5_zdtys>ul': '综合讨论区通知' },
             xsijishe: {
                 '.xxm-reply-meta': '发帖时间、点赞、点踩',
                 '.xxm-ratelog': '评分信息',
