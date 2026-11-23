@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.7
+// @version      7.17.8
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,8 +31,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.7
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.7
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.8
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.8
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -1792,25 +1792,6 @@
             if (item.effectDescription) {
                 description.append(makeElement('div', 'rule-detail-line', item.effectDescription));
             }
-            if (item.path) {
-                const pathSegments = item.path.split(' > ').map(segment => segment.trim()).filter(Boolean);
-                const makePathLevel = (segments, depth = 0) => {
-                    // 复用全站路径分组的折叠结构与样式，确保每一级路径的交互一致。
-                    const level = makeElement('details', 'path-group path-depth-' + depth);
-                    level.open = true;
-                    const summary = makeElement('summary', 'path-summary', segments[0]);
-                    level.append(summary);
-                    if (segments.length > 1) {
-                        const children = makeElement('div', 'path-rule-list');
-                        children.append(makePathLevel(segments.slice(1), depth + 1));
-                        level.append(children);
-                    }
-                    return level;
-                };
-                const pathTree = makeElement('div', 'rule-path-tree');
-                pathTree.append(makePathLevel(pathSegments));
-                description.append(pathTree);
-            }
             if (item.positionDescription) {
                 description.append(makeElement('span', 'rule-position', '⌖ ' + item.positionDescription));
             }
@@ -1898,9 +1879,9 @@
 
                     if (segments[0] === '通用') segments.shift();
 
-                    const groupSegments = segments.slice(0, -1);
+                    // 路径每一级都是目录；规则作为最后一级目录中的条目。
                     let node = pathTree;
-                    for (const segment of groupSegments) {
+                    for (const segment of segments) {
                         if (!node.children.has(segment)) {
                             node.children.set(segment, { children: new Map(), items: [] });
                         }
