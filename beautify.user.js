@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.6
+// @version      7.17.7
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,8 +31,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.6
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.6
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.7
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.7
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -1795,12 +1795,13 @@
             if (item.path) {
                 const pathSegments = item.path.split(' > ').map(segment => segment.trim()).filter(Boolean);
                 const makePathLevel = (segments, depth = 0) => {
-                    const level = makeElement('details', 'rule-path-level path-depth-' + depth);
+                    // 复用全站路径分组的折叠结构与样式，确保每一级路径的交互一致。
+                    const level = makeElement('details', 'path-group path-depth-' + depth);
                     level.open = true;
-                    const summary = makeElement('summary', 'rule-path-summary', segments[0]);
+                    const summary = makeElement('summary', 'path-summary', segments[0]);
                     level.append(summary);
                     if (segments.length > 1) {
-                        const children = makeElement('div', 'rule-path-children');
+                        const children = makeElement('div', 'path-rule-list');
                         children.append(makePathLevel(segments.slice(1), depth + 1));
                         level.append(children);
                     }
