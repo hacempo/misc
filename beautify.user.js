@@ -2032,7 +2032,7 @@
 
     syncZhihuContentWidth = () => {
         if (currentSite.id !== 'zhihu') return;
-        const enabled = currentSettings.enabled && currentSettings.enabled && currentSettings.style &&
+        const enabled = currentSettings.enabled && currentSettings.style &&
             isItemEnabled('style', 'zhihu', 'zhihu-header-width');
 
         if (!enabled) {
