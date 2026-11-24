@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.12
+// @version      7.17.13
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -31,8 +31,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.12
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.12
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.13
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.13
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -48,7 +48,7 @@
      * 站点列表。每个站点的美化与屏蔽分别控制。
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
-    const SCRIPT_VERSION = '7.17.12';
+    const SCRIPT_VERSION = '7.17.13';
 
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
@@ -106,6 +106,7 @@
 
     const legacyEnabledKey = id => 'beautify:enabled:' + id;
     const featureEnabledKey = (feature, id) => 'beautify:' + feature + '-enabled:' + id;
+    const siteEnabledKey = id => 'beautify:site-enabled:' + id;
 
     // 首次升级时沿用旧版总开关状态，之后两项独立保存。
     const readFeatureEnabled = (site, feature) => {
@@ -124,8 +125,10 @@
     for (const site of SITES) {
         const styleEnabled = readFeatureEnabled(site, 'style');
         const blockEnabled = readFeatureEnabled(site, 'block');
+        const siteEnabled = GM_getValue(siteEnabledKey(site.id), true);
 
         siteSettings.set(site.id, {
+            enabled: siteEnabled,
             style: styleEnabled,
             block: blockEnabled
         });
@@ -1601,6 +1604,8 @@
             '.current-name{font-size:17px;font-weight:750;color:#202938;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
             '.top-spacer{flex:1;}',
             '.save-hint{color:#778397;font-size:12px;white-space:nowrap;}',
+            '.site-master-toggle{display:flex;align-items:center;gap:7px;color:#34445d;font-size:12px;font-weight:650;white-space:nowrap;cursor:pointer;}',
+            '.right-panel.site-disabled .group{opacity:.48;}',
             '.version-label{padding:4px 8px;border:1px solid #e5e9f0;border-radius:7px;color:#647187;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap;}',
             '.close-button{width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:#657287;font-size:25px;line-height:1;cursor:pointer;}',
             '.close-button:hover{background:#f0f2f6;color:#263247;}',
@@ -1670,13 +1675,20 @@
         topTitle.append(eyebrow, currentName);
         const spacer = makeElement('div', 'top-spacer');
         const saveHint = makeElement('div', 'save-hint', '开关修改后会立即生效');
+        const siteMaster = makeElement('label', 'site-master-toggle');
+        const siteMasterText = makeElement('span', '', '整个网站');
+        const siteMasterInput = makeElement('input', 'switch');
+        siteMasterInput.type = 'checkbox';
+        siteMasterInput.checked = Boolean(siteSettings.get(selectedSite.id)?.enabled);
+        siteMasterInput.title = '启用或关闭当前网站的全部美化和屏蔽功能';
+        siteMaster.append(siteMasterText, siteMasterInput);
         const versionLabel = makeElement('div', 'version-label', 'v' + SCRIPT_VERSION);
         const closeButton = makeElement('button', 'close-button', '×');
         closeButton.type = 'button';
         closeButton.title = '关闭设置';
         closeButton.setAttribute('aria-label', '关闭设置');
         closeButton.addEventListener('click', closeSettings);
-        topbar.append(mark, topTitle, spacer, saveHint, versionLabel, closeButton);
+        topbar.append(mark, topTitle, spacer, siteMaster, saveHint, versionLabel, closeButton);
 
         const pagebar = makeElement('nav', 'pagebar');
         pagebar.setAttribute('aria-label', '页面类型');
@@ -1859,6 +1871,8 @@
         function renderSite(site) {
             selectedSite = site;
             currentName.textContent = site.name;
+            siteMasterInput.checked = Boolean(siteSettings.get(site.id)?.enabled);
+            rightPanel.classList.toggle('site-disabled', !siteMasterInput.checked);
             pagebar.replaceChildren();
 
             const allPages = getPages(site);
@@ -1902,6 +1916,16 @@
             button.addEventListener('click', () => renderSite(site));
             siteList.append(button);
         }
+
+        siteMasterInput.addEventListener('change', () => {
+            const enabled = siteMasterInput.checked;
+            GM_setValue(siteEnabledKey(selectedSite.id), enabled);
+            const settings = siteSettings.get(selectedSite.id);
+            if (settings) settings.enabled = enabled;
+            rightPanel.classList.toggle('site-disabled', !enabled);
+            if (currentSite?.id === selectedSite.id) refreshCurrentPageRules();
+            updateSavedHint(selectedSite);
+        });
 
         renderSite(selectedSite);
         window.addEventListener('keydown', onKeyDown);
@@ -1966,7 +1990,7 @@
     };
 
     refreshCurrentPageRules = () => {
-        const styleCss = currentSettings.style
+        const styleCss = currentSettings.enabled && currentSettings.style
             ? currentRuleItems.style
                 .filter(item =>
                     !item.special &&
@@ -1979,7 +2003,7 @@
                 }))
             : [];
 
-        const blockCss = currentSettings.block
+        const blockCss = currentSettings.enabled && currentSettings.block
             ? currentRuleItems.block
                 .filter(item =>
                     !item.special &&
@@ -2008,7 +2032,7 @@
 
     syncZhihuContentWidth = () => {
         if (currentSite.id !== 'zhihu') return;
-        const enabled = currentSettings.style &&
+        const enabled = currentSettings.enabled && currentSettings.enabled && currentSettings.style &&
             isItemEnabled('style', 'zhihu', 'zhihu-header-width');
 
         if (!enabled) {
@@ -2248,36 +2272,40 @@
     let updateBilibiliShadowRules = () => {};
     if (currentSite.id === 'bilibili') {
         updateBilibiliShadowRules = installBilibiliShadowRules({
-            commentPadding: currentSettings.style &&
+            commentPadding: currentSettings.enabled && currentSettings.style &&
                 isItemEnabled('style', 'bilibili', 'bili-comment-content-padding'),
-            navbarMargin: currentSettings.style &&
+            navbarMargin: currentSettings.enabled && currentSettings.style &&
                 isItemEnabled('style', 'bilibili', 'bili-comment-navbar-margin'),
-            goodsComments: currentSettings.block &&
+            goodsComments: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-goods-comments'),
-            commentFooters: currentSettings.block &&
+            commentFooters: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-comment-footers'),
-            commentInput: currentSettings.block &&
+            commentInput: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-comment-input'),
-            floatingCommentInput: currentSettings.block &&
+            floatingCommentInput: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-floating-comment-input')
         });
         syncBilibiliRules = () => updateBilibiliShadowRules({
-            commentPadding: currentSettings.style &&
+            commentPadding: currentSettings.enabled && currentSettings.style &&
                 isItemEnabled('style', 'bilibili', 'bili-comment-content-padding'),
-            navbarMargin: currentSettings.style &&
+            navbarMargin: currentSettings.enabled && currentSettings.style &&
                 isItemEnabled('style', 'bilibili', 'bili-comment-navbar-margin'),
-            goodsComments: currentSettings.block &&
+            goodsComments: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-goods-comments'),
-            commentFooters: currentSettings.block &&
+            commentFooters: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-comment-footers'),
-            commentInput: currentSettings.block &&
+            commentInput: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-comment-input'),
-            floatingCommentInput: currentSettings.block &&
+            floatingCommentInput: currentSettings.enabled && currentSettings.block &&
                 isItemEnabled('block', 'bilibili', 'bili-floating-comment-input')
         });
     }
 
     if (typeof GM_addValueChangeListener === 'function') {
+        GM_addValueChangeListener(siteEnabledKey(currentSite.id), (_key, _oldValue, newValue) => {
+            if (typeof newValue === 'boolean') currentSettings.enabled = newValue;
+            refreshCurrentPageRules();
+        });
         for (const feature of ['style', 'block']) {
             GM_addValueChangeListener(
                 featureEnabledKey(feature, currentSite.id),
