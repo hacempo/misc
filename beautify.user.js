@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.15
+// @version      7.17.16
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -33,8 +33,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.15
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.13
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.16
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.16
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -50,7 +50,7 @@
      * 站点列表。每个站点的美化与屏蔽分别控制。
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
-    const SCRIPT_VERSION = '7.17.15';
+    const SCRIPT_VERSION = '7.17.16';
 
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
@@ -1647,7 +1647,10 @@
             '.sidebar{min-height:0;overflow:auto;background:#fff;border-right:1px solid #e4e8ef;padding:24px 14px;}',
             '.side-heading{padding:0 10px 12px;color:#8994a5;font-size:11px;font-weight:750;letter-spacing:.09em;}',
             '.site-list{display:flex;flex-direction:column;gap:4px;}',
-            '.site-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:0;border-radius:9px;background:transparent;color:#4e5b70;text-align:left;cursor:pointer;}',
+            '.site-row{display:flex;align-items:center;gap:3px;margin:2px 0;}',
+            '.site-button{min-width:0;flex:1;width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 8px;border:0;border-radius:9px;background:transparent;color:#4e5b70;text-align:left;cursor:pointer;}',
+            '.site-row-toggle{flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:5px 3px;cursor:pointer;}',
+            '.site-row-toggle .switch{width:30px;height:17px;}',
             '.site-button:hover{background:#f5f7fb;}',
             '.site-button.active{background:#edf3ff;color:#245bb5;font-weight:700;}',
             '.site-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
@@ -1688,7 +1691,7 @@
             '.empty{padding:22px 0;color:#a0a9b6;font-size:13px;}',
             '.master-off-style .rule-style,.master-off-block .rule-block{opacity:.45;}',
             '.footer-note{margin:18px 2px 0;color:#98a2b1;font-size:12px;}',
-            '@media(max-width:700px){.shell{width:calc(100vw - 16px);height:calc(100dvh - 24px);border-radius:12px;}.topbar{padding:0 14px;gap:10px;}.pagebar{min-height:48px;padding:0 10px;gap:4px;}.page-tab{padding:8px 11px;font-size:12px;}.save-hint{display:none;}.version-label{font-size:10px;padding:3px 6px;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;}.site-button{padding:9px 7px;font-size:12px;}.site-count{display:none;}.main{padding:18px 12px 36px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.path-rule-list{padding-left:12px;}.path-summary{padding:9px 0;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
+            '@media(max-width:700px){.shell{width:calc(100vw - 16px);height:calc(100dvh - 24px);border-radius:12px;}.topbar{padding:0 14px;gap:10px;}.pagebar{min-height:48px;padding:0 10px;gap:4px;}.page-tab{padding:8px 11px;font-size:12px;}.save-hint{display:none;}.version-label{font-size:10px;padding:3px 6px;}.content{grid-template-columns:116px minmax(0,1fr);}.sidebar{padding:18px 7px;} .site-button{padding:9px 5px;font-size:12px;}.site-row-toggle{padding:5px 1px;}.site-row-toggle .switch{width:27px;height:16px;}.site-count{display:none;}.main{padding:18px 12px 36px;}.group-head{padding:14px 12px;gap:7px;}.rule-list{padding:4px 12px;}.path-rule-list{padding-left:12px;}.path-summary{padding:9px 0;}.master-toggle{gap:3px;font-size:11px;}.group-count{display:none;}}'
         ].join('\n');
 
         const makeElement = (tag, className, text) => {
@@ -1707,20 +1710,13 @@
         topTitle.append(eyebrow, currentName);
         const spacer = makeElement('div', 'top-spacer');
         const saveHint = makeElement('div', 'save-hint', '开关修改后会立即生效');
-        const siteMaster = makeElement('label', 'site-master-toggle');
-        const siteMasterText = makeElement('span', '', '整个网站');
-        const siteMasterInput = makeElement('input', 'switch');
-        siteMasterInput.type = 'checkbox';
-        siteMasterInput.checked = Boolean(siteSettings.get(selectedSite.id)?.enabled);
-        siteMasterInput.title = '启用或关闭当前网站的全部美化和屏蔽功能';
-        siteMaster.append(siteMasterText, siteMasterInput);
         const versionLabel = makeElement('div', 'version-label', 'v' + SCRIPT_VERSION);
         const closeButton = makeElement('button', 'close-button', '×');
         closeButton.type = 'button';
         closeButton.title = '关闭设置';
         closeButton.setAttribute('aria-label', '关闭设置');
         closeButton.addEventListener('click', closeSettings);
-        topbar.append(mark, topTitle, spacer, siteMaster, saveHint, versionLabel, closeButton);
+        topbar.append(mark, topTitle, spacer, saveHint, versionLabel, closeButton);
 
         const pagebar = makeElement('nav', 'pagebar');
         pagebar.setAttribute('aria-label', '页面类型');
@@ -1903,7 +1899,6 @@
         function renderSite(site) {
             selectedSite = site;
             currentName.textContent = site.name;
-            siteMasterInput.checked = Boolean(siteSettings.get(site.id)?.enabled);
             rightPanel.classList.toggle('site-disabled', !siteMasterInput.checked);
             pagebar.replaceChildren();
 
@@ -1939,6 +1934,7 @@
         for (const site of SITES) {
             const items = allSiteRuleItems.get(site.id);
             const total = items.style.length + items.block.length + (site.id === 'tieba' ? 2 : 0);
+            const row = makeElement('div', 'site-row');
             const button = makeElement('button', 'site-button');
             button.type = 'button';
             button.dataset.siteId = site.id;
@@ -1946,18 +1942,28 @@
             const count = makeElement('span', 'site-count', String(total));
             button.append(name, count);
             button.addEventListener('click', () => renderSite(site));
-            siteList.append(button);
+            const toggleLabel = makeElement('label', 'site-row-toggle');
+            const toggle = makeElement('input', 'switch');
+            toggle.type = 'checkbox';
+            toggle.dataset.siteId = site.id;
+            toggle.checked = Boolean(siteSettings.get(site.id)?.enabled);
+            toggle.title = '启用或关闭' + site.name + '的整个网站功能';
+            toggle.setAttribute('aria-label', toggle.title);
+            toggle.addEventListener('change', () => {
+                const enabled = toggle.checked;
+                GM_setValue(siteEnabledKey(site.id), enabled);
+                const settings = siteSettings.get(site.id);
+                if (settings) settings.enabled = enabled;
+                if (selectedSite.id === site.id) {
+                    rightPanel.classList.toggle('site-disabled', !enabled);
+                    if (currentSite?.id === site.id) refreshCurrentPageRules();
+                }
+                updateSavedHint(site);
+            });
+            toggleLabel.append(toggle);
+            row.append(button, toggleLabel);
+            siteList.append(row);
         }
-
-        siteMasterInput.addEventListener('change', () => {
-            const enabled = siteMasterInput.checked;
-            GM_setValue(siteEnabledKey(selectedSite.id), enabled);
-            const settings = siteSettings.get(selectedSite.id);
-            if (settings) settings.enabled = enabled;
-            rightPanel.classList.toggle('site-disabled', !enabled);
-            if (currentSite?.id === selectedSite.id) refreshCurrentPageRules();
-            updateSavedHint(selectedSite);
-        });
 
         renderSite(selectedSite);
         window.addEventListener('keydown', onKeyDown);
