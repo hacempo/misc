@@ -996,6 +996,8 @@
             '115': {
                 '#js_bottom_notification': '网盘 > 底部左侧 > 通知弹窗',
                 '.feature-float': '网盘 > 弹窗',
+                '.promptbar-caution.promptbar-vip-': '网盘 > 云下载 > 法律',
+                '.linktask-quota': '网盘 > 云下载 > 配额',
                 '.container-leftside': '网盘 > 左侧栏',
                 '[data-nav="photo"]': '网盘 > 顶栏 > 照片入口',
                 '[data-nav="credentials"]': '网盘 > 顶栏 > 密档/证件入口',
