@@ -996,8 +996,8 @@
             '115': {
                 '#js_bottom_notification': '网盘 > 底部左侧 > 通知弹窗',
                 '.feature-float': '网盘 > 弹窗',
-                '.promptbar-caution.promptbar-vip-': '网盘 > 云下载 > 法律',
-                '.linktask-quota': '网盘 > 云下载 > 配额',
+                '.promptbar-caution.promptbar-vip-': '网盘 > 云下载',
+                '.linktask-quota': '网盘 > 云下载',
                 '.container-leftside': '网盘 > 左侧栏',
                 '[data-nav="photo"]': '网盘 > 顶栏 > 照片入口',
                 '[data-nav="credentials"]': '网盘 > 顶栏 > 密档/证件入口',
@@ -1010,7 +1010,7 @@
                 '.vt-handle': '播放 > 顶部 > App 下载',
                 '.vt-headline > div': '播放 > 顶部 > 法律信息'
             },
-            javdb: { '.app-banner': '全站 > App 下载' },
+            javdb: { '.app-banner': '首页 > App 下载' },
             nga: {
                 '.topicrow .c3': '首页 > 帖子列表 > 发帖人和发帖时间',
                 '.topicrow .c4': '首页 > 帖子列表 > 最后回帖人和最后回帖时间',
@@ -1134,8 +1134,8 @@
                 '[data-nav="credentials"]': '密档和证件入口',
                 '[data-nav="note"]': '记事入口',
                 '.ceiling-feature': '顶部推广区域',
-                '.promptbar-caution.promptbar-vip-': '法律提示',
-                '.linktask-quota': '下载配额',
+                '.promptbar-caution.promptbar-vip-': '法律',
+                '.linktask-quota': '配额',
                 '.ceiling-link-temp': '顶部提示链接'
             },
             '115vod': {
@@ -1299,6 +1299,7 @@
             { id: 'cloud', label: '网盘' },
             { id: 'play', label: '播放' }
         ],
+        javdb: [{ id: 'home', label: '首页' }],
         nga: [
             { id: 'global', label: '全站' },
             { id: 'home', label: '首页' },
@@ -1385,10 +1386,14 @@
                 '[data-nav="credentials"]': ['cloud'],
                 '[data-nav="note"]': ['cloud'],
                 '.ceiling-feature': ['cloud'],
-                '.ceiling-link-temp': ['cloud']
+                '.ceiling-link-temp': ['cloud'],
+                '.promptbar-caution.promptbar-vip-': ['cloud'],
+                '.linktask-quota': ['cloud']
             },
             '115vod': {
-                '.feature-float': ['play']
+                '.feature-float': ['play'],
+                '.vt-handle': ['play'],
+                '.vt-headline > div': ['play']
             },
             nga: {
                 '.topicrow .c3': ['home'],
@@ -1440,6 +1445,7 @@
                 '.vtxxmpost': ['post'], '.footer': ['global'], '.xxm-bottom': ['global'],
                 '.xxmgapb': ['global'], '.jnpar-m-tip': ['post'], '.mtw': ['post']
             },
+            javdb: { '.app-banner': ['home'] },
             laowang: {
                 '.anti-scam-warning': ['post'], '.top_lev': ['post'], '#close': ['global']
             }
