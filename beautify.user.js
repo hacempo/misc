@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.13
+// @version      7.17.14
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
 // @match        *://115.com/*
 // @match        *://*.115.com/*
+// @match        *://javdb.com/*
+// @match        *://*.javdb.com/*
 // @match        *://115vod.com/*
 // @match        *://*.115vod.com/*
 // @match        *://ngabbs.com/*
@@ -31,7 +33,7 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.13
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.14
 // @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.13
 // @run-at       document-start
 // @noframes
@@ -48,11 +50,12 @@
      * 站点列表。每个站点的美化与屏蔽分别控制。
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
-    const SCRIPT_VERSION = '7.17.13';
+    const SCRIPT_VERSION = '7.17.14';
 
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
         { id: '115', name: '115 网盘', domains: ['115.com', '115vod.com'] },
+        { id: 'javdb', name: 'JAVDB', domains: ['javdb.com'] },
         { id: 'nga', name: 'NGA 玩家社区', domains: ['ngabbs.com'] },
         { id: '123pan', name: '123 云盘', domains: ['yun.123pan.cn'] },
         { id: 'zhihu', name: '知乎', domains: ['www.zhihu.com'] },
@@ -391,6 +394,8 @@
             selectors: [
                 '#js_bottom_notification',
                 '.feature-float',
+                '.promptbar-caution.promptbar-vip-',
+                '.linktask-quota',
                 '.container-leftside',
                 '[data-nav="photo"]',
                 '[data-nav="credentials"]',
@@ -402,7 +407,12 @@
         {
             // 115 视频：底部右侧悬浮弹窗
             domains: ['115vod.com'],
-            selectors: ['.feature-float']
+            selectors: ['.feature-float', '.vt-handle', '.vt-headline > div']
+        },
+        {
+            // JAVDB：App 下载提示
+            domains: ['javdb.com'],
+            selectors: ['.app-banner']
         },
         {
             // NGA：列表发帖/回帖信息、用户统计、按钮单元格及顶部模块
@@ -985,17 +995,20 @@
             },
             '115': {
                 '#js_bottom_notification': '网盘 > 底部左侧 > 通知弹窗',
-                '.feature-float': '网盘 > 底部右侧 > 悬浮功能弹窗',
+                '.feature-float': '网盘 > 弹窗',
                 '.container-leftside': '网盘 > 左侧栏',
                 '[data-nav="photo"]': '网盘 > 顶栏 > 照片入口',
                 '[data-nav="credentials"]': '网盘 > 顶栏 > 密档/证件入口',
                 '[data-nav="note"]': '网盘 > 顶栏 > 记事入口',
-                '.ceiling-feature': '网盘 > 顶栏中间 > 广告区域',
+                '.ceiling-feature': '网盘 > 顶栏 > 广告区域',
                 '.ceiling-link-temp': '网盘 > 顶栏 > 提示链接/提示条'
             },
             '115vod': {
-                '.feature-float': '播放 > 播放器 > 底部右侧 > 悬浮弹窗'
+                '.feature-float': '播放 > 悬浮',
+                '.vt-handle': '播放 > 顶部 > App 下载',
+                '.vt-headline > div': '播放 > 顶部 > 法律信息'
             },
+            javdb: { '.app-banner': '全站 > App 下载' },
             nga: {
                 '.topicrow .c3': '首页 > 帖子列表 > 发帖人和发帖时间',
                 '.topicrow .c4': '首页 > 帖子列表 > 最后回帖人和最后回帖时间',
@@ -1113,17 +1126,22 @@
             },
             '115': {
                 '#js_bottom_notification': '底部通知弹窗',
-                '.feature-float': '悬浮功能弹窗',
+                '.feature-float': '弹窗',
                 '.container-leftside': '左侧栏',
                 '[data-nav="photo"]': '照片入口',
                 '[data-nav="credentials"]': '密档和证件入口',
                 '[data-nav="note"]': '记事入口',
                 '.ceiling-feature': '顶部推广区域',
+                '.promptbar-caution.promptbar-vip-': '法律提示',
+                '.linktask-quota': '下载配额',
                 '.ceiling-link-temp': '顶部提示链接'
             },
             '115vod': {
-                '.feature-float': '悬浮弹窗'
+                '.feature-float': '弹窗',
+                '.vt-handle': 'App 下载',
+                '.vt-headline > div': '法律信息'
             },
+            javdb: { '.app-banner': 'App 下载' },
             nga: {
                 '.topicrow .c3': '发帖人和发帖时间',
                 '.topicrow .c4': '最后回复人和回复时间',
@@ -1228,6 +1246,12 @@
             },
          },
         position: {
+            '115': {
+                '#js_bottom_notification': '左侧',
+                '.feature-float': '右侧',
+                '.ceiling-feature': '中间'
+            },
+            '115vod': { '.feature-float': '右下角' },
             southplus: { '.btn-danger': '右上角' },
             bilibili: { '.recommended-swipe': '左上角' },
             xsijishe: { '.xxmgapb': '页脚下方' },
@@ -1467,7 +1491,7 @@
         return 'rule-' + hashRuleIdentity(feature + ':' + identity);
     };
 
-    const RULE_DIRECTORY_OVERRIDES = {"block|18comic|.col-sm-3":"全站","block|sehuatang|.n5_zdtys>ul":"综合讨论区页","block|x|[aria-label=\"主页时间线\"] > :nth-child(3)":"首页","block|x|[data-testid=\"inline_reply_offscreen\"]":"帖子页","block|bilibili|.adblock-tips":"全站","block|bilibili|.video-resource-list":"全站","block|115|#js_bottom_notification":"网盘 > 底部左侧","block|115|.ceiling-feature":"网盘 > 顶栏中间","block|123pan|.notice-box":"网盘 > 底部右侧","block|123pan|.entry_p0tlq":"网盘 > 底部右侧","block|nga|.topicrow .c3":"首页 > 帖子列表","block|nga|.topicrow .c4":"首页 > 帖子列表","block|nga|.c1":"帖子 > 信息列","block|nga|.cell":"帖子","block|nga|#toptopics":"首页 > 版头","block|nga|#fast_post_c":"帖子","block|nga|.posterInfoLine":"首页","block|nga|#m_nav":"全站","block|nga|#mainmenu":"全站","block|nga|#m_pbtntop":"帖子页","block|nga|#b_nav":"全站","block|nga|#footer":"全站","block|zhihu|.css-18opwoy":"全站 > 主要内容 > 具体回答 > 评论区 > 评论","block|zhihu|.css-79elbk > :first-child":"全站 > 主要内容 > 具体回答 > 评论区","block|zhihu|[aria-label=\"知乎\"]":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/column-square\"]":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/ring-feeds\"]":"全站 > 顶栏","block|zhihu|.css-53paqb":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/project-square\"]":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/fiore/h5/vip-web\"]":"全站 > 顶栏","block|zhihu|[href=\"https://zhida.zhihu.com/\"]":"全站 > 顶栏","block|zhihu|.SearchBar-askContainer":"全站 > 顶栏","block|zhihu|.css-1vbrp2j":"全站 > 顶栏","block|zhihu|.css-ruapjk":"全站 > 顶栏","block|zhihu|.ContentItem-actions > :first-child":"全站 > 主要内容 > 具体回答 > 操作栏","block|zhihu|[aria-label=\"喜欢\"]":"全站 > 主要内容 > 具体回答 > 操作栏","block|zhihu|[data-tooltip=\"解释这篇内容\"]":"全站 > 主要内容 > 具体回答 > 操作栏","block|zhihu|.WriteArea":"首页 > 主要内容","block|zhihu|.CornerButtonsGroup":"全站","block|zhihu|.QuestionHeader-side":"回答页 > 悬浮顶栏","block|zhihu|.QuestionHeader-footer":"回答页 > 顶部问题栏","block|zhihu|.FollowButton":"回答页","block|zhihu|.Reward":"回答页 > 主要内容 > 具体回答","block|zhihu|.css-1qqx3d0 > :first-child":"搜索 > 主要内容 > 具体回答 > 操作栏","block|zhihu|.css-140jo2":"回答 > 评论区","block|zhihu|.css-dvccr2":"回答 > 顶部","block|zhihu|.css-a3pqj1":"评论页","block|zhihu|.css-kt4t4n":"回答 > 评论区","block|bilibili|.left-entry-main > :nth-child(n+4)":"全站 > 顶栏","block|bilibili|.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))":"全站 > 顶栏","block|bilibili|.bili-dyn-publishing":"动态","block|x|article .r-qklmqi > :first-child":"帖子页 > 楼主帖子","block|x|article .r-kzbkwu > :last-child":"全站 > 信息流 > 信息","block|x|header[role=\"banner\"]":"全站","block|x|[data-testid=\"sidebarColumn\"]":"全站 > 主要内容","block|x|.r-494qqr":"首页","block|x|.r-ttdzmv":"帖子页 > 评论区","block|douyin|.Ctt1baq8":"首页 > 评论区 > 评论","block|douyin|.VAQA49VP":"首页 > 评论区 > 评论","block|douyin|.comment-input-container":"首页 > 评论区","block|douyin|.semiTabrelated_card":"首页 > 评论区 > 顶栏","block|douyin|.semiTabai_card":"首页 > 评论区 > 顶栏","block|southplus|.btn-outline-secondary":"帖子页 > 楼层","block|southplus|form[name=\"FORM\"]":"帖子页","block|southplus|.container>center":"全站 > 底部","block|southplus|body>center":"全站 > 底部","block|southplus|.pages":"全站 > 顶部","block|southplus|.by":"茶馆页 > 信息流 > 帖子","block|southplus|.btn-danger":"全站 > 顶部 > 路径栏","block|southplus|.blockquote":"帖子页 > 楼层 > 资源","block|laowang|.anti-scam-warning":"帖子页 > 楼层","block|laowang|.top_lev":"帖子页 > 楼层","block|laowang|#close":"全站","block|tieba|.login":"帖子 > 底部","block|tieba|.icon_tshows":"帖子 > 楼主昵称","block|tieba|.level-icon":"帖子 > 回帖用户昵称","block|tieba|.interaction-bar":"首页 > 内容区","block|115|.feature-float":"网盘 > 底部右侧","block|115|.container-leftside":"网盘","block|115|[data-nav=\"photo\"]":"网盘 > 顶栏","block|115|[data-nav=\"credentials\"]":"网盘 > 顶栏","block|115|[data-nav=\"note\"]":"网盘 > 顶栏","block|115|.ceiling-link-temp":"网盘 > 顶栏","block|115vod|.feature-float":"播放 > 播放器 > 底部右侧","block|123pan|.mfy-main-layout__head":"网盘","block|123pan|aside":"网盘","block|123pan|.withSideMenuLayoutSider_ELJ6a":"网盘 > 主内容区","block|zhihu|.css-bkewaf":"全站 > 主要内容","block|bilibili|.recommended-swipe":"首页 > 信息流","block|bilibili|.floor-single-card":"首页 > 信息流","block|bilibili|.feed-card:not(:has(.enable-no-interest))":"首页 > 信息流","block|bilibili|.bili-feed-card:not(:has(.enable-no-interest))":"首页 > 信息流","block|bilibili|aside":"动态","block|xsijishe|.footer":"全站","block|xsijishe|.xxm-bottom":"全站","block|xsijishe|.xxmgapb":"全站","block|xsijishe|.mtw":"帖子页 > 楼主"}
+    const RULE_DIRECTORY_OVERRIDES = {"block|115|#js_bottom_notification":"网盘 > 弹窗","block|115|.feature-float":"网盘 > 弹窗","block|115|.ceiling-feature":"网盘 > 顶栏","block|115vod|.feature-float":"播放 > 悬浮","block|18comic|.col-sm-3":"全站","block|sehuatang|.n5_zdtys>ul":"综合讨论区页","block|x|[aria-label=\"主页时间线\"] > :nth-child(3)":"首页","block|x|[data-testid=\"inline_reply_offscreen\"]":"帖子页","block|bilibili|.adblock-tips":"全站","block|bilibili|.video-resource-list":"全站","block|123pan|.notice-box":"网盘 > 底部右侧","block|123pan|.entry_p0tlq":"网盘 > 底部右侧","block|nga|.topicrow .c3":"首页 > 帖子列表","block|nga|.topicrow .c4":"首页 > 帖子列表","block|nga|.c1":"帖子 > 信息列","block|nga|.cell":"帖子","block|nga|#toptopics":"首页 > 版头","block|nga|#fast_post_c":"帖子","block|nga|.posterInfoLine":"首页","block|nga|#m_nav":"全站","block|nga|#mainmenu":"全站","block|nga|#m_pbtntop":"帖子页","block|nga|#b_nav":"全站","block|nga|#footer":"全站","block|zhihu|.css-18opwoy":"全站 > 主要内容 > 具体回答 > 评论区 > 评论","block|zhihu|.css-79elbk > :first-child":"全站 > 主要内容 > 具体回答 > 评论区","block|zhihu|[aria-label=\"知乎\"]":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/column-square\"]":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/ring-feeds\"]":"全站 > 顶栏","block|zhihu|.css-53paqb":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/project-square\"]":"全站 > 顶栏","block|zhihu|[href=\"https://www.zhihu.com/fiore/h5/vip-web\"]":"全站 > 顶栏","block|zhihu|[href=\"https://zhida.zhihu.com/\"]":"全站 > 顶栏","block|zhihu|.SearchBar-askContainer":"全站 > 顶栏","block|zhihu|.css-1vbrp2j":"全站 > 顶栏","block|zhihu|.css-ruapjk":"全站 > 顶栏","block|zhihu|.ContentItem-actions > :first-child":"全站 > 主要内容 > 具体回答 > 操作栏","block|zhihu|[aria-label=\"喜欢\"]":"全站 > 主要内容 > 具体回答 > 操作栏","block|zhihu|[data-tooltip=\"解释这篇内容\"]":"全站 > 主要内容 > 具体回答 > 操作栏","block|zhihu|.WriteArea":"首页 > 主要内容","block|zhihu|.CornerButtonsGroup":"全站","block|zhihu|.QuestionHeader-side":"回答页 > 悬浮顶栏","block|zhihu|.QuestionHeader-footer":"回答页 > 顶部问题栏","block|zhihu|.FollowButton":"回答页","block|zhihu|.Reward":"回答页 > 主要内容 > 具体回答","block|zhihu|.css-1qqx3d0 > :first-child":"搜索 > 主要内容 > 具体回答 > 操作栏","block|zhihu|.css-140jo2":"回答 > 评论区","block|zhihu|.css-dvccr2":"回答 > 顶部","block|zhihu|.css-a3pqj1":"评论页","block|zhihu|.css-kt4t4n":"回答 > 评论区","block|bilibili|.left-entry-main > :nth-child(n+4)":"全站 > 顶栏","block|bilibili|.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))":"全站 > 顶栏","block|bilibili|.bili-dyn-publishing":"动态","block|x|article .r-qklmqi > :first-child":"帖子页 > 楼主帖子","block|x|article .r-kzbkwu > :last-child":"全站 > 信息流 > 信息","block|x|header[role=\"banner\"]":"全站","block|x|[data-testid=\"sidebarColumn\"]":"全站 > 主要内容","block|x|.r-494qqr":"首页","block|x|.r-ttdzmv":"帖子页 > 评论区","block|douyin|.Ctt1baq8":"首页 > 评论区 > 评论","block|douyin|.VAQA49VP":"首页 > 评论区 > 评论","block|douyin|.comment-input-container":"首页 > 评论区","block|douyin|.semiTabrelated_card":"首页 > 评论区 > 顶栏","block|douyin|.semiTabai_card":"首页 > 评论区 > 顶栏","block|southplus|.btn-outline-secondary":"帖子页 > 楼层","block|southplus|form[name=\"FORM\"]":"帖子页","block|southplus|.container>center":"全站 > 底部","block|southplus|body>center":"全站 > 底部","block|southplus|.pages":"全站 > 顶部","block|southplus|.by":"茶馆页 > 信息流 > 帖子","block|southplus|.btn-danger":"全站 > 顶部 > 路径栏","block|southplus|.blockquote":"帖子页 > 楼层 > 资源","block|laowang|.anti-scam-warning":"帖子页 > 楼层","block|laowang|.top_lev":"帖子页 > 楼层","block|laowang|#close":"全站","block|tieba|.login":"帖子 > 底部","block|tieba|.icon_tshows":"帖子 > 楼主昵称","block|tieba|.level-icon":"帖子 > 回帖用户昵称","block|tieba|.interaction-bar":"首页 > 内容区","block|115|.container-leftside":"网盘","block|115|[data-nav=\"photo\"]":"网盘 > 顶栏","block|115|[data-nav=\"credentials\"]":"网盘 > 顶栏","block|115|[data-nav=\"note\"]":"网盘 > 顶栏","block|115|.ceiling-link-temp":"网盘 > 顶栏","block|123pan|.mfy-main-layout__head":"网盘","block|123pan|aside":"网盘","block|123pan|.withSideMenuLayoutSider_ELJ6a":"网盘 > 主内容区","block|zhihu|.css-bkewaf":"全站 > 主要内容","block|bilibili|.recommended-swipe":"首页 > 信息流","block|bilibili|.floor-single-card":"首页 > 信息流","block|bilibili|.feed-card:not(:has(.enable-no-interest))":"首页 > 信息流","block|bilibili|.bili-feed-card:not(:has(.enable-no-interest))":"首页 > 信息流","block|bilibili|aside":"动态","block|xsijishe|.footer":"全站","block|xsijishe|.xxm-bottom":"全站","block|xsijishe|.xxmgapb":"全站","block|xsijishe|.mtw":"帖子页 > 楼主"}
     const getRuleDirectoryPath = (feature, siteId, selector, path) => {
         const key = feature + '|' + siteId + '|' + selector;
         if (RULE_DIRECTORY_OVERRIDES[key]) return RULE_DIRECTORY_OVERRIDES[key];
