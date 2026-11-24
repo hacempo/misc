@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      7.17.16
+// @version      7.17.17
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -33,8 +33,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.16
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.16
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.17
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=7.17.17
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -50,7 +50,7 @@
      * 站点列表。每个站点的美化与屏蔽分别控制。
      * 所有功能统一从油猴菜单的「设置」入口管理。
      */
-    const SCRIPT_VERSION = '7.17.16';
+    const SCRIPT_VERSION = '7.17.17';
 
     const SITES = [
         { id: 'tieba', name: '百度贴吧', domains: ['tieba.baidu.com'] },
@@ -1899,7 +1899,7 @@
         function renderSite(site) {
             selectedSite = site;
             currentName.textContent = site.name;
-            rightPanel.classList.toggle('site-disabled', !siteMasterInput.checked);
+            rightPanel.classList.toggle('site-disabled', !Boolean(siteSettings.get(site.id)?.enabled));
             pagebar.replaceChildren();
 
             const allPages = getPages(site);
