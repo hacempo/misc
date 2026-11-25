@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      8.0.2
+// @version      8.0.3
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -33,8 +33,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.2
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.2
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.3
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.3
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
