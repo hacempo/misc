@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      8.0.1
+// @version      8.0.2
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -33,8 +33,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.1
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.1
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.2
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.2
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -127,18 +127,18 @@
 
             style: [
                 // ── 首页 ──
-                { sel: '.main-page-wrap', at: '首页', what: '让主页内容区域充分利用屏幕宽度。', page: 'home', css: { 'max-width': 'none' } },
+                { sel: '.main-page-wrap', at: '', what: '宽度拉伸', page: 'home', css: { 'max-width': 'none' } },
                 // ── 全站 ──
-                { sel: '.nav-bar-v2-fixed', at: '全站 > 顶栏', what: '让顶部导航栏铺满可用宽度。', css: { 'max-width': 'none' } },
+                { sel: '.nav-bar-v2-fixed', at: '', what: '宽度拉伸', css: { 'max-width': 'none' } },
             ],
 
             block: [
                 // ── 首页 ──
-                { sel: '.interaction-bar', at: '首页 > 内容区', what: '内容操作栏', page: 'home', hosts: ['tieba.baidu.com'] },
+                { sel: '.interaction-bar', at: '信息流 > 信息', what: '操作栏', page: 'home', hosts: ['tieba.baidu.com'] },
                 // ── 帖子 ──
-                { sel: '.login', at: '帖子 > 底部', what: '登录提示', page: 'thread', hosts: ['tieba.baidu.com'] },
-                { sel: '.icon_tshows', at: '帖子 > 楼主昵称', what: '楼主标识图标', page: 'thread', hosts: ['tieba.baidu.com'] },
-                { sel: '.level-icon', at: '帖子 > 回帖用户昵称', what: '用户等级图标', page: 'thread', hosts: ['tieba.baidu.com'] },
+                { sel: '.login', at: '底部', what: '登录提示', page: 'thread', hosts: ['tieba.baidu.com'] },
+                { sel: '.icon_tshows', at: '楼层 > 楼主', what: '等级', page: 'thread', hosts: ['tieba.baidu.com'] },
+                { sel: '.level-icon', at: '楼层', what: '等级', page: 'thread', hosts: ['tieba.baidu.com'] },
             ],
         },
         // ════════════ 115 网盘（115.com, 115vod.com）════════════
@@ -153,20 +153,20 @@
 
             block: [
                 // ── 网盘 ──
-                { sel: '#js_bottom_notification', at: '网盘 > 弹窗', what: '底部通知弹窗', pos: '左侧', page: 'cloud', hosts: ['115.com'] },
-                { sel: '.feature-float', at: '网盘 > 弹窗', what: '弹窗', pos: '右侧', page: 'cloud', hosts: ['115.com'] },
-                { sel: '.promptbar-caution.promptbar-vip-', at: '网盘 > 云下载', what: '法律', page: 'cloud', hosts: ['115.com'] },
-                { sel: '.linktask-quota', at: '网盘 > 云下载', what: '配额', page: 'cloud', hosts: ['115.com'] },
-                { sel: '.container-leftside', at: '网盘', what: '左侧栏', page: 'cloud', hosts: ['115.com'] },
-                { sel: '[data-nav="photo"]', at: '网盘 > 顶栏', what: '照片入口', page: 'cloud', hosts: ['115.com'] },
-                { sel: '[data-nav="credentials"]', at: '网盘 > 顶栏', what: '密档和证件入口', page: 'cloud', hosts: ['115.com'] },
-                { sel: '[data-nav="note"]', at: '网盘 > 顶栏', what: '记事入口', page: 'cloud', hosts: ['115.com'] },
-                { sel: '.ceiling-feature', at: '网盘 > 顶栏', what: '顶部推广区域', pos: '中间', page: 'cloud', hosts: ['115.com'] },
-                { sel: '.ceiling-link-temp', at: '网盘 > 顶栏', what: '顶部提示链接', page: 'cloud', hosts: ['115.com'] },
+                { sel: '#js_bottom_notification', at: '悬浮', what: '', pos: '左侧', page: 'cloud', hosts: ['115.com'] },
+                { sel: '.feature-float', at: '悬浮', what: '', pos: '右侧', page: 'cloud', hosts: ['115.com'] },
+                { sel: '.promptbar-caution.promptbar-vip-', at: '云下载', what: '法律', page: 'cloud', hosts: ['115.com'] },
+                { sel: '.linktask-quota', at: '云下载', what: '配额', page: 'cloud', hosts: ['115.com'] },
+                { sel: '.container-leftside', at: '', what: '左栏', page: 'cloud', hosts: ['115.com'] },
+                { sel: '[data-nav="photo"]', at: '顶栏', what: '照片', page: 'cloud', hosts: ['115.com'] },
+                { sel: '[data-nav="credentials"]', at: '顶栏', what: '密档和证件', page: 'cloud', hosts: ['115.com'] },
+                { sel: '[data-nav="note"]', at: '顶栏', what: '记事', page: 'cloud', hosts: ['115.com'] },
+                { sel: '.ceiling-feature', at: '顶栏', what: '推广', pos: '中间', page: 'cloud', hosts: ['115.com'] },
+                { sel: '.ceiling-link-temp', at: '顶栏', what: '法律', page: 'cloud', hosts: ['115.com'] },
                 // ── 播放 ──
-                { sel: '.feature-float', at: '播放 > 悬浮', what: '弹窗', pos: '右下角', page: 'play', hosts: ['115vod.com'] },
-                { sel: '.vt-handle', at: '播放 > 顶部 > App 下载', what: 'App 下载', page: 'play', hosts: ['115vod.com'] },
-                { sel: '.vt-headline > div', at: '播放 > 顶部 > 法律信息', what: '法律信息', page: 'play', hosts: ['115vod.com'] },
+                { sel: '.feature-float', at: '悬浮', what: '', pos: '右下角', page: 'play', hosts: ['115vod.com'] },
+                { sel: '.vt-handle', at: '顶部', what: 'App 下载', page: 'play', hosts: ['115vod.com'] },
+                { sel: '.vt-headline > div', at: '顶部', what: '法律信息', page: 'play', hosts: ['115vod.com'] },
             ],
         },
         // ════════════ JAVDB（javdb.com）════════════
@@ -180,7 +180,7 @@
 
             block: [
                 // ── 首页 ──
-                { sel: '.app-banner', at: '首页 > App 下载', what: 'App 下载', hosts: ['javdb.com'] },
+                { sel: '.app-banner', at: '', what: 'App 下载', hosts: ['javdb.com'] },
             ],
         },
         // ════════════ NGA 玩家社区（ngabbs.com）════════════
@@ -194,19 +194,19 @@
 
             block: [
                 // ── 全站 ──
-                { sel: '.c1', at: '帖子 > 信息列', what: '帖子人数统计及用户信息', hosts: ['ngabbs.com'] },
-                { sel: '.cell', at: '帖子', what: '功能按钮单元格', hosts: ['ngabbs.com'] },
-                { sel: '#fast_post_c', at: '帖子', what: '快速发帖区域', hosts: ['ngabbs.com'] },
-                { sel: '#m_nav', at: '全站', what: '导航栏', hosts: ['ngabbs.com'] },
-                { sel: '#mainmenu', at: '全站', what: '主菜单', hosts: ['ngabbs.com'] },
-                { sel: '#m_pbtntop', at: '帖子页', what: '翻页栏', hosts: ['ngabbs.com'] },
-                { sel: '#b_nav', at: '全站', what: '导航栏', hosts: ['ngabbs.com'] },
-                { sel: '#footer', at: '全站', what: '页脚', hosts: ['ngabbs.com'] },
+                { sel: '.c1', at: '楼层 > 信息列', what: '信息列', page: 'detail', hosts: ['ngabbs.com'] },
+                { sel: '.cell', at: '', what: '单元格', page: 'detail', hosts: ['ngabbs.com'] },
+                { sel: '#fast_post_c', at: '底部', what: '发帖', hosts: ['ngabbs.com'] },
+                { sel: '#mainmenu', at: '顶部', what: '主菜单', hosts: ['ngabbs.com'] },
+                { sel: '#m_nav', at: '顶部', what: '导航栏', hosts: ['ngabbs.com'] },
+                { sel: '#m_pbtntop', at: '顶部', what: '翻页栏', hosts: ['ngabbs.com'] },
+                { sel: '#b_nav', at: '底部', what: '导航栏', hosts: ['ngabbs.com'] },
+                { sel: '#footer', at: '底部', what: '页脚', hosts: ['ngabbs.com'] },
                 // ── 首页 ──
-                { sel: '.topicrow .c3', at: '首页 > 帖子列表', what: '发帖人和发帖时间', page: 'home', hosts: ['ngabbs.com'] },
-                { sel: '.topicrow .c4', at: '首页 > 帖子列表', what: '最后回复人和回复时间', page: 'home', hosts: ['ngabbs.com'] },
-                { sel: '#toptopics', at: '首页 > 版头', what: '公告和热门话题区域', page: 'home', hosts: ['ngabbs.com'] },
-                { sel: '.posterInfoLine', at: '首页', what: '发帖人、发帖时间及最后回复信息', page: 'home', hosts: ['ngabbs.com'] },
+                { sel: '.topicrow .c3', at: '信息流 > 信息', what: '发帖人和发帖时间', page: 'home', hosts: ['ngabbs.com'] },
+                { sel: '.topicrow .c4', at: '信息流 > 信息', what: '最后回复人和回复时间', page: 'home', hosts: ['ngabbs.com'] },
+                { sel: '#toptopics', at: '', what: '公告、热门话题', page: 'home', hosts: ['ngabbs.com'] },
+                { sel: '.posterInfoLine', at: '', what: '发帖人、发帖时间及最后回复信息', page: 'home', hosts: ['ngabbs.com'] },
             ],
         },
         // ════════════ 123 云盘（yun.123pan.cn）════════════
@@ -220,11 +220,11 @@
 
             block: [
                 // ── 网盘 ──
-                { sel: '.notice-box', at: '网盘 > 底部右侧', what: '公告', hosts: ['yun.123pan.cn'] },
-                { sel: '.entry_p0tlq', at: '网盘 > 底部右侧', what: '推广内容', hosts: ['yun.123pan.cn'] },
-                { sel: '.mfy-main-layout__head', at: '网盘', what: '顶部主区域', hosts: ['yun.123pan.cn'] },
-                { sel: 'aside', at: '网盘', what: '左侧栏', hosts: ['yun.123pan.cn'] },
-                { sel: '.withSideMenuLayoutSider_ELJ6a', at: '网盘 > 主内容区', what: '侧边菜单', hosts: ['yun.123pan.cn'] },
+                { sel: '.notice-box', at: '底部', what: '公告', pos: '右侧', hosts: ['yun.123pan.cn'] },
+                { sel: '.entry_p0tlq', at: '底部', what: '推广', pos: '右侧', hosts: ['yun.123pan.cn'] },
+                { sel: '.mfy-main-layout__head', at: '顶部', what: '顶部', hosts: ['yun.123pan.cn'] },
+                { sel: 'aside', at: '', what: '左栏', hosts: ['yun.123pan.cn'] },
+                { sel: '.withSideMenuLayoutSider_ELJ6a', at: '主区', what: '左栏', hosts: ['yun.123pan.cn'] },
             ],
         },
         // ════════════ 知乎（www.zhihu.com）════════════
@@ -272,59 +272,59 @@
                     css: { flex: '1 1 0%' },
                 },
                 // ── 首页 ──
-                { sel: '.Topstory-container', at: '首页 > 主要内容', what: '让首页内容区域铺满可用宽度。', page: 'home', css: { ...FILL, ...NO_SIDE_PADDING } },
+                { sel: '.Topstory-container', at: '主要内容', what: '让首页内容区域铺满可用宽度。', page: 'home', css: { ...FILL, ...NO_SIDE_PADDING } },
                 {
                     sel: '.Topstory-mainColumn',
-                    at: '首页 > 主要内容',
+                    at: '主要内容',
                     what: '让首页信息流主栏扩展到可用宽度。',
                     page: 'home',
                     css: { width: '100%', 'max-width': 'none', 'min-width': '0', flex: '1 1 0%', 'margin-right': '0' },
                 },
-                { sel: '.Topstory-mainColumnCard', at: '首页 > 主要内容', what: '让首页内容卡片铺满主栏。', page: 'home', css: FILL },
-                { sel: '.Topstory-content', at: '首页 > 主要内容', what: '让首页信息流内容铺满主栏。', page: 'home', css: FILL },
-                { sel: '.Topstory-recommend', at: '首页 > 主要内容', what: '让首页推荐内容铺满主栏。', page: 'home', css: FILL },
+                { sel: '.Topstory-mainColumnCard', at: '主要内容', what: '让首页内容卡片铺满主栏。', page: 'home', css: FILL },
+                { sel: '.Topstory-content', at: '主要内容', what: '让首页信息流内容铺满主栏。', page: 'home', css: FILL },
+                { sel: '.Topstory-recommend', at: '主要内容', what: '让首页推荐内容铺满主栏。', page: 'home', css: FILL },
                 // ── 全站 ──
                 {
                     sel: 'div:has(> header.AppHeader)',
-                    at: '全站 > 顶栏',
+                    at: '顶栏',
                     what: '让顶部导航栏与页面内容左右对齐，避免横向溢出。',
                     css: { width: 'var(--beautify-content-width)', 'max-width': 'none', 'box-sizing': 'border-box' },
                 },
-                { sel: 'header.AppHeader', at: '全站 > 顶栏', what: '让顶部导航栏铺满可用宽度。', css: { ...FILL, ...NO_SIDE_MARGIN } },
-                { sel: 'header.AppHeader > div', at: '全站 > 顶栏', what: '让顶部导航栏内部内容充分利用可用宽度。', css: { ...FILL, 'max-width': '100%' } },
+                { sel: 'header.AppHeader', at: '顶栏', what: '让顶部导航栏铺满可用宽度。', css: { ...FILL, ...NO_SIDE_MARGIN } },
+                { sel: 'header.AppHeader > div', at: '顶栏', what: '让顶部导航栏内部内容充分利用可用宽度。', css: { ...FILL, 'max-width': '100%' } },
                 {
                     sel: 'header.AppHeader > div > .css-51utkw',
-                    at: '全站 > 顶栏',
+                    at: '顶栏',
                     what: '为顶部导航和搜索区域留出充足空间。',
                     css: { ...FILL, width: 'auto', flex: '1 1 0%' },
                 },
                 {
                     sel: 'header.AppHeader > div > .css-51utkw > .css-51utkw',
-                    at: '全站 > 顶栏',
+                    at: '顶栏',
                     what: '让顶部导航内容自然延展，不受多余宽度限制。',
                     css: { ...FILL, width: 'auto', flex: '1 1 auto' },
                 },
                 {
                     sel: 'header.AppHeader .css-1ndlr1n',
-                    at: '全站 > 顶栏',
+                    at: '顶栏',
                     what: '避免顶部导航子区域被挤窄或撑出容器。',
                     css: { 'max-width': '100%', 'min-width': '0', 'box-sizing': 'border-box' },
                 },
                 {
                     sel: '.css-x84wzl',
-                    at: '全站 > 顶栏',
+                    at: '顶栏',
                     what: '让搜索区域灵活使用导航栏剩余空间，并靠右排列。',
                     css: { 'min-width': '0', 'max-width': '100%', flex: '1 1 0%', 'justify-content': 'flex-end', 'box-sizing': 'border-box' },
                 },
                 {
                     sel: '.css-x84wzl .SearchBar',
-                    at: '全站 > 顶栏',
+                    at: '顶栏',
                     what: '让顶部搜索框在较宽屏幕上保持舒适宽度。',
                     css: { width: 'clamp(400px, 52vw, 540px)', 'max-width': '100%', flex: '0 1 clamp(400px, 52vw, 540px)', 'box-sizing': 'border-box' },
                     media: '(min-width: 800px)',
                 },
-                { sel: '.css-x84wzl .SearchBar-tool', at: '全站 > 顶栏', what: '让搜索框工具区域铺满可用空间。', css: { ...FILL, 'max-width': '100%' } },
-                { sel: '.css-14iuq0r', at: '全站 > 顶栏', what: '让顶部左侧区域不再受固定宽度限制。', css: { 'max-width': 'none' } },
+                { sel: '.css-x84wzl .SearchBar-tool', at: '顶栏', what: '让搜索框工具区域铺满可用空间。', css: { ...FILL, 'max-width': '100%' } },
+                { sel: '.css-14iuq0r', at: '顶栏', what: '让顶部左侧区域不再受固定宽度限制。', css: { 'max-width': 'none' } },
                 // ── 回答 ──
                 { sel: '.QuestionHeader', at: '回答页 > 顶部问题栏', what: '让问题标题栏铺满可用宽度。', page: 'question', css: { ...FILL, ...NO_SIDE_MARGIN } },
                 { sel: '.QuestionHeader-content', at: '回答页 > 顶部问题栏', what: '让问题标题栏内容铺满区域。', page: 'question', css: { ...FILL, ...NO_SIDE_PADDING } },
@@ -332,14 +332,14 @@
                 // ── 全站 ──
                 {
                     sel: '.ContentItem-actions > :nth-child(2)',
-                    at: '全站 > 主要内容 > 具体回答 > 操作栏',
+                    at: '主要内容 > 具体回答 > 操作栏',
                     what: '收紧回答操作按钮之间的空隙。',
                     css: { 'margin-left': '0' },
                     except: ['/search'],
                 },
                 {
                     sel: '.ContentItem-actions',
-                    at: '全站 > 主要内容 > 具体回答',
+                    at: '主要内容 > 具体回答',
                     what: '让回答底部操作栏与卡片内容边缘对齐。',
                     css: { 'margin-left': '-16px', 'margin-right': '-16px' },
                     except: ['/search'],
@@ -396,7 +396,7 @@
                 // ── 全站 ──
                 {
                     sel: 'div:has(> header.AppHeader)',
-                    at: '全站 > 顶栏',
+                    at: '顶栏',
                     what: '让顶部导航栏与页面内容左右对齐，避免右侧出现横向溢出。',
                     script: 'zhihu-header-width',
                     title: '顶栏宽度自适应',
@@ -406,31 +406,31 @@
 
             block: [
                 // ── 全站 ──
-                { sel: '.css-bkewaf', at: '全站 > 主要内容', what: '右侧栏', hosts: ['www.zhihu.com'] },
-                { sel: '.css-18opwoy', at: '全站 > 主要内容 > 具体回答 > 评论区 > 评论', what: '评论中的回复和点赞区域', hosts: ['www.zhihu.com'] },
-                { sel: '.css-79elbk > :first-child', at: '全站 > 主要内容 > 具体回答 > 评论区', what: '评论回复框', hosts: ['www.zhihu.com'] },
-                { sel: '[aria-label="知乎"]', at: '全站 > 顶栏', what: '知乎 Logo', hosts: ['www.zhihu.com'] },
-                { sel: '[href="https://www.zhihu.com/column-square"]', at: '全站 > 顶栏', what: '专栏入口', hosts: ['www.zhihu.com'] },
-                { sel: '[href="https://www.zhihu.com/ring-feeds"]', at: '全站 > 顶栏', what: '圈子入口', hosts: ['www.zhihu.com'] },
-                { sel: '.css-53paqb', at: '全站 > 顶栏', what: '导航分隔线', hosts: ['www.zhihu.com'] },
-                { sel: '[href="https://www.zhihu.com/project-square"]', at: '全站 > 顶栏', what: 'AI Works 入口', hosts: ['www.zhihu.com'] },
-                { sel: '[href="https://www.zhihu.com/fiore/h5/vip-web"]', at: '全站 > 顶栏', what: '故事入口', hosts: ['www.zhihu.com'] },
-                { sel: '[href="https://zhida.zhihu.com/"]', at: '全站 > 顶栏', what: '直答入口', hosts: ['www.zhihu.com'] },
-                { sel: '.SearchBar-askContainer', at: '全站 > 顶栏', what: '发布入口', hosts: ['www.zhihu.com'] },
-                { sel: '.css-1vbrp2j', at: '全站 > 顶栏', what: '消息和私信入口', hosts: ['www.zhihu.com'] },
-                { sel: '.css-ruapjk', at: '全站 > 顶栏', what: '头像入口', hosts: ['www.zhihu.com'] },
+                { sel: '.css-bkewaf', at: '主要内容', what: '右侧栏', hosts: ['www.zhihu.com'] },
+                { sel: '.css-18opwoy', at: '主要内容 > 具体回答 > 评论区 > 评论', what: '评论中的回复和点赞区域', hosts: ['www.zhihu.com'] },
+                { sel: '.css-79elbk > :first-child', at: '主要内容 > 具体回答 > 评论区', what: '评论回复框', hosts: ['www.zhihu.com'] },
+                { sel: '[aria-label="知乎"]', at: '顶栏', what: '知乎 Logo', hosts: ['www.zhihu.com'] },
+                { sel: '[href="https://www.zhihu.com/column-square"]', at: '顶栏', what: '专栏入口', hosts: ['www.zhihu.com'] },
+                { sel: '[href="https://www.zhihu.com/ring-feeds"]', at: '顶栏', what: '圈子入口', hosts: ['www.zhihu.com'] },
+                { sel: '.css-53paqb', at: '顶栏', what: '导航分隔线', hosts: ['www.zhihu.com'] },
+                { sel: '[href="https://www.zhihu.com/project-square"]', at: '顶栏', what: 'AI Works 入口', hosts: ['www.zhihu.com'] },
+                { sel: '[href="https://www.zhihu.com/fiore/h5/vip-web"]', at: '顶栏', what: '故事入口', hosts: ['www.zhihu.com'] },
+                { sel: '[href="https://zhida.zhihu.com/"]', at: '顶栏', what: '直答入口', hosts: ['www.zhihu.com'] },
+                { sel: '.SearchBar-askContainer', at: '顶栏', what: '发布入口', hosts: ['www.zhihu.com'] },
+                { sel: '.css-1vbrp2j', at: '顶栏', what: '消息和私信入口', hosts: ['www.zhihu.com'] },
+                { sel: '.css-ruapjk', at: '顶栏', what: '头像入口', hosts: ['www.zhihu.com'] },
                 {
                     sel: '.ContentItem-actions > :first-child',
-                    at: '全站 > 主要内容 > 具体回答 > 操作栏',
+                    at: '主要内容 > 具体回答 > 操作栏',
                     what: '回答赞同和反对按钮',
                     hosts: ['www.zhihu.com'],
                     except: ['/search'],
                 },
-                { sel: '[aria-label="喜欢"]', at: '全站 > 主要内容 > 具体回答 > 操作栏', what: '喜欢按钮', hosts: ['www.zhihu.com'] },
-                { sel: '[data-tooltip="解释这篇内容"]', at: '全站 > 主要内容 > 具体回答 > 操作栏', what: '解释按钮', hosts: ['www.zhihu.com'] },
-                { sel: '.CornerButtonsGroup', at: '全站', what: 'AI 助手', pos: '右下角', hosts: ['www.zhihu.com'] },
+                { sel: '[aria-label="喜欢"]', at: '主要内容 > 具体回答 > 操作栏', what: '喜欢按钮', hosts: ['www.zhihu.com'] },
+                { sel: '[data-tooltip="解释这篇内容"]', at: '主要内容 > 具体回答 > 操作栏', what: '解释按钮', hosts: ['www.zhihu.com'] },
+                { sel: '.CornerButtonsGroup', at: '', what: 'AI 助手', pos: '右下角', hosts: ['www.zhihu.com'] },
                 // ── 首页 ──
-                { sel: '.WriteArea', at: '首页 > 主要内容', what: '写回答区域', page: 'home', hosts: ['www.zhihu.com'] },
+                { sel: '.WriteArea', at: '主要内容', what: '写回答区域', page: 'home', hosts: ['www.zhihu.com'] },
                 // ── 回答 ──
                 { sel: '.QuestionHeader-side', at: '回答页 > 悬浮顶栏', what: '问题栏右侧区域', page: 'question', hosts: ['www.zhihu.com'] },
                 { sel: '.QuestionHeader-footer', at: '回答页 > 顶部问题栏', what: '问题栏底部操作区', page: 'question', hosts: ['www.zhihu.com'] },
@@ -463,8 +463,8 @@
                 // ── 动态 ──
                 {
                     sel: 'main',
-                    at: '动态 > 主要内容',
-                    what: '让动态页主内容区域铺满页面宽度。',
+                    at: '',
+                    what: '宽度拉伸',
                     page: 'dynamic',
                     css: { ...FILL, ...NO_SIDE_MARGIN, flex: '1 1 100%', 'grid-column': '1 / -1' },
                     hosts: ['t.bilibili.com'],
@@ -472,7 +472,7 @@
                 // ── 播放 ──
                 {
                     sel: '#commentapp > bili-comments 的 Shadow DOM 内 #contents',
-                    at: '播放 > 评论区',
+                    at: '评论区',
                     what: '收紧评论区内容顶部的空白，让评论内容更靠近上方导航。',
                     page: 'video',
                     hosts: ['www.bilibili.com'],
@@ -482,7 +482,7 @@
                 },
                 {
                     sel: '#commentapp > bili-comments > #header > bili-comments-header-renderer 的 Shadow DOM 内 #navbar',
-                    at: '播放 > 评论区',
+                    at: '评论区',
                     what: '缩小评论区顶部导航栏下方的空白，让评论列表更紧凑。',
                     page: 'video',
                     hosts: ['www.bilibili.com'],
@@ -494,31 +494,33 @@
 
             block: [
                 // ── 全站 ──
-                { sel: '.adblock-tips', at: '全站', what: '检测到广告屏蔽器的提示', hosts: ['www.bilibili.com'] },
-                { sel: '.left-entry-main > :nth-child(n+4)', at: '全站 > 顶栏', what: '顶栏左侧按钮（保留前 3 项）', hosts: ['bilibili.com'] },
+                { sel: '.adblock-tips', at: '', what: '检测到广告屏蔽器的提示', hosts: ['www.bilibili.com'] },
+                { sel: '.left-entry-main > :nth-child(n+4)', at: '顶栏', what: '保留前 3 项',
+                    pos: '左侧', hosts: ['bilibili.com'] },
                 {
                     sel: '.right-entry__main > :not(:nth-child(n+4):nth-child(-n+6))',
-                    at: '全站 > 顶栏',
-                    what: '顶栏右侧按钮（保留第 4 至第 6 项）',
+                    at: '顶栏',
+                    what: '保留第 4 至第 6 项',
+                    pos: '右侧',
                     hosts: ['bilibili.com'],
                 },
                 // ── 首页 ──
-                { sel: '.recommended-swipe', at: '首页 > 卡片', what: '首页轮播推荐内容', pos: '左上角', page: 'home', hosts: ['www.bilibili.com'] },
-                { sel: '.floor-single-card', at: '首页 > 卡片', what: '分区推广卡片', page: 'home', hosts: ['www.bilibili.com'] },
-                { sel: '.feed-card:not(:has(.enable-no-interest))', at: '首页 > 卡片', what: '初始加载的推广卡片', page: 'home', hosts: ['www.bilibili.com'] },
+                { sel: '.recommended-swipe', at: '卡片', what: '轮播图', pos: '左上角', page: 'home', hosts: ['www.bilibili.com'] },
+                { sel: '.floor-single-card', at: '卡片', what: '分区推广', page: 'home', hosts: ['www.bilibili.com'] },
+                { sel: '.feed-card:not(:has(.enable-no-interest))', at: '卡片', what: '初始加载的推广', page: 'home', hosts: ['www.bilibili.com'] },
                 {
                     sel: '.bili-feed-card:not(:has(.enable-no-interest))',
-                    at: '首页 > 卡片',
-                    what: '下滑加载的推广卡片',
+                    at: '卡片',
+                    what: '下滑加载的推广',
                     page: 'home',
                     hosts: ['www.bilibili.com'],
                 },
                 // ── 播放 ──
-                { sel: '.bili-live-card', at: '首页 > 卡片', what: '直播卡片', page: 'home', hosts: ['www.bilibili.com'] },
-                { sel: '.video-resource-list', at: '全站', what: '视频推广', page: 'video', hosts: ['www.bilibili.com'] },
+                { sel: '.bili-live-card', at: '卡片', what: '直播', page: 'home', hosts: ['www.bilibili.com'] },
+                { sel: '.video-resource-list', at: '', what: '视频推广', page: 'video', hosts: ['www.bilibili.com'] },
                 {
                     sel: 'bili-comment-thread-renderer:has([data-type="goods"])',
-                    at: '播放 > 评论区',
+                    at: '评论区',
                     what: '包含商品推广的评论',
                     page: 'video',
                     hosts: ['www.bilibili.com'],
@@ -528,7 +530,7 @@
                 },
                 {
                     sel: 'bili-comment-renderer >>> #footer, bili-comment-reply-renderer >>> #footer',
-                    at: '播放 > 评论区',
+                    at: '评论区',
                     what: '操作栏',
                     pos: '主评论和回复下方',
                     page: 'video',
@@ -539,7 +541,7 @@
                 },
                 {
                     sel: 'bili-comments-header-renderer >>> #commentbox',
-                    at: '播放 > 评论区',
+                    at: '评论区',
                     what: '评论框',
                     pos: '评论区顶部',
                     page: 'video',
@@ -550,7 +552,7 @@
                 },
                 {
                     sel: 'bili-comments-header-renderer >>> .bili-comments-bottom-fixed-wrapper',
-                    at: '播放 > 评论区',
+                    at: '评论区',
                     what: '悬浮评论框',
                     pos: '评论区底部',
                     page: 'video',
@@ -560,8 +562,8 @@
                     id: 'bili-floating-comment-input',
                 },
                 // ── 动态 ──
-                { sel: 'aside', at: '动态', what: '动态页右侧栏', page: 'dynamic', hosts: ['t.bilibili.com'] },
-                { sel: '.bili-dyn-publishing', at: '动态', what: '动态发布区域', page: 'dynamic', hosts: ['t.bilibili.com'] },
+                { sel: 'aside', at: '', what: '右栏', page: 'dynamic', hosts: ['t.bilibili.com'] },
+                { sel: '.bili-dyn-publishing', at: '', what: '发布', page: 'dynamic', hosts: ['t.bilibili.com'] },
             ],
         },
         // ════════════ 推特（x.com）════════════
@@ -573,15 +575,15 @@
 
             style: [
                 // ── 全站 ──
-                { sel: 'main > :only-child', at: '全站 > 主要内容', what: '让 X 的主内容区域铺满可用宽度。', css: { width: '100%', 'max-width': 'none' } },
-                { sel: '.r-1ye8kvj', at: '全站 > 主要内容', what: '让 X 的主栏内容充分利用可用宽度。', css: { width: '100%', 'max-width': 'none', 'min-width': '0' } },
+                { sel: 'main > :only-child', at: '主区 > 主栏', what: '宽度拉伸', css: { width: '100%', 'max-width': 'none' } },
+                { sel: '.r-1ye8kvj', at: '主区', what: '宽度拉伸', css: { width: '100%', 'max-width': 'none', 'min-width': '0' } },
             ],
 
             block: [
                 // ── 全站 ──
                 {
                     sel: 'article .r-kzbkwu > :last-child',
-                    at: '全站 > 信息流 > 信息',
+                    at: '信息流 > 信息',
                     what: '其他帖子的操作栏',
                     hosts: ['x.com'],
                     paths: ['/home'],
@@ -589,37 +591,37 @@
                     pathIncludes: ['/status/'],
                     id: 'rule-1bvuu3s',
                 },
-                { sel: 'header[role="banner"]', at: '全站', what: '左侧导航栏', hosts: ['x.com'] },
-                { sel: '[data-testid="sidebarColumn"]', at: '全站 > 主要内容', what: '右侧推荐栏', hosts: ['x.com'] },
+                { sel: 'header[role="banner"]', at: '', what: '左栏', hosts: ['x.com'] },
+                { sel: '[data-testid="sidebarColumn"]', at: '', what: '右栏', hosts: ['x.com'] },
                 // ── 首页 ──
                 {
                     sel: '[aria-label="主页时间线"] > :nth-child(3)',
-                    at: '首页',
-                    what: '发帖输入区域',
+                    at: '',
+                    what: '发布',
                     page: 'home',
                     hosts: ['x.com'],
                     paths: ['/home'],
                     exact: true,
                 },
-                { sel: '.r-494qqr', at: '首页', what: 'App 下载提示条', page: 'home', hosts: ['x.com'], paths: ['/home'], exact: true },
+                { sel: '.r-494qqr', at: '', what: 'App 下载提示', page: 'home', hosts: ['x.com'], paths: ['/home'], exact: true },
                 // ── 帖子 ──
                 {
                     sel: 'article .r-qklmqi > :first-child',
-                    at: '帖子页 > 楼主帖子',
-                    what: '楼主帖子的操作栏',
+                    at: '楼层 > 楼主',
+                    what: '操作栏',
                     page: 'post',
                     hosts: ['x.com'],
                     pathIncludes: ['/status/'],
                 },
                 {
                     sel: '[data-testid="inline_reply_offscreen"]',
-                    at: '帖子页',
-                    what: '回复输入框',
+                    at: '',
+                    what: '发布',
                     page: 'post',
                     hosts: ['x.com'],
                     pathIncludes: ['/status/'],
                 },
-                { sel: '.r-ttdzmv', at: '帖子页 > 评论区', what: '评论之间的空隙', page: 'post', hosts: ['x.com'], pathIncludes: ['/status/'] },
+                { sel: '.r-ttdzmv', at: '楼层', what: '空隙', page: 'post', hosts: ['x.com'], pathIncludes: ['/status/'] },
             ],
         },
         // ════════════ 抖音（douyin.com）════════════
@@ -633,11 +635,11 @@
 
             block: [
                 // ── 首页 ──
-                { sel: '.VAQA49VP', at: '首页 > 评论区 > 评论', what: '发布时间和发布地区', pos: '底部，操作栏上方', hosts: ['douyin.com'] },
-                { sel: '.Ctt1baq8', at: '首页 > 评论区 > 评论', what: '操作栏', pos: '底部', hosts: ['douyin.com'] },
-                { sel: '.comment-input-container', at: '首页 > 评论区', what: '评论框', pos: '底部', hosts: ['douyin.com'] },
-                { sel: '.semiTabrelated_card', at: '首页 > 评论区 > 顶栏', what: '切换推荐', hosts: ['douyin.com'] },
-                { sel: '.semiTabai_card', at: '首页 > 评论区 > 顶栏', what: '切换 AI', hosts: ['douyin.com'] },
+                { sel: '.VAQA49VP', at: '评论区 > 评论', what: '发布时间和发布地区', pos: '底部，操作栏上方', hosts: ['douyin.com'] },
+                { sel: '.Ctt1baq8', at: '评论区 > 评论', what: '操作栏', pos: '底部', hosts: ['douyin.com'] },
+                { sel: '.comment-input-container', at: '评论区', what: '发布', pos: '底部', hosts: ['douyin.com'] },
+                { sel: '.semiTabrelated_card', at: '评论区 > 顶栏', what: '切换推荐', hosts: ['douyin.com'] },
+                { sel: '.semiTabai_card', at: '评论区 > 顶栏', what: '切换 AI', hosts: ['douyin.com'] },
             ],
         },
         // ════════════ 南+（south-plus.net）════════════
@@ -651,13 +653,13 @@
 
             block: [
                 // ── 全站 ──
-                { sel: '.container>center', at: '全站 > 底部', what: '切换桌面版按钮', hosts: ['south-plus.net'], paths: ['/simple/index.php'], exact: true },
-                { sel: 'body>center', at: '全站 > 底部', what: '脚注', hosts: ['south-plus.net'], paths: ['/simple/index.php'], exact: true },
+                { sel: '.container>center', at: '底部', what: '切换桌面版按钮', hosts: ['south-plus.net'], paths: ['/simple/index.php'], exact: true },
+                { sel: 'body>center', at: '底部', what: '脚注', hosts: ['south-plus.net'], paths: ['/simple/index.php'], exact: true },
                 // ── 茶馆 ──
-                { sel: '.pages', at: '全站 > 顶部', what: '顶部翻页栏', page: 'tea', hosts: ['south-plus.net'], paths: ['/simple/index.php'], exact: true },
+                { sel: '.pages', at: '顶部', what: '顶部翻页栏', page: 'global', hosts: ['south-plus.net'], paths: ['/simple/index.php'], exact: true },
                 {
                     sel: '.by',
-                    at: '茶馆页 > 信息流 > 帖子',
+                    at: '信息流 > 帖子',
                     what: '帖子发布时间等信息',
                     page: 'tea',
                     hosts: ['south-plus.net'],
@@ -666,10 +668,10 @@
                 },
                 {
                     sel: '.btn-danger',
-                    at: '全站 > 顶部 > 路径栏',
+                    at: '顶部 > 路径栏',
                     what: '发布主题按钮',
                     pos: '右上角',
-                    page: 'tea',
+                    page: 'global',
                     hosts: ['south-plus.net'],
                     paths: ['/simple/index.php'],
                     exact: true,
@@ -677,8 +679,8 @@
                 // ── 帖子 ──
                 {
                     sel: '.btn-outline-secondary',
-                    at: '帖子页 > 楼层',
-                    what: '回复当前楼层按钮',
+                    at: '楼层',
+                    what: '回复当前楼',
                     page: 'post',
                     hosts: ['south-plus.net'],
                     paths: ['/simple/index.php'],
@@ -686,8 +688,8 @@
                 },
                 {
                     sel: 'form[name="FORM"]',
-                    at: '帖子页',
-                    what: '评论框',
+                    at: '',
+                    what: '发布',
                     page: 'post',
                     hosts: ['south-plus.net'],
                     paths: ['/simple/index.php'],
@@ -695,22 +697,13 @@
                 },
                 {
                     sel: '.blockquote',
-                    at: '帖子页 > 楼层 > 资源',
-                    what: '资源购买警告',
+                    at: '楼层 > 资源',
+                    what: '购买警告',
                     page: 'post',
                     hosts: ['south-plus.net'],
                     paths: ['/simple/index.php'],
                     exact: true,
-                },
-                {
-                    sel: '.quote',
-                    at: '帖子页 > 楼层 > 资源',
-                    what: '资源信息区域（仅展示，暂不屏蔽，避免影响资源购买）',
-                    page: 'post',
-                    note: true,
-                    id: 'southplus-quote-display-only',
-                },
-            ],
+                },],
         },
         // ════════════ 老王论坛（laowang.vip）════════════
         {
@@ -723,10 +716,10 @@
 
             block: [
                 // ── 全站 ──
-                { sel: '#close', at: '全站', what: 'App 下载提示', page: 'global', hosts: ['laowang.vip'] },
+                { sel: '#close', at: '', what: 'App 下载提示', page: 'global', hosts: ['laowang.vip'] },
                 // ── 帖子页 ──
-                { sel: '.anti-scam-warning', at: '帖子页 > 楼层', what: '防诈骗警告', hosts: ['laowang.vip'] },
-                { sel: '.top_lev', at: '帖子页 > 楼层', what: '用户等级', hosts: ['laowang.vip'] },
+                { sel: '.anti-scam-warning', at: '楼层', what: '防诈骗警告', hosts: ['laowang.vip'] },
+                { sel: '.top_lev', at: '楼层', what: '用户等级', hosts: ['laowang.vip'] },
             ],
         },
         // ════════════ 禁漫天堂（18comic.vip）════════════
@@ -738,8 +731,8 @@
             style: [],
 
             block: [
-                // ── 全部 ──
-                { sel: '.col-sm-3', at: '全站', what: '广告栏', hosts: ['18comic.vip'] },
+                // ── 全站 ──
+                { sel: '.col-sm-3', at: '', what: '广告栏', hosts: ['18comic.vip'] },
             ],
         },
         // ════════════ 98 堂（sehuatang.net）════════════
@@ -767,24 +760,16 @@
 
             block: [
                 // ── 全站 ──
-                { sel: '.footer', at: '全站', what: '页脚', page: 'global', hosts: ['xsijishe.com'] },
-                { sel: '.xxm-bottom', at: '全站', what: '', page: 'global', hosts: ['xsijishe.com'] },
-                { sel: '.xxmgapb', at: '全站', what: '间隔', pos: '页脚下方', page: 'global', hosts: ['xsijishe.com'] },
+                { sel: '.footer', at: '', what: '页脚', page: 'global', hosts: ['xsijishe.com'] },
+                { sel: '.xxm-bottom', at: '', what: '', page: 'global', hosts: ['xsijishe.com'] },
+                { sel: '.xxmgapb', at: '', what: '间隔', pos: '页脚下方', page: 'global', hosts: ['xsijishe.com'] },
                 // ── 帖子 ──
-                { sel: '.xxm-reply-meta', at: '帖子页 > 楼层', what: '发帖时间、点赞、点踩', hosts: ['xsijishe.com'] },
-                { sel: '.xxm-ratelog', at: '帖子页 > 楼层', what: '评分信息', hosts: ['xsijishe.com'] },
-                { sel: '.authortitle', at: '帖子页 > 楼层 > 用户栏', what: '用户等级', hosts: ['xsijishe.com'] },
-                { sel: '.vtxxmpost', at: '帖子页', what: '输入框', hosts: ['xsijishe.com'] },
-                { sel: '.jnpar-m-tip', at: '帖子页 > 楼层', what: '购买提示', hosts: ['xsijishe.com'] },
-                { sel: '.mtw', at: '帖子页 > 楼主', what: '观看人数', hosts: ['xsijishe.com'] },
-                {
-                    sel: 'div[style="font-size: 12px;overflow: hidden;margin-top: 15px;padding-top: 12px;line-height: 1.6;background: url(\'static/image/common/sigline.gif\') no-repeat 0 0;max-height:550px;"]',
-                    at: '帖子页 > 楼层 > 用户栏',
-                    what: '用户签名区域（规则尚未完善，仅展示，不启用）',
-                    note: true,
-                    id: 'xsijishe-signature-display-only',
-                },
-            ],
+                { sel: '.xxm-reply-meta', at: '楼层', what: '发帖时间、点赞、点踩', hosts: ['xsijishe.com'] },
+                { sel: '.xxm-ratelog', at: '楼层', what: '评分', hosts: ['xsijishe.com'] },
+                { sel: '.authortitle', at: '楼层 > 用户栏', what: '等级', hosts: ['xsijishe.com'] },
+                { sel: '.vtxxmpost', at: '', what: '发布', hosts: ['xsijishe.com'] },
+                { sel: '.jnpar-m-tip', at: '楼层', what: '购买', hosts: ['xsijishe.com'] },
+                { sel: '.mtw', at: '楼层', what: '人数', hosts: ['xsijishe.com'] },],
         },
     ];
 
