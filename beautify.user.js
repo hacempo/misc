@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      8.0.0
+// @version      8.0.1
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -33,8 +33,8 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.0
-// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.0
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.1
+// @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.1
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -435,11 +435,12 @@
                 { sel: '.QuestionHeader-side', at: '回答页 > 悬浮顶栏', what: '问题栏右侧区域', page: 'question', hosts: ['www.zhihu.com'] },
                 { sel: '.QuestionHeader-footer', at: '回答页 > 顶部问题栏', what: '问题栏底部操作区', page: 'question', hosts: ['www.zhihu.com'] },
                 { sel: '.FollowButton', at: '回答页', what: '关注按钮', page: 'question', hosts: ['www.zhihu.com'] },
-                { sel: '.Reward', at: '回答页 > 主要内容 > 具体回答', what: '赞赏入口', page: 'question', hosts: ['www.zhihu.com'] },
-                { sel: '.css-140jo2', at: '回答 > 评论区', what: '评论发布时间和地点', page: 'question', hosts: ['www.zhihu.com'] },
-                { sel: '.css-dvccr2', at: '回答 > 顶部', what: '文章赞同人数', page: 'question', hosts: ['www.zhihu.com'] },
-                { sel: '.css-a3pqj1', at: '评论页', what: '评论框', page: 'question', hosts: ['www.zhihu.com'] },
-                { sel: '.css-kt4t4n', at: '回答 > 评论区', what: '悬浮评论框', page: 'question', hosts: ['www.zhihu.com'] },
+                { sel: '.Reward', at: '回答页 > 具体回答 > 底部', what: '赞赏入口', page: 'question', hosts: ['www.zhihu.com'] },
+                { sel: '.css-140jo2', at: '回答页 > 具体回答 > 评论区', what: '评论发布时间和地点', page: 'question', hosts: ['www.zhihu.com'] },
+                { sel: '.css-dvccr2', at: '回答页 > 具体回答 > 顶部', what: '文章赞同人数', page: 'question', hosts: ['www.zhihu.com'] },
+                { sel: '.css-a3pqj1', at: '回答页 > 评论页', what: '评论框', page: 'question', hosts: ['www.zhihu.com'] },
+                { sel: '.css-kt4t4n', at: '回答页 > 具体回答 > 评论区', what: '悬浮评论框', page: 'question', hosts: ['www.zhihu.com'] },
+                { sel: '.css-jghqwm', at: '回答页 > 具体回答 > 底部', what: '继续追问', page: 'question', hosts: ['www.zhihu.com'] },
                 // ── 搜索 ──
                 {
                     sel: '.css-1qqx3d0 > :first-child',
@@ -502,17 +503,18 @@
                     hosts: ['bilibili.com'],
                 },
                 // ── 首页 ──
-                { sel: '.recommended-swipe', at: '首页 > 信息流', what: '首页轮播推荐内容', pos: '左上角', page: 'home', hosts: ['www.bilibili.com'] },
-                { sel: '.floor-single-card', at: '首页 > 信息流', what: '分区推广卡片', page: 'home', hosts: ['www.bilibili.com'] },
-                { sel: '.feed-card:not(:has(.enable-no-interest))', at: '首页 > 信息流', what: '初始加载的推广卡片', page: 'home', hosts: ['www.bilibili.com'] },
+                { sel: '.recommended-swipe', at: '首页 > 卡片', what: '首页轮播推荐内容', pos: '左上角', page: 'home', hosts: ['www.bilibili.com'] },
+                { sel: '.floor-single-card', at: '首页 > 卡片', what: '分区推广卡片', page: 'home', hosts: ['www.bilibili.com'] },
+                { sel: '.feed-card:not(:has(.enable-no-interest))', at: '首页 > 卡片', what: '初始加载的推广卡片', page: 'home', hosts: ['www.bilibili.com'] },
                 {
                     sel: '.bili-feed-card:not(:has(.enable-no-interest))',
-                    at: '首页 > 信息流',
+                    at: '首页 > 卡片',
                     what: '下滑加载的推广卡片',
                     page: 'home',
                     hosts: ['www.bilibili.com'],
                 },
                 // ── 播放 ──
+                { sel: '.bili-live-card', at: '首页 > 卡片', what: '直播卡片', page: 'home', hosts: ['www.bilibili.com'] },
                 { sel: '.video-resource-list', at: '全站', what: '视频推广', page: 'video', hosts: ['www.bilibili.com'] },
                 {
                     sel: 'bili-comment-thread-renderer:has([data-type="goods"])',
