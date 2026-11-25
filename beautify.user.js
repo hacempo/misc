@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         beautify
 // @namespace    http://tampermonkey.net/
-// @version      8.0.3
+// @version      8.0.4
 // @description  独立控制指定网站的页面美化与元素屏蔽
 // @match        *://tieba.baidu.com/*
 // @match        *://*.tieba.baidu.com/*
@@ -33,7 +33,7 @@
 // @match        *://*.sehuatang.net/*
 // @match        *://xsijishe.com/*
 // @match        *://*.xsijishe.com/*
-// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.3
+// @updateURL    https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.4
 // @downloadURL  https://raw.githubusercontent.com/hacempo/misc/master/beautify.user.js?v=8.0.3
 // @run-at       document-start
 // @noframes
@@ -127,9 +127,9 @@
 
             style: [
                 // ── 首页 ──
-                { sel: '.main-page-wrap', at: '', what: '宽度拉伸', page: 'home', css: { 'max-width': 'none' } },
+                { sel: '.main-page-wrap', at: '主区', what: '宽度拉伸', page: 'home', css: { 'max-width': 'none' } },
                 // ── 全站 ──
-                { sel: '.nav-bar-v2-fixed', at: '', what: '宽度拉伸', css: { 'max-width': 'none' } },
+                { sel: '.nav-bar-v2-fixed', at: '顶栏', what: '宽度拉伸', css: { 'max-width': 'none' } },
             ],
 
             block: [
