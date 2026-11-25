@@ -196,10 +196,10 @@
                 // ── 全站 ──
                 { sel: '.c1', at: '楼层 > 信息列', what: '信息列', page: 'detail', hosts: ['ngabbs.com'] },
                 { sel: '.cell', at: '', what: '单元格', page: 'detail', hosts: ['ngabbs.com'] },
-                { sel: '#fast_post_c', at: '底部', what: '发帖', hosts: ['ngabbs.com'] },
                 { sel: '#mainmenu', at: '顶部', what: '主菜单', hosts: ['ngabbs.com'] },
                 { sel: '#m_nav', at: '顶部', what: '导航栏', hosts: ['ngabbs.com'] },
                 { sel: '#m_pbtntop', at: '顶部', what: '翻页栏', hosts: ['ngabbs.com'] },
+                { sel: '#fast_post_c', at: '底部', what: '发帖', hosts: ['ngabbs.com'] },
                 { sel: '#b_nav', at: '底部', what: '导航栏', hosts: ['ngabbs.com'] },
                 { sel: '#footer', at: '底部', what: '页脚', hosts: ['ngabbs.com'] },
                 // ── 首页 ──
@@ -584,7 +584,7 @@
                 {
                     sel: 'article .r-kzbkwu > :last-child',
                     at: '信息流 > 信息',
-                    what: '其他帖子的操作栏',
+                    what: '操作栏',
                     hosts: ['x.com'],
                     paths: ['/home'],
                     exact: true,
@@ -659,7 +659,7 @@
                 { sel: '.pages', at: '顶部', what: '顶部翻页栏', page: 'global', hosts: ['south-plus.net'], paths: ['/simple/index.php'], exact: true },
                 {
                     sel: '.by',
-                    at: '信息流 > 帖子',
+                    at: '信息流 > 信息',
                     what: '帖子发布时间等信息',
                     page: 'tea',
                     hosts: ['south-plus.net'],
